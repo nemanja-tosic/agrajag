@@ -1,0 +1,46 @@
+microfrontends
+
+# Dependencies
+node_modules
+
+# Testing
+/coverage
+
+# Next.js
+.next
+out
+.vercel
+
+# Production
+build
+dist
+
+# Misc
+.DS_Store
+*.pem
+tsconfig.tsbuildinfo
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local ENV files
+.env
+
+# Cloudflare secrets
+.dev.vars
+
+# Turborepo
+.turbo
+
+# see https://yarnpkg.com/getting-started/qa#which-files-should-be-gitignored
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+
+.vagrant

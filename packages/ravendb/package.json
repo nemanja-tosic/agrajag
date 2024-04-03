@@ -1,0 +1,30 @@
+{
+  "name": "@agrajag/ravendb-adapter",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "yarn build:ts"
+  },
+  "exports": {
+    ".": "./dist/src/index.js"
+  },
+  "files": [
+    "README.md",
+    "dist/src/**"
+  ],
+  "dependencies": {
+    "agrajag": "workspace:*",
+    "ramda": "0.30.0",
+    "uuid": "9.0.1"
+  },
+  "devDependencies": {
+    "@agrajag/configs": "workspace:*",
+    "@types/node": "20.12.7",
+    "@types/ramda": "^0.29.12",
+    "@types/uuid": "^9.0.8",
+    "ravendb": "file:../../ravendb-6.0.0.tgz"
+  },
+  "peerDependencies": {
+    "ravendb": "*"
+  }
+}

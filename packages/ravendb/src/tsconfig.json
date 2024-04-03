@@ -1,0 +1,7 @@
+{
+  "extends": "@agrajag/configs/tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "../",
+    "outDir": "../dist"
+  }
+}

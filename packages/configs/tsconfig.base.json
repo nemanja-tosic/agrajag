@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    "module": "node16",
+    "target": "ES2022",
+    "moduleResolution": "Node16",
+
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "incremental": true,
+    "noEmitOnError": true,
+
+    "preserveConstEnums": true,
+    "newLine": "lf",
+    "pretty": true,
+
+    "useUnknownInCatchVariables": false,
+  },
+  "watchOptions": {
+    "watchFile": "useFsEventsOnParentDirectory",
+    "watchDirectory": "useFsEvents"
+  }
+}
