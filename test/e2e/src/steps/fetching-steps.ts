@@ -29,6 +29,7 @@ interface World {
     article: ArticleDefinition;
     author: AuthorDefinition;
     comment: CommentDefinition;
+    empty: AuthorDefinition;
   };
 }
 
@@ -57,11 +58,16 @@ Before<World>(async function () {
     { relationships: { author, comments: [comment] } },
   );
 
-  this.schemas = { author, article, comment };
+  const empty = this.builder.createSchema(
+    'empty',
+    z => z.object({ name: z.string(), category: z.string() }),
+  );
+
+  this.schemas = { author , article, comment, empty};
 });
 
 Before<World>(async function () {
-  const { author, article, comment } = this.schemas;
+  const { author,empty,  article, comment } = this.schemas;
 
   this.documentStore = new DocumentStore('http://localhost:8080', 'test-crud');
   this.documentStore.initialize();
@@ -83,6 +89,11 @@ Before<World>(async function () {
 
   this.builder.addResource(
     comment,
+    new RavendbCrudEndpointFactory(this.documentStore),
+  );
+
+  this.builder.addResource(
+    empty,
     new RavendbCrudEndpointFactory(this.documentStore),
   );
 });
@@ -186,6 +197,8 @@ Given<World>('the test data', async function () {
     },
   ] satisfies Resource<AuthorDefinition>[];
 
+  const empty = [] satisfies Resource<AuthorDefinition>[];
+
   const comments = [
     {
       id: 'comments-1',
@@ -226,9 +239,18 @@ Given<World>('the test data', async function () {
         comments: { data: [comments[2]] },
       },
     },
+    {
+      id: 'articles-3',
+      type: 'articles',
+      attributes: { title: 'Foo', body: 'Bar', tags: ['Baz'] },
+      relationships: {
+        author: { data: authors[0]},
+        comments: { data: [] },
+      },
+    },
   ] satisfies Resource<ArticleDefinition>[];
 
-  for (const resource of [...authors, ...articles, ...comments]) {
+  for (const resource of [...authors, ...articles, ...comments, ...empty]) {
     await hono.request(`/${resource.type}`, {
       body: JSON.stringify({ data: resource }),
       method: 'POST',

@@ -55,20 +55,19 @@ Feature: Fetching resources
       }
       """
 
-  # FIXME: Returning 404?
-#  Scenario: Fetching an empty collection of resources
-#    When I send a "GET" request to "/somethings"
-#    Then the response status should be 200
-#    And the response body should be:
-#      """
-#      {
-#        "data": []
-#      }
-#      """
+  Scenario: Fetching an empty collection of resources
+    When I send a "GET" request to "/empty"
+    Then the response status should be 200
+    And the response body should be:
+      """
+      {
+        "data": []
+      }
+      """
 
-  # FIXME: Returning 404?
+ #FIXME: need to create an empty resource in the collection
 #  Scenario: Fetching an empty resource
-#    When I send a "GET" request to "/somethings/somethings-1"
+#    When I send a "GET" request to "/authors1/authors-3"
 #    Then the response status should be 200
 #    And the response body should be:
 #      """

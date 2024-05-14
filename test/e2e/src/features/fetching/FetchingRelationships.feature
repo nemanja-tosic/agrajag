@@ -39,3 +39,29 @@ Feature: Fetching relationships
         ]
       }
       """
+
+#FIXME: in order to get status 200, relationship/author needs to be set null
+
+#  Scenario: Fetching a to-one relationship with empty data
+#    When I send a "GET" request to "/articles/articles-3/relationships/author"
+#    Then the response status should be 200
+#    And the response body should be:
+#      """
+#      {
+#        "data": null
+#      }
+#      """
+
+  Scenario: Fetching a to-many relationship with empty data
+    When I send a "GET" request to "/articles/articles-3/relationships/comments"
+    Then the response status should be 200
+    And the response body should be:
+      """
+      {
+        "data": []
+      }
+      """
+
+  Scenario: Fetching a relationship link URL that does not exist
+    When I send a "GET" request to "/articles/articles-5/relationships/author"
+    Then the response status should be 404
