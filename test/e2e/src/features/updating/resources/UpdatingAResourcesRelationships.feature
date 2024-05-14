@@ -152,6 +152,45 @@ Feature: Update a resources relationships
     }
     """
 
+  Scenario: Clearing a to-many relationship
+    When I send a "PATCH" request to "articles/articles-1" with the resource
+      """
+      {
+        "data": {
+          "type": "articles",
+          "id": "articles-1",
+          "relationships": {
+            "comments": {
+              "data": []
+            }
+          }
+        }
+      }
+      """
+    Then the response status should be 200
+    And the response body should be:
+      """
+      {
+        "data": {
+          "type": "articles",
+          "id": "articles-1",
+          "attributes": {
+          "title": "Foo",
+          "body": "Bar",
+          "tags": ["Baz"]
+        },
+        "relationships": {
+          "author": {
+            "data": { "type": "authors", "id": "authors-1" }
+          },
+          "comments": {
+            "data": []
+          }
+        }
+      }
+    }
+    """
+
   Scenario: Updating an unknown resource
     When I send a "PATCH" request to "articles/articles-404" with the resource
       """

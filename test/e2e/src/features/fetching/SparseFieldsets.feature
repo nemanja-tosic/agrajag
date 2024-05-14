@@ -26,53 +26,69 @@ Feature: Sparse fieldsets
     And the response body should be:
       """
       {
-        "data": [
-          {
-            "type": "articles",
-            "id": "articles-1",
-            "attributes": {
-              "title": "Foo",
-              "body": "Bar"
-            },
-            "relationships": {
-              "author": {
-                "data": { "type": "authors", "id": "authors-1" }
-              },
-              "comments": {
-                "data": [
-                  { "type": "comments", "id": "comments-1" },
-                  { "type": "comments", "id": "comments-2" }
-                ]
-              }
-            }
-          },
-          {
-            "type": "articles",
-            "id": "articles-2",
-            "attributes": {
-              "title": "Foo",
-              "body": "Bar"
-            },
-            "relationships": {
-              "author": {
-                "data": { "type": "authors", "id": "authors-1" }
-              },
-              "comments": {
-                "data": [
-                  { "type": "comments", "id": "comments-3" }
-                ]
-              }
-            }
-          }
-        ],
-        "included": [
-          {
-            "type": "authors",
-            "id": "authors-1",
-            "attributes": {
-              "name": "Nemanja"
-            }
-          }
-        ]
+  "data": [
+    {
+      "type": "articles",
+      "id": "articles-1",
+      "attributes": {
+        "title": "Foo",
+        "body": "Bar"
+      },
+      "relationships": {
+        "author": {
+          "data": { "type": "authors", "id": "authors-1" }
+        },
+        "comments": {
+          "data": [
+            { "type": "comments", "id": "comments-1" },
+            { "type": "comments", "id": "comments-2" }
+          ]
+        }
       }
-      """
+    },
+    {
+      "type": "articles",
+      "id": "articles-2",
+      "attributes": {
+        "title": "Foo",
+        "body": "Bar"
+      },
+      "relationships": {
+        "author": {
+          "data": { "type": "authors", "id": "authors-1" }
+        },
+        "comments": {
+          "data": [
+            { "type": "comments", "id": "comments-3" }
+          ]
+        }
+      }
+    },
+    {
+      "type": "articles",
+      "id": "articles-3",
+      "attributes": {
+        "title": "Foo",
+        "body": "Bar"
+      },
+      "relationships": {
+        "author": {
+          "data": { "type": "authors", "id": "authors-1" }
+        },
+        "comments": {
+          "data": []
+        }
+      }
+    }
+  ],
+    "included": [
+      {
+        "type": "authors",
+        "id": "authors-1",
+        "attributes": {
+          "name": "Nemanja"
+        }
+      }
+    ]
+  }
+       """

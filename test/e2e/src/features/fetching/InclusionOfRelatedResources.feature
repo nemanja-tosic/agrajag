@@ -93,131 +93,113 @@ Feature: Fetching relationships
     Then the response status should be 200
     And the response body should be:
       """
-      {
-        "data": [
-          {
-            "type": "articles",
-            "id": "articles-1",
-            "attributes": {
-              "title": "Foo",
-              "body": "Bar",
-              "tags": ["Baz"]
-            },
-            "relationships": {
-              "author": {
-                "data": {
-                  "type": "authors",
-                  "id": "authors-1"
-                }
-              },
-              "comments": {
-                "data": [
-                  {
-                    "id": "comments-1",
-                    "type": "comments"
-                  },
-                  {
-                    "id": "comments-2",
-                    "type": "comments"
-                  }
-                ]
-              }
-            }
-          },
-          {
-            "type": "articles",
-            "id": "articles-2",
-            "attributes": {
-              "title": "Foo",
-              "body": "Bar",
-              "tags": ["Baz"]
-            },
-            "relationships": {
-              "author": {
-                "data": {
-                  "type": "authors",
-                  "id": "authors-1"
-                }
-              },
-              "comments": {
-                "data": [
-                  {
-                    "id": "comments-3",
-                    "type": "comments"
-                  }
-                ]
-              }
-            }
-          }
-        ],
-        "included": [
-          {
+   {
+  "data": [
+    {
+      "type": "articles",
+      "id": "articles-1",
+      "attributes": {
+        "title": "Foo",
+        "body": "Bar",
+        "tags": ["Baz"]
+      },
+      "relationships": {
+        "author": {
+          "data": {
             "type": "authors",
-            "id": "authors-1",
-            "attributes": {
-              "name": "Nemanja",
-              "category": "IT"
-            }
-          },
-          {
-            "id": "comments-1",
-            "type": "comments",
-            "attributes": {
-              "body": "Foo"
-            }
-          },
-          {
-            "id": "comments-2",
-            "type": "comments",
-            "attributes": {
-              "body": "Bar"
-            }
-          },
-          {
-            "id": "comments-3",
-            "type": "comments",
-            "attributes": {
-              "body": "Baz"
-            }
+            "id": "authors-1"
           }
-        ]
-      }
-      """
-
-  Scenario: Fetching a resource without including relationships
-    When I send a "GET" request to "/articles/articles-1"
-    Then the response status should be 200
-    And the response body should be:
-      """
-      {
-        "data": {
-          "type": "articles",
-          "id": "articles-1",
-          "attributes": {
-            "title": "Foo",
-            "body": "Bar",
-            "tags": ["Baz"]
-          },
-          "relationships": {
-            "author": {
-              "data": {
-                "type": "authors",
-                "id": "authors-1"
-              }
+        },
+        "comments": {
+          "data": [
+            {
+              "id": "comments-1",
+              "type": "comments"
             },
-            "comments": {
-              "data": [
-                {
-                  "id": "comments-1",
-                  "type": "comments"
-                },
-                {
-                  "id": "comments-2",
-                  "type": "comments"
-                }
-              ]
+            {
+              "id": "comments-2",
+              "type": "comments"
             }
-          }
+          ]
         }
       }
+    },
+    {
+      "type": "articles",
+      "id": "articles-2",
+      "attributes": {
+        "title": "Foo",
+        "body": "Bar",
+        "tags": ["Baz"]
+      },
+      "relationships": {
+        "author": {
+          "data": {
+            "type": "authors",
+            "id": "authors-1"
+          }
+        },
+        "comments": {
+          "data": [
+            {
+              "id": "comments-3",
+              "type": "comments"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "articles",
+      "id": "articles-3",
+      "attributes": {
+        "title": "Foo",
+        "body": "Bar",
+        "tags": ["Baz"]
+      },
+      "relationships": {
+        "author": {
+          "data": {
+            "type": "authors",
+            "id": "authors-1"
+          }
+        },
+        "comments": {
+          "data": []
+        }
+      }
+    }
+  ],
+  "included": [
+    {
+      "type": "authors",
+      "id": "authors-1",
+      "attributes": {
+        "name": "Nemanja",
+        "category": "IT"
+      }
+    },
+    {
+      "id": "comments-1",
+      "type": "comments",
+      "attributes": {
+        "body": "Foo"
+      }
+    },
+    {
+      "id": "comments-2",
+      "type": "comments",
+      "attributes": {
+        "body": "Bar"
+      }
+    },
+    {
+      "id": "comments-3",
+      "type": "comments",
+      "attributes": {
+        "body": "Baz"
+      }
+    }
+  ]
+}
       """

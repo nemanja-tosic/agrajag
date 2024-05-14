@@ -77,3 +77,18 @@ Feature: Creating resources
       }
       """
     Then the response status should be 201
+
+  Scenario: Creating a resource with non-existing related resource
+    When I send a "POST" request to "/test" with the resource
+      """
+       {
+        "data": {
+          "type": "test",
+          "attributes": {
+            "example": "data"
+          }
+        }
+      }
+      """
+    Then the response status should be 404
+

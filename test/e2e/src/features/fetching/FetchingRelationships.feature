@@ -40,7 +40,7 @@ Feature: Fetching relationships
       }
       """
 
-#FIXME: in order to get status 200, relationship/author needs to be set null
+#FIXME: in order to get status 200, relationship/author needs to be set to null
 
 #  Scenario: Fetching a to-one relationship with empty data
 #    When I send a "GET" request to "/articles/articles-3/relationships/author"
