@@ -20,7 +20,7 @@ export type Endpoints<TDefinition extends ResourceDefinition> = {
 };
 
 type FetchEndpoint<TDefinition extends ResourceDefinition> = {
-  collection: (params: QueryParams) => Promise<Resource<TDefinition>>;
+  collection: (params: QueryParams<TDefinition>) => Promise<Resource<TDefinition>>;
   self: (
     params: { id: string } & QueryParams,
   ) => Promise<Resource<TDefinition> | undefined>;
@@ -73,6 +73,7 @@ export type EndpointSchema = ZodObject<{
     query: ZodObject<{
       include: ZodOptional<ZodString>;
       fields: ZodOptional<ZodString>;
+      sort: ZodOptional<ZodString>;
     }>;
   }>;
 }>;

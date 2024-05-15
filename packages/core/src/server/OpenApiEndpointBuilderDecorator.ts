@@ -18,11 +18,14 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
     this.builder = builder;
   }
 
-  addGet<TPath extends string = string>(
-    definition: ResourceDefinition,
+  addGet<
+    TPath extends string = string,
+    TDefinition extends ResourceDefinition = ResourceDefinition,
+  >(
+    definition: TDefinition,
     endpointSchema: EndpointSchema,
     path: TPath,
-    handler: FetchHandler<TPath>,
+    handler: FetchHandler<TPath, TDefinition>,
   ) {
     this.#paths[path] = {
       ...this.#paths[path],

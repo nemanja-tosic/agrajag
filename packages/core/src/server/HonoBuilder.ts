@@ -11,11 +11,14 @@ import {
 export class HonoBuilder extends ServerBuilder {
   #hono = new Hono();
 
-  addGet<TPath extends string = string>(
-    schema: ResourceDefinition,
+  addGet<
+    TPath extends string = string,
+    TDefinition extends ResourceDefinition = ResourceDefinition,
+  >(
+    schema: TDefinition,
     endpointSchema: EndpointSchema,
     path: TPath,
-    handler: FetchHandler<TPath>,
+    handler: FetchHandler<TPath, TDefinition>,
   ): this {
     this.#hono.get(path, async c => {
       const { body, status, headers } = await new Promise<Response>(resolve =>
@@ -97,6 +100,7 @@ export class HonoBuilder extends ServerBuilder {
           .filter(([key]) => key.match(/fields\[(.*?)\]/g))
           .map(([key, value]) => [key.match(/fields\[(.*?)\]/)![1], value]),
       ),
+      sort: c.req.query('sort'),
     };
   }
 

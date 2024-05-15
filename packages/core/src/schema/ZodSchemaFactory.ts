@@ -78,6 +78,11 @@ export class ZodSchemaFactory implements SchemaFactory {
             .string()
             .optional()
             .openapi({ param: { name: 'fields', in: 'query' } }),
+          // TODO: limit to fields in definition
+          sort: z
+            .string()
+            .optional()
+            .openapi({ param: { name: 'sort', in: 'query' } }),
         }),
       }),
     });

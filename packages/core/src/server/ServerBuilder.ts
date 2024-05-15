@@ -1,17 +1,18 @@
 import { Params } from '../endpoints/Params.js';
 import { EndpointSchema } from '../endpoints/Endpoints.js';
-import {
-  ResourceDefinition,
-} from '../resources/ResourceDefinition.js';
+import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import { ResourceIdentifier } from '../resources/ResourceLinkageSchema.js';
 import { Resource } from '../resources/Resource.js';
 
 export abstract class ServerBuilder {
-  abstract addGet<TPath extends string = string>(
-    definition: ResourceDefinition,
+  abstract addGet<
+    TPath extends string = string,
+    TDefinition extends ResourceDefinition = ResourceDefinition,
+  >(
+    definition: TDefinition,
     endpointSchema: EndpointSchema,
     path: TPath,
-    handler: FetchHandler<TPath>,
+    handler: FetchHandler<TPath, TDefinition>,
   ): void;
 
   abstract addPost<TPath extends string = string>(
@@ -52,7 +53,10 @@ export type MutationHandler<TPath extends string> = (
   respond: RespondFunction,
 ) => Promise<void>;
 
-export type FetchHandler<TPath extends string> = (
-  params: Params<TPath>,
+export type FetchHandler<
+  TPath extends string,
+  TDefinition extends ResourceDefinition = ResourceDefinition,
+> = (
+  params: Params<TPath, TDefinition>,
   respond: RespondFunction,
 ) => Promise<void>;

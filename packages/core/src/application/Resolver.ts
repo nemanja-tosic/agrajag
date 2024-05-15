@@ -2,7 +2,7 @@ import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import { Denormalized, Normalized } from '../endpoints/Endpoints.js';
 
 // @ts-ignore
-Symbol.asyncDispose ??= Symbol("Symbol.asyncDispose");
+Symbol.asyncDispose ??= Symbol('Symbol.asyncDispose');
 
 export interface Resolver<
   TDefinition extends ResourceDefinition = ResourceDefinition,
@@ -12,7 +12,10 @@ export interface Resolver<
   byId(id: string): Promise<Normalized<TDefinition> | undefined>;
   byId(ids: string[]): Promise<Normalized<TDefinition>[]>;
 
-  byType(type: string): Promise<Normalized<TDefinition>[]>;
+  byType(
+    type: string,
+    options?: { sort?: TDefinition['attributes'] },
+  ): Promise<Normalized<TDefinition>[]>;
 
   relationshipByKey(
     id: string,

@@ -34,14 +34,21 @@ export class RavendbCrudEndpointFactory<
           return query.singleOrNull().then(r => r ?? undefined);
         }
       },
-      byType: type =>
-        session.advanced
-          .rawQuery<Normalized<TDefinition>>(
-            `
-              from "${definition.type}"
-            `,
-          )
-          .all(),
+      byType: (type, { sort } = {}) => {
+        const query = session.query<Normalized<TDefinition>>({
+          collection: type,
+        });
+
+        if (sort) {
+          if (sort.toString().startsWith('-')) {
+            query.orderByDescending(sort.toString().substring(1));
+          } else {
+            query.orderBy(sort.toString());
+          }
+        }
+
+        return query.all();
+      },
       relationshipByKey: async (id, key) => {
         const query = session.advanced
           .rawQuery<Denormalized<TDefinition>>(

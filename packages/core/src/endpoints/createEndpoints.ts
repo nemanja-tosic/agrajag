@@ -1,6 +1,4 @@
-import {
-  ResourceDefinition,
-} from '../resources/ResourceDefinition.js';
+import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import { Denormalized, Endpoints, Normalized } from './Endpoints.js';
 import { Resolver } from '../application/Resolver.js';
 import { Serializer } from '../serialization/Serializer.js';
@@ -81,7 +79,9 @@ export abstract class EndpointFactory<TDefinition extends ResourceDefinition> {
         collection: async params => {
           await using external = this.createExternal(definition);
 
-          const entities = await external.byType(definition.type);
+          const entities = await external.byType(definition.type, {
+            sort: params.sort,
+          });
 
           return this.#serialize(
             definition,
