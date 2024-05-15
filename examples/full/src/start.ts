@@ -2,13 +2,12 @@ import { honoBuilder, openApiBuilder } from './builder.js';
 import { swaggerUI } from '@hono/swagger-ui';
 import { serve } from '@hono/node-server';
 
-import './NotificationSchema.js';
-import './NotificationGroupSchema.js';
+import './schema.js';
 
 const hono = honoBuilder.build();
 const openapi = openApiBuilder.build();
 
-hono.get('/ui', swaggerUI({ url: '/' }));
+hono.get('/ui', swaggerUI({ url: '/', spec: openapi }));
 
 hono.get('/openapi.json', c => c.json(openapi));
 

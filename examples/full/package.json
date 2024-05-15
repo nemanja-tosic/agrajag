@@ -1,6 +1,10 @@
 {
   "name": "@agrajag/examples-full",
   "type": "module",
+  "scripts": {
+    "build": "yarn build:ts",
+    "start": "node ./dist/src/start.js"
+  },
   "dependencies": {
     "@agrajag/ravendb-adapter": "workspace:*",
     "@hono/node-server": "1.11.1",
@@ -17,6 +21,7 @@
   "devDependencies": {
     "@agrajag/configs": "workspace:*",
     "@cucumber/cucumber": "10.6.0",
+    "@rtk-query/codegen-openapi": "1.2.0",
     "@types/node": "20.12.7",
     "@types/ramda": "^0.29.12",
     "@types/uuid": "^9.0.8"
