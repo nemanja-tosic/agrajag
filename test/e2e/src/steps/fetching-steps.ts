@@ -10,16 +10,26 @@ type AuthorDefinition = ResourceDefinition<
   ZodObject<{ name: ZodString; category: ZodString }>
 >;
 
+type PhotographerDefinition = ResourceDefinition<
+  ZodObject<{ name?: ZodString; category: ZodString }>,
+  {}
+>;
+
 type CommentDefinition = ResourceDefinition<
   ZodObject<{ body: ZodString }>,
-  { author: AuthorDefinition }
+  { author: AuthorDefinition}
+>;
+
+//todo: create empty to-one relationship
+type PhotoDefinition = ResourceDefinition<
+  ZodObject<{ name: ZodString }>
+  // { photographer?: PhotographerDefinition }
 >;
 
 type ArticleDefinition = ResourceDefinition<
   ZodObject<{ title: ZodString; body: ZodString; tags: ZodArray<ZodString> }>,
-  { author: AuthorDefinition; comments: [CommentDefinition] }
+  { author: AuthorDefinition; comments: [CommentDefinition]}
 >;
-
 interface World {
   documentStore: DocumentStore;
   response: Response;
@@ -30,6 +40,8 @@ interface World {
     author: AuthorDefinition;
     comment: CommentDefinition;
     empty: AuthorDefinition;
+    photo: PhotoDefinition;
+    photographer: PhotographerDefinition;
   };
 }
 
@@ -39,6 +51,15 @@ Before<World>(async function () {
 
   const author = this.builder.createSchema('authors', z =>
     z.object({ name: z.string(), category: z.string() }),
+  );
+
+  const photographer = this.builder.createSchema('photographers', z =>
+    z.object({ name: z.string(), category: z.string() }),
+  );
+
+  const photo = this.builder.createSchema('photos', z =>
+    z.object({ name: z.string() }),
+    {relationships: {photographer}},
   );
 
   const comment = this.builder.createSchema(
@@ -63,11 +84,11 @@ Before<World>(async function () {
     z => z.object({ name: z.string(), category: z.string() }),
   );
 
-  this.schemas = { author , article, comment, empty};
+  this.schemas = { author , article, comment, empty, photo, photographer};
 });
 
 Before<World>(async function () {
-  const { author,empty,  article, comment } = this.schemas;
+  const { author,empty,  article, comment, photo, photographer } = this.schemas;
 
   this.documentStore = new DocumentStore('http://localhost:8080', 'test-crud');
   this.documentStore.initialize();
@@ -88,12 +109,22 @@ Before<World>(async function () {
   );
 
   this.builder.addResource(
+    photographer,
+    new RavendbCrudEndpointFactory(this.documentStore),
+  );
+
+  this.builder.addResource(
     comment,
     new RavendbCrudEndpointFactory(this.documentStore),
   );
 
   this.builder.addResource(
     empty,
+    new RavendbCrudEndpointFactory(this.documentStore),
+  );
+
+  this.builder.addResource(
+    photo,
     new RavendbCrudEndpointFactory(this.documentStore),
   );
 });
@@ -199,6 +230,27 @@ Given<World>('the test data', async function () {
 
   const empty = [] satisfies Resource<AuthorDefinition>[];
 
+  const photographers: Resource<PhotographerDefinition>[] = [
+    {
+      id: '',
+      type: '',
+      attributes: { name: '', category: '' },
+      relationships: {},
+    },
+  ] satisfies Resource<PhotographerDefinition>[];
+
+  const photos: Resource<PhotoDefinition>[] = [
+    {
+      id: 'photos-1',
+      type: 'photos',
+      attributes: { name: 'Foo'},
+      relationships: {}
+      // relationships:{
+      //   photographer: {data: null},
+      // },
+    },
+  ] satisfies Resource<PhotoDefinition>[];
+
   const comments = [
     {
       id: 'comments-1',
@@ -250,7 +302,7 @@ Given<World>('the test data', async function () {
     },
   ] satisfies Resource<ArticleDefinition>[];
 
-  for (const resource of [...authors, ...articles, ...comments, ...empty]) {
+  for (const resource of [...authors, ...articles, ...comments, ...empty,  ...photographers, ...photos,]) {
     await hono.request(`/${resource.type}`, {
       body: JSON.stringify({ data: resource }),
       method: 'POST',

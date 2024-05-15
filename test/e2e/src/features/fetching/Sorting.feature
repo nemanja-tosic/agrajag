@@ -56,3 +56,7 @@ Feature: Sorting
           ]
         }
     """
+#fixme: should fail but getting 200?
+#  Scenario: Fetching nested resources
+#    When I send a "GET" request to '/articles?sort=-title, comments.body'
+#    Then the response status should be 400
