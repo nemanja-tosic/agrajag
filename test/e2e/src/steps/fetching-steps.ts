@@ -20,10 +20,9 @@ type CommentDefinition = ResourceDefinition<
   { author: AuthorDefinition}
 >;
 
-//todo: create empty to-one relationship
 type PhotoDefinition = ResourceDefinition<
-  ZodObject<{ name: ZodString }>
-  // { photographer?: PhotographerDefinition }
+  ZodObject<{ name: ZodString }>,
+  { photographer: PhotographerDefinition }
 >;
 
 type ArticleDefinition = ResourceDefinition<
@@ -244,10 +243,9 @@ Given<World>('the test data', async function () {
       id: 'photos-1',
       type: 'photos',
       attributes: { name: 'Foo'},
-      relationships: {}
-      // relationships:{
-      //   photographer: {data: null},
-      // },
+      relationships:{
+        photographer: {data: null},
+      },
     },
   ] satisfies Resource<PhotoDefinition>[];
 
@@ -294,7 +292,7 @@ Given<World>('the test data', async function () {
     {
       id: 'articles-3',
       type: 'articles',
-      attributes: { title: 'Foo', body: 'Bar', tags: ['Baz'] },
+      attributes: { title: 'Foo1', body: 'Bar', tags: ['Baz'] },
       relationships: {
         author: { data: authors[0]},
         comments: { data: [] },

@@ -33,6 +33,8 @@ export abstract class EndpointFactory<TDefinition extends ResourceDefinition> {
     definition: TDefinition,
   ): Resolver<TDefinition>;
 
+  //todo: serialize return type should be compatible with resource or resource array
+  //todo: to be able to handle self and collection differently
   async #serialize(
     definition: ResourceDefinition,
     external: Resolver,
@@ -104,7 +106,7 @@ export abstract class EndpointFactory<TDefinition extends ResourceDefinition> {
                 key,
               );
               if (!relationship) {
-                return undefined;
+                return { data: null };
               }
 
               let definition1 = Array.isArray(value) ? value[0] : value;
@@ -141,7 +143,7 @@ export abstract class EndpointFactory<TDefinition extends ResourceDefinition> {
                 ([key, value]) =>
                   Array.isArray(value.data)
                     ? [`${key}Ids`, value.data.map(d => d.id)]
-                    : [`${key}Id`, value.data!.id],
+                    : [`${key}Id`, value.data?.id],
               ),
             ),
           };

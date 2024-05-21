@@ -68,7 +68,7 @@ Feature: Sparse fieldsets
       "type": "articles",
       "id": "articles-3",
       "attributes": {
-        "title": "Foo",
+        "title": "Foo1",
         "body": "Bar"
       },
       "relationships": {

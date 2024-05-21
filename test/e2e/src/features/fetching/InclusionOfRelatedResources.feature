@@ -153,7 +153,7 @@ Feature: Fetching relationships
       "type": "articles",
       "id": "articles-3",
       "attributes": {
-        "title": "Foo",
+        "title": "Foo1",
         "body": "Bar",
         "tags": ["Baz"]
       },

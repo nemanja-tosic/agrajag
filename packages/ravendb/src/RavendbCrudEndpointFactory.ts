@@ -109,7 +109,7 @@ const getRelationship = `
     if (entity[\`\${key}Id\`] !== undefined) {
       const relationship = load(entity[\`\${key}Id\`]);
       if (relationship == null) {
-        return null;
+        return [];
       }
       
       return {
@@ -127,6 +127,6 @@ const getRelationship = `
         }));
     }
     
-    return null;
+    return [];
   }
 `;

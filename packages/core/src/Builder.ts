@@ -162,6 +162,8 @@ export class Builder {
         `/${type}/:id/relationships/${key}`,
         async (params, respond) => {
           const data = await endpoints.fetch?.related?.[key](params);
+          // TODO: remove this, and all other 404s from relationships
+          //TODO: with this removal the tests are getting status 200 so need to double ckeck
           if (!data) {
             return await respond({ status: 404 });
           }

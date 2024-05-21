@@ -1,9 +1,9 @@
-import { z, ZodArray, ZodLiteral, ZodObject, ZodString } from 'zod';
+import { z, ZodArray, ZodLiteral, ZodObject, ZodString, ZodNull } from 'zod';
 
 export type ResourceLinkageSchema = ToManyLinkageSchema | ToOneLinkageSchema;
 
 export type ToOneLinkageSchema = ZodObject<{
-  data: ResourceIdentifierSchema;
+  data: ResourceIdentifierSchema | ZodLiteral<null>;
 }>;
 
 export type ToManyLinkageSchema = ZodObject<{

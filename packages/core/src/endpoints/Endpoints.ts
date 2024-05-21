@@ -5,9 +5,7 @@ import {
 } from '../resources/ResourceSchema.js';
 import { Params } from './Params.js';
 import { z, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
-import {
-  ResourceDefinition,
-} from '../resources/ResourceDefinition.js';
+import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import { QueryParams } from './QueryParams.js';
 import { ResourceIdentifier } from '../resources/ResourceLinkageSchema.js';
 import { Resource } from '../resources/Resource.js';
@@ -20,6 +18,8 @@ export type Endpoints<TDefinition extends ResourceDefinition> = {
 };
 
 type FetchEndpoint<TDefinition extends ResourceDefinition> = {
+  //todo: return array of resources
+  // collection: (params: QueryParams<TDefinition>) => Promise<Resource<TDefinition>[]>;
   collection: (params: QueryParams<TDefinition>) => Promise<Resource<TDefinition>>;
   self: (
     params: { id: string } & QueryParams,
