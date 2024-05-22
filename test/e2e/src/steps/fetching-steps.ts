@@ -180,6 +180,16 @@ When<World>(
   },
 );
 
+When<World>(
+  'I send a "DELETE" request to {string}',
+  async function (path: string) {
+    const hono = this.honoBuilder.build();
+
+    this.response = await hono.request(path, { method: 'DELETE' });
+  },
+);
+
+
 Then<World>(
   'the response status should be {int}',
   async function (statusCode: number) {

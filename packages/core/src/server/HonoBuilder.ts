@@ -71,6 +71,7 @@ export class HonoBuilder extends ServerBuilder {
     return this;
   }
 
+  //todo: make delete work without json input
   addDelete<TPath extends string = string>(
     schema: ResourceDefinition,
     endpointSchema: EndpointSchema,
