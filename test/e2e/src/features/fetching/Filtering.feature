@@ -1,8 +1,8 @@
 Feature: Filtering
+#note: not clearly defined in the specification, see: https://jsonapi.org/format/#fetching-resources:~:text=the%20request%20type.-,Filtering,-The%20filter%20query
 
-  Background:
-    Given the test data
-
+#  Background:
+#    Given the test data
 #  Scenario: Filtering data
 #    When I send a "GET" request to "articles?filter[title]=Foo1"
 #    Then the response status should be 200
@@ -20,10 +20,7 @@ Feature: Filtering
 #      },
 #      "relationships": {
 #        "author": {
-#          "data": {
-#            "type": "authors",
-#            "id": "authors-1"
-#          }
+#          "data": null
 #        },
 #        "comments": {
 #          "data": []

@@ -65,16 +65,15 @@ Feature: Fetching resources
       }
       """
 
- #FIXME: need to create an empty resource in the collection
-#  Scenario: Fetching an empty resource
-#    When I send a "GET" request to "/authors1/authors-3"
-#    Then the response status should be 200
-#    And the response body should be:
-#      """
-#      {
-#        "data": null
-#      }
-#      """
+  Scenario: Fetching an empty resource
+    When I send a "GET" request to "/articles/articles-3/relationships/author"
+    Then the response status should be 200
+    And the response body should be:
+      """
+      {
+        "data": null
+      }
+      """
 
   Scenario: Fetching a resource that does not exist
     When I send a "GET" request to "/authors/authors-404"

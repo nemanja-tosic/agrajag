@@ -159,10 +159,7 @@ Feature: Fetching relationships
       },
       "relationships": {
         "author": {
-          "data": {
-            "type": "authors",
-            "id": "authors-1"
-          }
+          "data": null
         },
         "comments": {
           "data": []

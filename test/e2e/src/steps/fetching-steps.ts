@@ -11,8 +11,7 @@ type AuthorDefinition = ResourceDefinition<
 >;
 
 type PhotographerDefinition = ResourceDefinition<
-  ZodObject<{ name?: ZodString; category: ZodString }>,
-  {}
+  ZodObject<{ name?: ZodString; category: ZodString }>
 >;
 
 type CommentDefinition = ResourceDefinition<
@@ -29,6 +28,7 @@ type ArticleDefinition = ResourceDefinition<
   ZodObject<{ title: ZodString; body: ZodString; tags: ZodArray<ZodString> }>,
   { author: AuthorDefinition; comments: [CommentDefinition]}
 >;
+
 interface World {
   documentStore: DocumentStore;
   response: Response;
@@ -229,16 +229,7 @@ Given<World>('the test data', async function () {
 
   const empty = [] satisfies Resource<AuthorDefinition>[];
 
-  const photographers: Resource<PhotographerDefinition>[] = [
-    {
-      id: '',
-      type: '',
-      attributes: { name: '', category: '' },
-      relationships: {},
-    },
-  ] satisfies Resource<PhotographerDefinition>[];
-
-  const photos: Resource<PhotoDefinition>[] = [
+  const photos = [
     {
       id: 'photos-1',
       type: 'photos',
@@ -294,13 +285,13 @@ Given<World>('the test data', async function () {
       type: 'articles',
       attributes: { title: 'Foo1', body: 'Bar', tags: ['Baz'] },
       relationships: {
-        author: { data: authors[0]},
+        author: { data: null},
         comments: { data: [] },
       },
     },
   ] satisfies Resource<ArticleDefinition>[];
 
-  for (const resource of [...authors, ...articles, ...comments, ...empty,  ...photographers, ...photos,]) {
+  for (const resource of [...authors, ...articles, ...comments, ...empty, ...photos,]) {
     await hono.request(`/${resource.type}`, {
       body: JSON.stringify({ data: resource }),
       method: 'POST',
