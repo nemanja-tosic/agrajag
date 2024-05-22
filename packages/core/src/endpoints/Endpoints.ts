@@ -18,9 +18,7 @@ export type Endpoints<TDefinition extends ResourceDefinition> = {
 };
 
 type FetchEndpoint<TDefinition extends ResourceDefinition> = {
-  //todo: return array of resources
-  // collection: (params: QueryParams<TDefinition>) => Promise<Resource<TDefinition>[]>;
-  collection: (params: QueryParams<TDefinition>) => Promise<Resource<TDefinition>>;
+  collection: (params: QueryParams<TDefinition>) => Promise<Resource<TDefinition>[]>;
   self: (
     params: { id: string } & QueryParams,
   ) => Promise<Resource<TDefinition> | undefined>;

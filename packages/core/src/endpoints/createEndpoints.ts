@@ -33,8 +33,6 @@ export abstract class EndpointFactory<TDefinition extends ResourceDefinition> {
     definition: TDefinition,
   ): Resolver<TDefinition>;
 
-  //todo: serialize return type should be compatible with resource or resource array
-  //todo: to be able to handle self and collection differently
   async #serialize(
     definition: ResourceDefinition,
     external: Resolver,
@@ -79,19 +77,23 @@ export abstract class EndpointFactory<TDefinition extends ResourceDefinition> {
           );
         },
         collection: async params => {
-          await using external = this.createExternal(definition);
+            await using external = this.createExternal(definition);
 
           const entities = await external.byType(definition.type, {
             sort: params.sort,
           });
 
-          return this.#serialize(
+          const serialized = await this.#serialize(
             definition,
             external,
             serializer,
             entities,
             params,
           );
+
+          return Array.isArray(serialized) && serialized.length === 1
+            ? serialized[0]
+            : serialized;
         },
         // mismatch as fromEntries does not return a useful type
         // @ts-ignore
