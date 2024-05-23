@@ -178,10 +178,12 @@ export class Builder {
         this.#schemaFactory.createEndpointsParamsSchema(),
         `/${type}/:id/relationships/${key}`,
         async (body, params, respond) => {
+          //fixme: data is not denormalized
           const data = await endpoints.create?.related?.[key](
             body as any,
             params,
-          );
+          ) as any;
+
           if (!data) {
             return await respond({ status: 404 });
           }
@@ -199,10 +201,12 @@ export class Builder {
         this.#schemaFactory.createEndpointsParamsSchema(),
         `/${type}/:id/relationships/${key}`,
         async (body, params, respond) => {
+          //fixme: data is not denormalized
           const data = await endpoints.patch?.related?.[key](
             body as any,
             params,
-          );
+          ) as any;
+
           if (!data) {
             return await respond({ status: 404 });
           }

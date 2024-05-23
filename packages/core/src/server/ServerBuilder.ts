@@ -1,7 +1,7 @@
 import { Params } from '../endpoints/Params.js';
 import { EndpointSchema } from '../endpoints/Endpoints.js';
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
-import { ResourceIdentifier } from '../resources/ResourceLinkageSchema.js';
+import { ResourceLinkage } from '../resources/ResourceLinkageSchema.js';
 import { Resource } from '../resources/Resource.js';
 
 export abstract class ServerBuilder {
@@ -41,7 +41,7 @@ export abstract class ServerBuilder {
 export type StatusCode = 200 | 201 | 204 | 400 | 401 | 403 | 404 | 500;
 
 export interface Response {
-  body?: Resource | Resource[] | ResourceIdentifier | ResourceIdentifier[];
+  body?: Resource | Resource[] | ResourceLinkage | ResourceLinkage[];
   status: StatusCode;
   headers?: Record<string, string>;
 }

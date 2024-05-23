@@ -7,26 +7,31 @@ import { Params } from './Params.js';
 import { z, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import { QueryParams } from './QueryParams.js';
-import { ResourceIdentifier } from '../resources/ResourceLinkageSchema.js';
+import { ResourceLinkage } from '../resources/ResourceLinkageSchema.js';
 import { Resource } from '../resources/Resource.js';
 
 export type Endpoints<TDefinition extends ResourceDefinition> = {
-  fetch: FetchDeleteEndpoint<TDefinition>;
+  fetch: FetchEndpoint<TDefinition>;
   create?: MutateEndpoint<TDefinition>;
   patch?: MutateEndpoint<TDefinition>;
-  delete?: FetchDeleteEndpoint<TDefinition>;
+  delete?: DeleteEndpoint<TDefinition>;
 };
 
-type FetchDeleteEndpoint<TDefinition extends ResourceDefinition> = {
-  collection: (params: QueryParams<TDefinition>) => Promise<Resource<TDefinition>[]>;
+type FetchEndpoint<TDefinition extends ResourceDefinition> = {
   self: (
     params: { id: string } & QueryParams,
   ) => Promise<Resource<TDefinition> | undefined>;
-  related?: {
-    [K in keyof TDefinition['relationships']]: (
-      params: { id: string } & QueryParams,
-    ) => Promise<ResourceIdentifier | ResourceIdentifier[]>;
-  };
+  collection: (
+    params: QueryParams,
+  ) => Promise<Resource<TDefinition>[] | undefined>;
+  related?: RelatedEndpointsWithoutBody<TDefinition>;
+};
+
+type DeleteEndpoint<TDefinition extends ResourceDefinition> = {
+  self: (
+    params: { id: string } & QueryParams,
+  ) => Promise<Resource<TDefinition> | undefined>;
+  related?: RelatedEndpointsWithoutBody<TDefinition>;
 };
 
 type MutateEndpoint<TDefinition extends ResourceDefinition> = {
@@ -34,12 +39,22 @@ type MutateEndpoint<TDefinition extends ResourceDefinition> = {
     body: z.infer<UpdateSchema<TDefinition>>,
     params: Params,
   ) => Promise<Resource<TDefinition> | undefined>;
-  related?: {
-    [K in keyof TDefinition['relationships']]: (
-      body: z.infer<SinglePrimaryType | ArrayPrimaryType>,
-      params: { id: string },
-    ) => Promise<any>;
-  };
+  related?: RelatedEndpointsWithBody<TDefinition>;
+}
+
+export type RelatedEndpointsWithoutBody<
+  TDefinition extends ResourceDefinition,
+> = {
+  [K in keyof TDefinition['relationships']]: (
+    params: { id: string } & QueryParams,
+  ) => Promise<ResourceLinkage>;
+};
+
+export type RelatedEndpointsWithBody<TDefinition extends ResourceDefinition> = {
+  [K in keyof TDefinition['relationships']]: (
+    body: z.infer<SinglePrimaryType | ArrayPrimaryType>,
+    params: { id: string },
+  ) => Promise<ResourceLinkage>;
 };
 
 export type Normalized<TSchema extends ResourceDefinition> = {

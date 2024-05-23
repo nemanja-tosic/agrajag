@@ -1,5 +1,6 @@
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
-import { Denormalized, Normalized } from '../endpoints/Endpoints.js';
+import { Normalized } from '../endpoints/Endpoints.js';
+import { ResourceIdentifier } from '../resources/ResourceLinkageSchema.js';
 
 // @ts-ignore
 Symbol.asyncDispose ??= Symbol('Symbol.asyncDispose');
@@ -22,8 +23,8 @@ export interface Resolver<
     key: keyof TDefinition['relationships'],
   ): Promise<
     | undefined
-    | Normalized<ResourceDefinition>
-    | Normalized<ResourceDefinition>[]
+    | ResourceIdentifier
+    | ResourceIdentifier[]
   >;
 
   updateProperty?<TProp extends keyof TDefinition['attributes']>(

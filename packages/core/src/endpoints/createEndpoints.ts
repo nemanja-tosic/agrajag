@@ -1,9 +1,16 @@
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
-import { Denormalized, Endpoints, Normalized } from './Endpoints.js';
+import {
+  Denormalized,
+  Endpoints,
+  Normalized,
+  RelatedEndpointsWithBody,
+  RelatedEndpointsWithoutBody,
+} from './Endpoints.js';
 import { Resolver } from '../application/Resolver.js';
 import { Serializer } from '../serialization/Serializer.js';
 import { QueryParams } from './QueryParams.js';
 import { Resource } from '../resources/Resource.js';
+import { ResourceLinkage } from '../resources/ResourceLinkageSchema.js';
 
 async function denormalize<TDefinition extends ResourceDefinition>(
   definition: TDefinition,
@@ -77,7 +84,7 @@ export abstract class EndpointFactory<TDefinition extends ResourceDefinition> {
           );
         },
         collection: async params => {
-            await using external = this.createExternal(definition);
+          await using external = this.createExternal(definition);
 
           const entities = await external.byType(definition.type, {
             sort: params.sort,
@@ -95,8 +102,6 @@ export abstract class EndpointFactory<TDefinition extends ResourceDefinition> {
             ? serialized[0]
             : serialized;
         },
-        // mismatch as fromEntries does not return a useful type
-        // @ts-ignore
         related: Object.fromEntries(
           Object.entries(definition.relationships).map(([key, value]) => [
             key,
@@ -112,18 +117,21 @@ export abstract class EndpointFactory<TDefinition extends ResourceDefinition> {
               }
 
               let definition1 = Array.isArray(value) ? value[0] : value;
+              if (Array.isArray(relationship)) {
+                return {
+                  data: relationship.map(r => ({
+                    id: r.id,
+                    type: definition1.type,
+                  })),
+                } as ResourceLinkage;
+              }
 
               return {
-                data: Array.isArray(relationship)
-                  ? relationship.map(r => ({
-                      id: r.id,
-                      type: definition1.type,
-                    }))
-                  : { id: relationship.id, type: definition1.type },
-              };
+                data: { id: relationship.id, type: definition1.type },
+              } as ResourceLinkage;
             },
           ]),
-        ),
+        ) as RelatedEndpointsWithoutBody<TDefinition>,
       },
       create: {
         self: async (body, params) => {
@@ -167,8 +175,6 @@ export abstract class EndpointFactory<TDefinition extends ResourceDefinition> {
             params,
           );
         },
-        // mismatch as fromEntries does not return a useful type
-        // @ts-ignore
         related: Object.fromEntries(
           Object.entries(definition.relationships).map(([key, value]) => [
             key,
@@ -197,10 +203,12 @@ export abstract class EndpointFactory<TDefinition extends ResourceDefinition> {
               }
               await external.saveUow?.();
 
-              return external.relationshipByKey(params.id, key);
+              return {
+              data: await external.relationshipByKey(params.id, key)
+              } as ResourceLinkage;
             },
           ]),
-        ),
+        ) as RelatedEndpointsWithBody<TDefinition>,
       },
       delete: {
         self: async params => {
@@ -222,7 +230,6 @@ export abstract class EndpointFactory<TDefinition extends ResourceDefinition> {
             params,
           );
         },
-        // @ts-ignore
         related: Object.fromEntries(
           Object.entries(definition.relationships).map(([key, value]) => {
             return [
@@ -246,11 +253,13 @@ export abstract class EndpointFactory<TDefinition extends ResourceDefinition> {
                 }
                 await external.saveUow?.();
 
-                return external.relationshipByKey(params.id, key);
+                return {
+                  data: await external.relationshipByKey(params.id, key),
+                } as ResourceLinkage;
               },
             ];
           }),
-        ),
+        ) as RelatedEndpointsWithoutBody<TDefinition>,
       },
       patch: {
         self: async (body, params) => {
@@ -300,7 +309,6 @@ export abstract class EndpointFactory<TDefinition extends ResourceDefinition> {
             params,
           );
         },
-        // @ts-ignore
         related: Object.fromEntries(
           Object.entries(definition.relationships).map(([key, value]) => {
             return [
@@ -328,11 +336,14 @@ export abstract class EndpointFactory<TDefinition extends ResourceDefinition> {
                 }
                 await external.saveUow?.();
 
-                return external.relationshipByKey(params.id, key);
+
+                return {
+                  data: await external.relationshipByKey(params.id, key),
+                } as ResourceLinkage;
               },
             ];
           }),
-        ),
+        ) as RelatedEndpointsWithBody<TDefinition>,
       },
     };
   }
