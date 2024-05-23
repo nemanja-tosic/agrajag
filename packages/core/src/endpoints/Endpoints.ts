@@ -11,13 +11,13 @@ import { ResourceIdentifier } from '../resources/ResourceLinkageSchema.js';
 import { Resource } from '../resources/Resource.js';
 
 export type Endpoints<TDefinition extends ResourceDefinition> = {
-  fetch: FetchEndpoint<TDefinition>;
+  fetch: FetchDeleteEndpoint<TDefinition>;
   create?: MutateEndpoint<TDefinition>;
   patch?: MutateEndpoint<TDefinition>;
-  delete?: MutateEndpoint<TDefinition>;
+  delete?: FetchDeleteEndpoint<TDefinition>;
 };
 
-type FetchEndpoint<TDefinition extends ResourceDefinition> = {
+type FetchDeleteEndpoint<TDefinition extends ResourceDefinition> = {
   collection: (params: QueryParams<TDefinition>) => Promise<Resource<TDefinition>[]>;
   self: (
     params: { id: string } & QueryParams,

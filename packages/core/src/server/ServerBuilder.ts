@@ -12,7 +12,7 @@ export abstract class ServerBuilder {
     definition: TDefinition,
     endpointSchema: EndpointSchema,
     path: TPath,
-    handler: FetchHandler<TPath, TDefinition>,
+    handler: FetchDeleteHandler<TPath, TDefinition>,
   ): void;
 
   abstract addPost<TPath extends string = string>(
@@ -29,11 +29,12 @@ export abstract class ServerBuilder {
     handler: MutationHandler<TPath>,
   ): void;
 
-  abstract addDelete<TPath extends string = string>(
+  abstract addDelete<TPath extends string = string,
+    TDefinition extends ResourceDefinition = ResourceDefinition>(
     definition: ResourceDefinition,
     endpointSchema: EndpointSchema,
     path: TPath,
-    handler: MutationHandler<TPath>,
+    handler: FetchDeleteHandler<TPath, TDefinition>,
   ): void;
 }
 
@@ -53,7 +54,7 @@ export type MutationHandler<TPath extends string> = (
   respond: RespondFunction,
 ) => Promise<void>;
 
-export type FetchHandler<
+export type FetchDeleteHandler<
   TPath extends string,
   TDefinition extends ResourceDefinition = ResourceDefinition,
 > = (

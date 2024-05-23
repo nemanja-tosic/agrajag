@@ -3,7 +3,7 @@ import { EndpointSchema } from '../endpoints/Endpoints.js';
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import {
   ServerBuilder,
-  FetchHandler,
+  FetchDeleteHandler,
   MutationHandler,
 } from './ServerBuilder.js';
 
@@ -25,7 +25,7 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
     definition: TDefinition,
     endpointSchema: EndpointSchema,
     path: TPath,
-    handler: FetchHandler<TPath, TDefinition>,
+    handler: FetchDeleteHandler<TPath, TDefinition>,
   ) {
     this.#paths[path] = {
       ...this.#paths[path],
@@ -99,11 +99,12 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
     this.builder.addPatch(definition, endpointSchema, path, handler);
   }
 
-  addDelete<TPath extends string = string>(
-    definition: ResourceDefinition,
+  addDelete<TPath extends string = string,
+    TDefinition extends ResourceDefinition = ResourceDefinition>(
+    definition: TDefinition,
     endpointSchema: EndpointSchema,
     path: TPath,
-    handler: MutationHandler<TPath>,
+    handler: FetchDeleteHandler<TPath, TDefinition>,
   ): void {
     this.#paths[path] = {
       ...this.#paths[path],

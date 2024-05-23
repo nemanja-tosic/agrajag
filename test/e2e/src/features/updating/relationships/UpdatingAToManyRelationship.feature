@@ -78,25 +78,6 @@ Feature: Update a resources relationships directly
       }
       """
 
-  Scenario: Deleting from a to-many relationship
-    When I send a "DELETE" request to "articles/articles-1/relationships/comments" with the resource
-      """
-      {
-        "data": [
-          { "type": "comments", "id": "comments-1" }
-        ]
-      }
-      """
-    Then the response status should be 200
-    And the response body should be:
-      """
-      {
-        "data": [
-          { "type": "comments", "id": "comments-2" }
-        ]
-      }
-      """
-
   Scenario: Updating an unknown resource
     When I send a "PATCH" request to "articles/articles-404/relationships/comments" with the resource
       """

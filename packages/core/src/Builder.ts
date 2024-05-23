@@ -133,18 +133,15 @@ export class Builder {
         definition,
         this.#schemaFactory.createEndpointsParamsSchema(),
         `/${type}/:id`,
-        async (body, params, respond) => {
-          const data = await endpoints.delete!.self!(
-            this.#schemaFactory.createUpdateSchema(definition).parse(body),
-            params,
-          );
+        async (params, respond) => {
+         const data = await endpoints.delete!.self!(params);
           if (!data) {
             return await respond({ status: 404 });
           }
 
           await respond({
             body: data,
-            status: 204,
+            status:  200,
             headers: { 'Content-Type': 'application/vnd.api+json' },
           });
         },
@@ -223,17 +220,13 @@ export class Builder {
         relationship,
         this.#schemaFactory.createEndpointsParamsSchema(),
         `/${type}/:id/relationships/${key}`,
-        async (body, params, respond) => {
-          const data = await endpoints.delete?.related?.[key](
-            body as any,
-            params,
-          );
+        async (params, respond) => {
+          const data = await endpoints.delete?.related?.[key](params);
           if (!data) {
             return await respond({ status: 404 });
           }
-
           await respond({
-            body: this.#serializer.serialize(relationship, data, params),
+            body: data,
             status: 200,
             headers: { 'Content-Type': 'application/vnd.api+json' },
           });

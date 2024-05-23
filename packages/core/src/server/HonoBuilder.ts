@@ -3,7 +3,7 @@ import { EndpointSchema } from '../endpoints/Endpoints.js';
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import {
   ServerBuilder,
-  FetchHandler,
+  FetchDeleteHandler,
   MutationHandler,
   Response,
 } from './ServerBuilder.js';
@@ -18,7 +18,7 @@ export class HonoBuilder extends ServerBuilder {
     schema: TDefinition,
     endpointSchema: EndpointSchema,
     path: TPath,
-    handler: FetchHandler<TPath, TDefinition>,
+    handler: FetchDeleteHandler<TPath, TDefinition>,
   ): this {
     this.#hono.get(path, async c => {
       const { body, status, headers } = await new Promise<Response>(resolve =>
@@ -71,17 +71,17 @@ export class HonoBuilder extends ServerBuilder {
     return this;
   }
 
-  //todo: make delete work without json input
-  addDelete<TPath extends string = string>(
-    schema: ResourceDefinition,
+  addDelete<TPath extends string = string,
+    TDefinition extends ResourceDefinition = ResourceDefinition>(
+    schema: TDefinition,
     endpointSchema: EndpointSchema,
     path: TPath,
-    handler: MutationHandler<TPath>,
+    handler: FetchDeleteHandler<TPath, TDefinition>,
   ): this {
     this.#hono.delete(path, async c => {
       const { body, status, headers } = await new Promise<Response>(
         async resolve =>
-          handler(await c.req.json(), this.#extractParams(c), async response =>
+          handler(this.#extractParams(c), async response =>
             resolve(response),
           ),
       );

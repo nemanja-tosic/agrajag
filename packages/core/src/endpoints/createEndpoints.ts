@@ -203,12 +203,12 @@ export abstract class EndpointFactory<TDefinition extends ResourceDefinition> {
         ),
       },
       delete: {
-        self: async (body, params) => {
+        self: async params => {
           await using external = this.createExternal(definition);
 
-          const entity = await external.byId(body.data!.id!);
+          const entity = await external.byId(params.id);
           if (!entity) {
-            throw new Error('Entity not found');
+            return undefined;
           }
 
           await external.delete(entity);
@@ -227,28 +227,19 @@ export abstract class EndpointFactory<TDefinition extends ResourceDefinition> {
           Object.entries(definition.relationships).map(([key, value]) => {
             return [
               key,
-              async (body, params) => {
+              async params => {
                 await using external = this.createExternal(definition);
 
                 const entity = await external.byId(params.id);
                 if (!entity) {
-                  throw new Error('Entity not found');
+                  return undefined;
                 }
 
                 const property = Array.isArray(value)
                   ? `${key}Ids`
                   : `${key}Id`;
 
-                if (Array.isArray(body.data)) {
-                  Object.assign(entity, {
-                    [property]: (entity as any)[property].filter(
-                      // @ts-ignore
-                      id => !body.data.some(d => d.id === id),
-                    ),
-                  });
-                } else {
-                  delete (entity as any)[property];
-                }
+                delete (entity as any)[property];
 
                 if (!external.saveUow) {
                   await external.save(entity);

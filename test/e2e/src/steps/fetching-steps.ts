@@ -167,18 +167,6 @@ When<World>(
   },
 );
 
-When<World>(
-  'I send a "DELETE" request to {string} with the resource',
-  async function (path: string, body: string) {
-    const hono = this.honoBuilder.build();
-
-    this.response = await hono.request(path, {
-      body,
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/vnd.api+json' },
-    });
-  },
-);
 
 When<World>(
   'I send a "DELETE" request to {string}',
