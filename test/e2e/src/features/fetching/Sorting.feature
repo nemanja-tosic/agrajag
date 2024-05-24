@@ -58,5 +58,5 @@ Feature: Sorting
     """
 
   Scenario: Fetching nested resources
-    When I send a "GET" request to '/articles?sort=-title, comments.body'
+    When I send a "GET" request to '/articles?sort=author.name'
     Then the response status should be 400
