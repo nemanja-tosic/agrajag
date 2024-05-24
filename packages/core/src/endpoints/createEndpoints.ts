@@ -90,6 +90,10 @@ export abstract class EndpointFactory<TDefinition extends ResourceDefinition> {
             sort: params.sort,
           });
 
+          if(!entities){
+            return undefined;
+          }
+
           const serialized = await this.#serialize(
             definition,
             external,

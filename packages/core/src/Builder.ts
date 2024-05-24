@@ -62,12 +62,15 @@ export class Builder {
       definition,
       this.#schemaFactory.createEndpointsParamsSchema(),
       `/${type}`,
-      async (params, respond) =>
-        respond({
-          body: await endpoints.fetch.collection(params),
-          status: 200,
+      async (params, respond) => {
+        const body = await endpoints.fetch.collection(params);
+
+        await respond({
+          body: body,
+          status: body ? 200 : 400,
           headers: { 'Content-Type': 'application/vnd.api+json' },
-        }),
+        });
+      }
     );
 
     this.#endpointBuilder.addGet(

@@ -16,7 +16,7 @@ export interface Resolver<
   byType(
     type: string,
     options?: { sort?: TDefinition['attributes'] },
-  ): Promise<Normalized<TDefinition>[]>;
+  ): Promise<Normalized<TDefinition>[]> | undefined;
 
   relationshipByKey(
     id: string,

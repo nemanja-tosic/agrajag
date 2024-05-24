@@ -42,7 +42,11 @@ export class RavendbCrudEndpointFactory<
         if (sort) {
           if (sort.toString().startsWith('-')) {
             query.orderByDescending(sort.toString().substring(1));
-          } else {
+          } else if(sort.toString().includes('.')) {
+            //node: nested sorting not supported
+            return undefined;
+          }
+          else {
             query.orderBy(sort.toString());
           }
         }
