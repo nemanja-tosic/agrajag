@@ -1,6 +1,6 @@
 import { After, Before, Given, Then, When } from '@cucumber/cucumber';
 import { Builder, HonoBuilder } from 'agrajag';
-import { deepStrictEqual, strictEqual } from 'node:assert';
+import { deepStrictEqual, strictEqual, notStrictEqual } from 'node:assert';
 import { DocumentStore, DeleteByQueryOperation } from 'ravendb';
 import { Resource, ResourceDefinition } from 'agrajag';
 import { RavendbCrudEndpointFactory } from '@agrajag/ravendb-adapter';
@@ -193,6 +193,13 @@ Then<World>(
     deepStrictEqual(response, JSON.parse(responseBody));
   },
 );
+
+Then('the response should contain a valid id', async function () {
+  const response: any = await this.response.json();
+
+  notStrictEqual(response.data.id, '');
+  notStrictEqual(response.data.id, undefined);
+});
 
 Given<World>(
   'i have sent a "POST" request to {string} with the following body:',
