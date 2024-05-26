@@ -13,7 +13,7 @@
     "test/*"
   ],
   "dependencies": {
-    "@types/node": "20.12.7",
+    "@types/node": "20.12.12",
     "prettier": "3.2.5",
     "typescript": "5.4.5"
   },
