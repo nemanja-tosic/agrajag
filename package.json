@@ -1,7 +1,7 @@
 {
   "type": "module",
   "private": true,
-  "packageManager": "yarn@4.1.1",
+  "packageManager": "yarn@4.2.2",
   "scripts": {
     "build": "yarn workspaces foreach --worktree --topological --parallel --interlaced run build",
     "build:ts": "cd $INIT_CWD && tsc -b tsconfig.json",
