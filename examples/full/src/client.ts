@@ -1,3 +1,5 @@
-import { petApi } from './petApi.js';
+import { exampleApi } from './exampleApi.js';
 
-const query = petApi.useGetArticlesQuery({ id: '' });
+const articleCollection = exampleApi.useGetArticlesQuery({});
+
+const specificArticle = exampleApi.useGetArticlesIdQuery({ id: '' });

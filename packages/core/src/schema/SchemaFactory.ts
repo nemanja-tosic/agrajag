@@ -20,6 +20,8 @@ export interface SchemaFactory {
     options?: { relationships?: TRelationships },
   ): ResourceDefinition<TAttributes, TRelationships>;
 
+  createCollectionEndpointParamsSchema(): EndpointSchema;
+
   createEndpointsParamsSchema(): EndpointSchema;
 
   createSinglePrimaryTypeSchema<

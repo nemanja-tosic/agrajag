@@ -4,7 +4,7 @@ import {
   UpdateSchema,
 } from '../resources/ResourceSchema.js';
 import { Params } from './Params.js';
-import { z, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
+import { z, ZodObject, ZodOptional, ZodRecord, ZodString, ZodType } from 'zod';
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import { QueryParams } from './QueryParams.js';
 import { ResourceLinkage } from '../resources/ResourceLinkageSchema.js';
@@ -82,7 +82,7 @@ export type Denormalized<TSchema extends ResourceDefinition> = {
 
 export type EndpointSchema = ZodObject<{
   parameters: ZodObject<{
-    path: ZodObject<{ id: ZodType<string> }>;
+    path?: ZodObject<{}>,
     query: ZodObject<{
       include: ZodOptional<ZodString>;
       fields: ZodOptional<ZodString>;

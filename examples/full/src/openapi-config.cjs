@@ -5,8 +5,8 @@ const config = {
   schemaFile: 'http://127.0.0.1:8888/openapi.json',
   apiFile: './baseApi.ts',
   apiImport: 'api',
-  outputFile: './petApi.ts',
-  exportName: 'petApi',
+  outputFile: './exampleApi.ts',
+  exportName: 'exampleApi',
 }
 
 module.exports = config;

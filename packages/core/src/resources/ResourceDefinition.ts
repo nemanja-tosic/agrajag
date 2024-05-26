@@ -16,7 +16,7 @@ export interface ResourceDefinition<
   TRelationships extends ResourceRelationships = ResourceRelationships,
 > {
   type: string;
-  attributes: (keyof TAttributes['shape'])[];
+  attributes: (string & keyof TAttributes['shape'])[];
   relationships: TRelationships;
   schema: ResourceSchema<
     TAttributes,

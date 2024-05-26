@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Context, Hono } from 'hono';
 import { EndpointSchema } from '../endpoints/Endpoints.js';
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import {
@@ -7,6 +7,7 @@ import {
   MutationHandler,
   Response,
 } from './ServerBuilder.js';
+import { Params } from '../endpoints/Params.js';
 
 export class HonoBuilder extends ServerBuilder {
   #hono = new Hono();
@@ -71,8 +72,10 @@ export class HonoBuilder extends ServerBuilder {
     return this;
   }
 
-  addDelete<TPath extends string = string,
-    TDefinition extends ResourceDefinition = ResourceDefinition>(
+  addDelete<
+    TPath extends string = string,
+    TDefinition extends ResourceDefinition = ResourceDefinition,
+  >(
     schema: TDefinition,
     endpointSchema: EndpointSchema,
     path: TPath,
@@ -81,9 +84,7 @@ export class HonoBuilder extends ServerBuilder {
     this.#hono.delete(path, async c => {
       const { body, status, headers } = await new Promise<Response>(
         async resolve =>
-          handler(this.#extractParams(c), async response =>
-            resolve(response),
-          ),
+          handler(this.#extractParams(c), async response => resolve(response)),
       );
 
       return c.json(body, status, headers);
@@ -94,7 +95,7 @@ export class HonoBuilder extends ServerBuilder {
 
   #extractParams(c: any): any {
     return {
-      ...(c.req.param() as any),
+      ...c.req.param(),
       include: c.req.query('include'),
       fields: Object.fromEntries(
         Object.entries(c.req.query())

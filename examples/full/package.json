@@ -3,7 +3,8 @@
   "type": "module",
   "scripts": {
     "build": "yarn build:ts",
-    "start": "node ./dist/src/start.js"
+    "start": "node ./dist/src/start.js",
+    "codegen": "yarn rtk-query-codegen-openapi src/openapi-config.cjs"
   },
   "dependencies": {
     "@agrajag/ravendb-adapter": "workspace:*",

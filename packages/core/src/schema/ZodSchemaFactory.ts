@@ -63,6 +63,28 @@ export class ZodSchemaFactory implements SchemaFactory {
     };
   }
 
+  createCollectionEndpointParamsSchema(): EndpointSchema {
+    return z.object({
+      parameters: z.object({
+        query: z.object({
+          include: z
+            .string()
+            .optional()
+            .openapi({ param: { name: 'include', in: 'query' } }),
+          fields: z
+            .string()
+            .optional()
+            .openapi({ param: { name: 'fields', in: 'query' } }),
+          // TODO: limit to fields in definition
+          sort: z
+            .string()
+            .optional()
+            .openapi({ param: { name: 'sort', in: 'query' } }),
+        }),
+      }),
+    });
+  }
+
   createEndpointsParamsSchema(): EndpointSchema {
     return z.object({
       parameters: z.object({

@@ -60,7 +60,7 @@ export class Builder {
 
     this.#endpointBuilder.addGet(
       definition,
-      this.#schemaFactory.createEndpointsParamsSchema(),
+      this.#schemaFactory.createCollectionEndpointParamsSchema(),
       `/${type}`,
       async (params, respond) => {
         const body = await endpoints.fetch.collection(params);

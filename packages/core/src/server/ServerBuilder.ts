@@ -29,8 +29,10 @@ export abstract class ServerBuilder {
     handler: MutationHandler<TPath>,
   ): void;
 
-  abstract addDelete<TPath extends string = string,
-    TDefinition extends ResourceDefinition = ResourceDefinition>(
+  abstract addDelete<
+    TPath extends string = string,
+    TDefinition extends ResourceDefinition = ResourceDefinition,
+  >(
     definition: ResourceDefinition,
     endpointSchema: EndpointSchema,
     path: TPath,
