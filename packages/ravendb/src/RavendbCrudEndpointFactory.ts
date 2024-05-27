@@ -67,10 +67,29 @@ export class RavendbCrudEndpointFactory<
           .addParameter('id', id)
           .addParameter('key', key);
 
+        const processResult = (result: any) => {
+          if (!result) {
+            return undefined;
+          }
+          if (Array.isArray(result)) {
+            return result.map(r => ({
+              id: r.id,
+              type: r.type,
+            }));
+          } else {
+            return {
+              id: result.id,
+              type: result.type,
+            };
+          }
+        };
+
         if (Array.isArray(definition.relationships[key])) {
-          return query.all() as any;
+          const results = await query.all();
+          return processResult(results) as any;
         } else {
-          return query.singleOrNull().then(r => r ?? undefined);
+          const result = await query.singleOrNull();
+          return processResult(result) ?? undefined;
         }
       },
       saveUow: () => session.saveChanges(),

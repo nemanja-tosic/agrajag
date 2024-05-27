@@ -78,19 +78,13 @@ Feature: Update a resources relationships directly
       }
       """
 
-  Scenario: Updating an unknown resource
-    When I send a "PATCH" request to "articles/articles-404/relationships/comments" with the resource
+  Scenario: Updating an unknown relationship
+    When I send a "PATCH" request to "articles/articles-1/relationships/test" with the resource
       """
-      {
-        "data": {
-          "type": "articles",
-          "id": "articles-404",
-          "relationships": {
-            "author": {
-              "data": { "type": "authors", "id": "authors-404" }
-            }
-          }
-        }
+    {
+        "data": [
+          { "type": "comments", "id": "comments-3" }
+        ]
       }
       """
     Then the response status should be 404

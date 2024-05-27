@@ -176,14 +176,13 @@ export class Builder {
         this.#schemaFactory.createEndpointsParamsSchema(),
         `/${type}/:id/relationships/${key}`,
         async (body, params, respond) => {
-          //fixme: data is not denormalized
           const data = await endpoints.create?.related?.[key](
             body as any,
             params,
-          ) as any;
+          );
 
           await respond({
-            body: this.#serializer.serialize(relationship, data, params),
+            body: data,
             status: 200,
             headers: { 'Content-Type': 'application/vnd.api+json' },
           });
@@ -195,14 +194,13 @@ export class Builder {
         this.#schemaFactory.createEndpointsParamsSchema(),
         `/${type}/:id/relationships/${key}`,
         async (body, params, respond) => {
-          //fixme: data is not denormalized
           const data = await endpoints.patch?.related?.[key](
             body as any,
             params,
-          ) as any;
+          );
 
           await respond({
-            body: this.#serializer.serialize(relationship, data, params),
+            body: data,
             status: 200,
             headers: { 'Content-Type': 'application/vnd.api+json' },
           });
