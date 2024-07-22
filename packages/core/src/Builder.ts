@@ -10,22 +10,21 @@ import {
 import { ZodSchemaFactory } from './schema/ZodSchemaFactory.js';
 import { SchemaFactory } from './schema/SchemaFactory.js';
 import { ServerBuilder } from './server/ServerBuilder.js';
-import { HonoBuilder } from './server/HonoBuilder.js';
 import { EndpointFactory } from './endpoints/createEndpoints.js';
 
 export class Builder {
-  #endpointBuilder: ServerBuilder = new HonoBuilder();
+  #endpointBuilder: ServerBuilder;
   #serializer: Serializer = new JsonApiSerializer();
   #schemaFactory: SchemaFactory = new ZodSchemaFactory();
 
-  constructor(options?: {
-    endpointBuilder?: ServerBuilder;
-    serializer?: Serializer;
-    schemaFactory?: SchemaFactory;
-  }) {
-    if (options?.endpointBuilder) {
-      this.#endpointBuilder = options.endpointBuilder;
-    }
+  constructor(
+    endpointBuilder: ServerBuilder,
+    options?: {
+      serializer?: Serializer;
+      schemaFactory?: SchemaFactory;
+    },
+  ) {
+    this.#endpointBuilder = endpointBuilder;
 
     if (options?.serializer) {
       this.#serializer = options.serializer;
@@ -70,7 +69,7 @@ export class Builder {
           status: body ? 200 : 400,
           headers: { 'Content-Type': 'application/vnd.api+json' },
         });
-      }
+      },
     );
 
     this.#endpointBuilder.addGet(
@@ -137,14 +136,14 @@ export class Builder {
         this.#schemaFactory.createEndpointsParamsSchema(),
         `/${type}/:id`,
         async (params, respond) => {
-         const data = await endpoints.delete!.self!(params);
+          const data = await endpoints.delete!.self!(params);
           if (!data) {
             return await respond({ status: 404 });
           }
 
           await respond({
             body: data,
-            status:  200,
+            status: 200,
             headers: { 'Content-Type': 'application/vnd.api+json' },
           });
         },
@@ -177,10 +176,10 @@ export class Builder {
         `/${type}/:id/relationships/${key}`,
         async (body, params, respond) => {
           //fixme: data is not denormalized
-          const data = await endpoints.create?.related?.[key](
+          const data = (await endpoints.create?.related?.[key](
             body as any,
             params,
-          ) as any;
+          )) as any;
 
           await respond({
             body: this.#serializer.serialize(relationship, data, params),
@@ -196,10 +195,10 @@ export class Builder {
         `/${type}/:id/relationships/${key}`,
         async (body, params, respond) => {
           //fixme: data is not denormalized
-          const data = await endpoints.patch?.related?.[key](
+          const data = (await endpoints.patch?.related?.[key](
             body as any,
             params,
-          ) as any;
+          )) as any;
 
           await respond({
             body: this.#serializer.serialize(relationship, data, params),

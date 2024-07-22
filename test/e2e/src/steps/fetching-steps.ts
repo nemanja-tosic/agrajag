@@ -16,7 +16,7 @@ type PhotographerDefinition = ResourceDefinition<
 
 type CommentDefinition = ResourceDefinition<
   ZodObject<{ body: ZodString }>,
-  { author: AuthorDefinition}
+  { author: AuthorDefinition }
 >;
 
 type PhotoDefinition = ResourceDefinition<
@@ -26,7 +26,7 @@ type PhotoDefinition = ResourceDefinition<
 
 type ArticleDefinition = ResourceDefinition<
   ZodObject<{ title: ZodString; body: ZodString; tags: ZodArray<ZodString> }>,
-  { author: AuthorDefinition; comments: [CommentDefinition]}
+  { author: AuthorDefinition; comments: [CommentDefinition] }
 >;
 
 interface World {
@@ -46,7 +46,7 @@ interface World {
 
 Before<World>(async function () {
   this.honoBuilder = new HonoBuilder();
-  this.builder = new Builder({ endpointBuilder: this.honoBuilder });
+  this.builder = new Builder(this.honoBuilder);
 
   const author = this.builder.createSchema('authors', z =>
     z.object({ name: z.string(), category: z.string() }),
@@ -56,9 +56,10 @@ Before<World>(async function () {
     z.object({ name: z.string(), category: z.string() }),
   );
 
-  const photo = this.builder.createSchema('photos', z =>
-    z.object({ name: z.string() }),
-    {relationships: {photographer}},
+  const photo = this.builder.createSchema(
+    'photos',
+    z => z.object({ name: z.string() }),
+    { relationships: { photographer } },
   );
 
   const comment = this.builder.createSchema(
@@ -78,16 +79,15 @@ Before<World>(async function () {
     { relationships: { author, comments: [comment] } },
   );
 
-  const empty = this.builder.createSchema(
-    'empty',
-    z => z.object({ name: z.string(), category: z.string() }),
+  const empty = this.builder.createSchema('empty', z =>
+    z.object({ name: z.string(), category: z.string() }),
   );
 
-  this.schemas = { author , article, comment, empty, photo, photographer};
+  this.schemas = { author, article, comment, empty, photo, photographer };
 });
 
 Before<World>(async function () {
-  const { author,empty,  article, comment, photo, photographer } = this.schemas;
+  const { author, empty, article, comment, photo, photographer } = this.schemas;
 
   this.documentStore = new DocumentStore('http://localhost:8080', 'test-crud');
   this.documentStore.initialize();
@@ -167,7 +167,6 @@ When<World>(
   },
 );
 
-
 When<World>(
   'I send a "DELETE" request to {string}',
   async function (path: string) {
@@ -176,7 +175,6 @@ When<World>(
     this.response = await hono.request(path, { method: 'DELETE' });
   },
 );
-
 
 Then<World>(
   'the response status should be {int}',
@@ -239,9 +237,9 @@ Given<World>('the test data', async function () {
     {
       id: 'photos-1',
       type: 'photos',
-      attributes: { name: 'Foo'},
-      relationships:{
-        photographer: {data: null},
+      attributes: { name: 'Foo' },
+      relationships: {
+        photographer: { data: null },
       },
     },
   ] satisfies Resource<PhotoDefinition>[];
@@ -291,13 +289,19 @@ Given<World>('the test data', async function () {
       type: 'articles',
       attributes: { title: 'Foo1', body: 'Bar', tags: ['Baz'] },
       relationships: {
-        author: { data: null},
+        author: { data: null },
         comments: { data: [] },
       },
     },
   ] satisfies Resource<ArticleDefinition>[];
 
-  for (const resource of [...authors, ...articles, ...comments, ...empty, ...photos,]) {
+  for (const resource of [
+    ...authors,
+    ...articles,
+    ...comments,
+    ...empty,
+    ...photos,
+  ]) {
     await hono.request(`/${resource.type}`, {
       body: JSON.stringify({ data: resource }),
       method: 'POST',

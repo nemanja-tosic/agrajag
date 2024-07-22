@@ -1,13 +1,7 @@
-import {
-  Builder,
-  HonoBuilder,
-  OpenApiEndpointBuilderDecorator,
-} from 'agrajag';
+import { Builder, HonoBuilder, OpenApiEndpointBuilderDecorator } from 'agrajag';
 
 export const honoBuilder = new HonoBuilder();
 
 export const openApiBuilder = new OpenApiEndpointBuilderDecorator(honoBuilder);
 
-export const builder = new Builder({
-  endpointBuilder: openApiBuilder,
-});
+export const builder = new Builder(openApiBuilder);

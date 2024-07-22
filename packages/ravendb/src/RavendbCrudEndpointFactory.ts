@@ -4,6 +4,7 @@ import {
   Normalized,
   Resolver,
   ResourceDefinition,
+  ResourceIdentifier,
 } from 'agrajag';
 import { IDocumentStore } from 'ravendb';
 
@@ -55,7 +56,7 @@ export class RavendbCrudEndpointFactory<
       },
       relationshipByKey: async (id, key) => {
         const query = session.advanced
-          .rawQuery<Denormalized<TDefinition>>(
+          .rawQuery<ResourceIdentifier>(
             `
               ${getRelationship}
 

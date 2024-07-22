@@ -27,12 +27,6 @@ export interface Resolver<
     | ResourceIdentifier[]
   >;
 
-  updateProperty?<TProp extends keyof TDefinition['attributes']>(
-    id: string,
-    key: TProp,
-    value: TDefinition['attributes'][TProp],
-  ): Promise<void>;
-
   save(entity: Normalized<TDefinition>): Promise<void>;
 
   delete(entity: Normalized<TDefinition>): Promise<void>;
