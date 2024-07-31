@@ -26,7 +26,7 @@ Feature: Update a resources relationships
     Given the test data
 
   Scenario: Updating an existing to-one relationship
-    When I send a "PATCH" request to "articles/articles-1" with the resource
+    When I send a "PATCH" request to "/articles/articles-1" with the resource
       """
       {
         "data": {
@@ -68,7 +68,7 @@ Feature: Update a resources relationships
       """
 
   Scenario: Updating an existing to-one relationship with null
-    When I send a "PATCH" request to "articles/articles-1" with the resource
+    When I send a "PATCH" request to "/articles/articles-1" with the resource
       """
       {
         "data": {
@@ -110,7 +110,7 @@ Feature: Update a resources relationships
     """
 
   Scenario: Updating a to-many relationship
-    When I send a "PATCH" request to "articles/articles-1" with the resource
+    When I send a "PATCH" request to "/articles/articles-1" with the resource
       """
       {
         "data": {
@@ -153,7 +153,7 @@ Feature: Update a resources relationships
     """
 
   Scenario: Clearing a to-many relationship
-    When I send a "PATCH" request to "articles/articles-1" with the resource
+    When I send a "PATCH" request to "/articles/articles-1" with the resource
       """
       {
         "data": {
@@ -192,7 +192,7 @@ Feature: Update a resources relationships
     """
 
   Scenario: Updating an unknown resource
-    When I send a "PATCH" request to "articles/articles-404" with the resource
+    When I send a "PATCH" request to "/articles/articles-404" with the resource
       """
       {
         "data": {

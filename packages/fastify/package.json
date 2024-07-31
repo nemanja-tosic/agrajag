@@ -1,0 +1,27 @@
+{
+  "name": "@agrajag/fastify-adapter",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "yarn build:ts"
+  },
+  "exports": {
+    ".": "./dist/src/index.js"
+  },
+  "files": [
+    "README.md",
+    "dist/src/**"
+  ],
+  "dependencies": {
+    "agrajag": "workspace:*"
+  },
+  "devDependencies": {
+    "@agrajag/configs": "workspace:*",
+    "@types/node": "20.12.12",
+    "fastify": "4.28.1",
+    "fastify-plugin": "4.5.1"
+  },
+  "peerDependencies": {
+    "fastify": "^4.28.1"
+  }
+}

@@ -4,7 +4,11 @@ import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import { ResourceLinkage } from '../resources/ResourceLinkageSchema.js';
 import { Resource } from '../resources/Resource.js';
 
-export abstract class ServerBuilder {
+export interface Server {
+  request(path: string, body: unknown): Response | Promise<Response>;
+}
+
+export abstract class ServerBuilder<TResult = unknown> {
   abstract addGet<
     TPath extends string = string,
     TDefinition extends ResourceDefinition = ResourceDefinition,
@@ -38,6 +42,8 @@ export abstract class ServerBuilder {
     path: TPath,
     handler: FetchDeleteHandler<TPath, TDefinition>,
   ): void;
+
+  abstract build(): TResult;
 }
 
 export type StatusCode = 200 | 201 | 204 | 400 | 401 | 403 | 404 | 500;

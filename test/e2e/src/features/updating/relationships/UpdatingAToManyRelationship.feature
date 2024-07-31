@@ -4,7 +4,7 @@ Feature: Update a resources relationships directly
     Given the test data
 
   Scenario: Adding to a to-many relationship
-    When I send a "POST" request to "articles/articles-1/relationships/comments" with the resource
+    When I send a "POST" request to "/articles/articles-1/relationships/comments" with the resource
       """
       {
         "data": [
@@ -25,7 +25,7 @@ Feature: Update a resources relationships directly
       """
 
   Scenario: Adding existing item to a to-many relationship
-    When I send a "POST" request to "articles/articles-1/relationships/comments" with the resource
+    When I send a "POST" request to "/articles/articles-1/relationships/comments" with the resource
       """
       {
         "data": [
@@ -45,7 +45,7 @@ Feature: Update a resources relationships directly
       """
 
   Scenario: Updating a to-many relationship
-    When I send a "PATCH" request to "articles/articles-1/relationships/comments" with the resource
+    When I send a "PATCH" request to "/articles/articles-1/relationships/comments" with the resource
       """
       {
         "data": [
@@ -64,7 +64,7 @@ Feature: Update a resources relationships directly
       """
 
   Scenario: Clearing a to-many relationship
-    When I send a "PATCH" request to "articles/articles-1/relationships/comments" with the resource
+    When I send a "PATCH" request to "/articles/articles-1/relationships/comments" with the resource
       """
       {
         "data": []
@@ -79,7 +79,7 @@ Feature: Update a resources relationships directly
       """
 
   Scenario: Updating an unknown resource
-    When I send a "PATCH" request to "articles/articles-404/relationships/comments" with the resource
+    When I send a "PATCH" request to "/articles/articles-404/relationships/comments" with the resource
       """
       {
         "data": {

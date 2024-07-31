@@ -1,5 +1,5 @@
 import { After, Before, Given, Then, When } from '@cucumber/cucumber';
-import { Builder, HonoBuilder } from 'agrajag';
+import { Builder, ServerBuilder } from 'agrajag';
 import { deepStrictEqual, strictEqual, notStrictEqual } from 'node:assert';
 import { DocumentStore, DeleteByQueryOperation } from 'ravendb';
 import { Resource, ResourceDefinition } from 'agrajag';
@@ -29,11 +29,12 @@ type ArticleDefinition = ResourceDefinition<
   { author: AuthorDefinition; comments: [CommentDefinition] }
 >;
 
-interface World {
+export interface World {
   documentStore: DocumentStore;
   response: Response;
-  honoBuilder: HonoBuilder;
+  serverBuilder: ServerBuilder;
   builder: Builder;
+  fetch: (path: string, options: RequestInit) => Response | Promise<Response>;
   schemas: {
     article: ArticleDefinition;
     author: AuthorDefinition;
@@ -42,12 +43,12 @@ interface World {
     photo: PhotoDefinition;
     photographer: PhotographerDefinition;
   };
+  cleanup?: (() => Promise<void>)[];
+  adapterData?: Record<string, unknown>;
+  listen?: () => Promise<void>;
 }
 
 Before<World>(async function () {
-  this.honoBuilder = new HonoBuilder();
-  this.builder = new Builder(this.honoBuilder);
-
   const author = this.builder.createSchema('authors', z =>
     z.object({ name: z.string(), category: z.string() }),
   );
@@ -126,6 +127,8 @@ Before<World>(async function () {
     photo,
     new RavendbCrudEndpointFactory(this.documentStore),
   );
+
+  await this.listen?.();
 });
 
 After(async function () {
@@ -135,18 +138,14 @@ After(async function () {
 When<World>(
   'I send a "GET" request to {string}',
   async function (path: string) {
-    const hono = this.honoBuilder.build();
-
-    this.response = await hono.request(path, { method: 'GET' });
+    this.response = await this.fetch(path, { method: 'GET' });
   },
 );
 
 When<World>(
   'I send a "POST" request to {string} with the resource',
   async function (path: string, body: string) {
-    const hono = this.honoBuilder.build();
-
-    this.response = await hono.request(path, {
+    this.response = await this.fetch(path, {
       body,
       method: 'POST',
       headers: { 'Content-Type': 'application/vnd.api+json' },
@@ -157,9 +156,7 @@ When<World>(
 When<World>(
   'I send a "PATCH" request to {string} with the resource',
   async function (path: string, body: string) {
-    const hono = this.honoBuilder.build();
-
-    this.response = await hono.request(path, {
+    this.response = await this.fetch(path, {
       body,
       method: 'PATCH',
       headers: { 'Content-Type': 'application/vnd.api+json' },
@@ -170,9 +167,7 @@ When<World>(
 When<World>(
   'I send a "DELETE" request to {string}',
   async function (path: string) {
-    const hono = this.honoBuilder.build();
-
-    this.response = await hono.request(path, { method: 'DELETE' });
+    this.response = await this.fetch(path, { method: 'DELETE' });
   },
 );
 
@@ -203,9 +198,7 @@ Then('the response should contain a valid id', async function () {
 Given<World>(
   'i have sent a "POST" request to {string} with the following body:',
   async function (path: string, body: string) {
-    const hono = this.honoBuilder.build();
-
-    this.response = await hono.request(path, {
+    this.response = await this.fetch(path, {
       body,
       method: 'POST',
       headers: { 'Content-Type': 'application/vnd.api+json' },
@@ -214,8 +207,6 @@ Given<World>(
 );
 
 Given<World>('the test data', async function () {
-  const hono = this.honoBuilder.build();
-
   const authors = [
     {
       id: 'authors-1',
@@ -302,10 +293,14 @@ Given<World>('the test data', async function () {
     ...empty,
     ...photos,
   ]) {
-    await hono.request(`/${resource.type}`, {
+    const res = await this.fetch(`/${resource.type}`, {
       body: JSON.stringify({ data: resource }),
       method: 'POST',
       headers: { 'Content-Type': 'application/vnd.api+json' },
     });
+
+    if (!res.ok) {
+      throw new Error(await res.text());
+    }
   }
 });

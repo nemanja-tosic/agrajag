@@ -43,11 +43,10 @@ export class RavendbCrudEndpointFactory<
         if (sort) {
           if (sort.toString().startsWith('-')) {
             query.orderByDescending(sort.toString().substring(1));
-          } else if(sort.toString().includes('.')) {
+          } else if (sort.toString().includes('.')) {
             //node: nested sorting not supported
             return undefined;
-          }
-          else {
+          } else {
             query.orderBy(sort.toString());
           }
         }
@@ -69,7 +68,7 @@ export class RavendbCrudEndpointFactory<
           .addParameter('key', key);
 
         if (Array.isArray(definition.relationships[key])) {
-          return query.all() as any;
+          return await query.all();
         } else {
           return query.singleOrNull().then(r => r ?? undefined);
         }

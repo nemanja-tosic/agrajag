@@ -6,10 +6,10 @@ import {
   FetchDeleteHandler,
   MutationHandler,
   Response,
+  Server,
 } from './ServerBuilder.js';
-import { Params } from '../endpoints/Params.js';
 
-export class HonoBuilder extends ServerBuilder {
+export class HonoBuilder extends ServerBuilder<Hono> {
   #hono = new Hono();
 
   addGet<
@@ -106,7 +106,7 @@ export class HonoBuilder extends ServerBuilder {
     };
   }
 
-  build() {
+  build(): Hono {
     return this.#hono;
   }
 }

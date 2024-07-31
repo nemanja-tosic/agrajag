@@ -181,8 +181,12 @@ export class Builder {
             params,
           )) as any;
 
+          if (!data) {
+            return await respond({ status: 404 });
+          }
+
           await respond({
-            body: this.#serializer.serialize(relationship, data, params),
+            body: this.#serializer.serialize(relationship, data.data, params),
             status: 200,
             headers: { 'Content-Type': 'application/vnd.api+json' },
           });
@@ -200,8 +204,12 @@ export class Builder {
             params,
           )) as any;
 
+          if (!data) {
+            return await respond({ status: 404 });
+          }
+
           await respond({
-            body: this.#serializer.serialize(relationship, data, params),
+            body: this.#serializer.serialize(relationship, data.data, params),
             status: 200,
             headers: { 'Content-Type': 'application/vnd.api+json' },
           });
