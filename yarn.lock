@@ -90,6 +90,7 @@ __metadata:
     agrajag: "workspace:*"
     express: "npm:4.19.2"
   peerDependencies:
+    agrajag: ^0.0.0
     express: ^4.19.2
   languageName: unknown
   linkType: soft

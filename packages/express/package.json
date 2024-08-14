@@ -1,6 +1,6 @@
 {
   "name": "@agrajag/express-adapter",
-  "version": "0.0.0",
+  "version": "0.0.2",
   "type": "module",
   "scripts": {
     "build": "yarn build:ts"
@@ -12,16 +12,15 @@
     "README.md",
     "dist/src/**"
   ],
-  "dependencies": {
-    "agrajag": "workspace:*"
-  },
   "devDependencies": {
     "@agrajag/configs": "workspace:*",
     "@types/express": "4.17.21",
     "@types/node": "20.12.12",
+    "agrajag": "workspace:*",
     "express": "4.19.2"
   },
   "peerDependencies": {
+    "agrajag": "^0.0.0",
     "express": "^4.19.2"
   }
 }
