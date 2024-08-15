@@ -63,6 +63,8 @@ export class JsonApiSerializer implements Serializer {
         ? params?.include?.split(',').includes(options.relationshipKey) ?? false
         : true,
       attributes,
+      // keep attribute keys as is
+      keyForAttribute: attribute => attribute,
       ...Object.fromEntries(
         Object.entries(relationships).map(([key, value]) => {
           const relationship = Array.isArray(value) ? value[0] : value;

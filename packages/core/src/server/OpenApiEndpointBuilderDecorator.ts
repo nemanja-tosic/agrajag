@@ -1,4 +1,8 @@
-import { createDocument, ZodOpenApiPathsObject } from 'zod-openapi';
+import {
+  createDocument,
+  ZodOpenApiPathsObject,
+  ZodOpenApiPathItemObject,
+} from 'zod-openapi';
 import { EndpointSchema } from '../endpoints/Endpoints.js';
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import {
@@ -27,8 +31,7 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
     path: TPath,
     handler: FetchDeleteHandler<TPath, TDefinition>,
   ) {
-    this.#paths[path] = {
-      ...this.#paths[path],
+    this.#addPath(path, {
       get: {
         requestParams: {
           path: endpointSchema.shape.parameters.shape.path,
@@ -40,7 +43,7 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
           },
         },
       },
-    };
+    });
 
     this.builder.addGet(definition, endpointSchema, path, handler);
   }
@@ -51,8 +54,7 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
     path: TPath,
     handler: MutationHandler<TPath>,
   ): void {
-    this.#paths[path] = {
-      ...this.#paths[path],
+    this.#addPath(path, {
       post: {
         requestParams: {
           path: endpointSchema.shape.parameters.shape.path,
@@ -67,7 +69,7 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
           },
         },
       },
-    };
+    });
 
     this.builder.addPost(definition, endpointSchema, path, handler);
   }
@@ -78,8 +80,7 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
     path: TPath,
     handler: MutationHandler<TPath>,
   ): void {
-    this.#paths[path] = {
-      ...this.#paths[path],
+    this.#addPath(path, {
       patch: {
         requestParams: {
           path: endpointSchema.shape.parameters.shape.path,
@@ -94,20 +95,21 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
           },
         },
       },
-    };
+    });
 
     this.builder.addPatch(definition, endpointSchema, path, handler);
   }
 
-  addDelete<TPath extends string = string,
-    TDefinition extends ResourceDefinition = ResourceDefinition>(
+  addDelete<
+    TPath extends string = string,
+    TDefinition extends ResourceDefinition = ResourceDefinition,
+  >(
     definition: TDefinition,
     endpointSchema: EndpointSchema,
     path: TPath,
     handler: FetchDeleteHandler<TPath, TDefinition>,
   ): void {
-    this.#paths[path] = {
-      ...this.#paths[path],
+    this.#addPath(path, {
       delete: {
         requestParams: {
           path: endpointSchema.shape.parameters.shape.path,
@@ -119,9 +121,15 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
           },
         },
       },
-    };
+    });
 
     this.builder.addDelete(definition, endpointSchema, path, handler);
+  }
+
+  #addPath(path: string, item: ZodOpenApiPathItemObject): void {
+    const oapiPath = path.replace(/:(\w+)/g, '{$1}');
+
+    this.#paths[oapiPath] = { ...this.#paths[oapiPath], ...item };
   }
 
   build(): any {

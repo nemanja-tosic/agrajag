@@ -1,6 +1,6 @@
 {
   "name": "agrajag",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "build": "yarn build:ts"
@@ -13,7 +13,6 @@
     "dist/src/**"
   ],
   "dependencies": {
-    "hono": "4.3.11",
     "jsonapi-serializer": "3.6.9",
     "ramda": "0.30.0",
     "zod": "3.23.8",
@@ -23,6 +22,10 @@
     "@agrajag/configs": "workspace:*",
     "@types/jsonapi-serializer": "3.6.8",
     "@types/node": "20.12.12",
-    "@types/ramda": "0.30.0"
+    "@types/ramda": "0.30.0",
+    "hono": "4.3.11"
+  },
+  "peerDependencies": {
+    "hono": "^4.0.0"
   }
 }
