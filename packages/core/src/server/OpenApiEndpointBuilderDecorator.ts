@@ -39,7 +39,9 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
         },
         responses: {
           200: {
-            content: { 'application/json': { schema: definition.schema } },
+            content: {
+              'application/json': { schema: endpointSchema.shape.response },
+            },
           },
         },
       },
@@ -61,11 +63,15 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
           query: endpointSchema.shape.parameters.shape.query,
         },
         requestBody: {
-          content: { 'application/json': { schema: definition.schema } },
+          content: {
+            'application/json': { schema: endpointSchema.shape.request },
+          },
         },
         responses: {
           200: {
-            content: { 'application/json': { schema: definition.schema } },
+            content: {
+              'application/json': { schema: endpointSchema.shape.response },
+            },
           },
         },
       },
@@ -87,11 +93,15 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
           query: endpointSchema.shape.parameters.shape.query,
         },
         requestBody: {
-          content: { 'application/json': { schema: definition.relationships } },
+          content: {
+            'application/json': { schema: endpointSchema.shape.request },
+          },
         },
         responses: {
           200: {
-            content: { 'application/json': { schema: definition.schema } },
+            content: {
+              'application/json': { schema: endpointSchema.shape.response },
+            },
           },
         },
       },
@@ -117,7 +127,9 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
         },
         responses: {
           200: {
-            content: { 'application/json': { schema: definition.schema } },
+            content: {
+              'application/json': { schema: endpointSchema.shape.response },
+            },
           },
         },
       },

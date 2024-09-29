@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "build": "yarn build:ts",
-    "start": "node ./dist/src/start.js",
+    "start": "node --watch --inspect-brk ./dist/src/start.js",
     "codegen": "yarn rtk-query-codegen-openapi src/openapi-config.cjs"
   },
   "dependencies": {
@@ -17,7 +17,7 @@
     "ravendb": "file:../../ravendb-6.0.0.tgz",
     "uuid": "9.0.1",
     "zod": "3.23.8",
-    "zod-openapi": "2.17.0"
+    "zod-openapi": "2.19.0"
   },
   "devDependencies": {
     "@agrajag/configs": "workspace:*",

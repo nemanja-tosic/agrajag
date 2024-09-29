@@ -1,4 +1,5 @@
 import {
+  ArrayPrimaryType,
   AttributesSchema,
   SinglePrimaryType,
   UpdateSchema,
@@ -20,15 +21,24 @@ export interface SchemaFactory {
     options?: { relationships?: TRelationships },
   ): ResourceDefinition<TAttributes, TRelationships>;
 
-  createCollectionEndpointParamsSchema(): EndpointSchema;
-
-  createEndpointsParamsSchema(): EndpointSchema;
+  createEndpointSchema(options?: {
+    responseSchema?: any;
+    requestSchema?: any;
+    noId?: boolean;
+  }): EndpointSchema;
 
   createSinglePrimaryTypeSchema<
     TDefinition extends ResourceDefinition = ResourceDefinition,
   >(
     definition: TDefinition,
+    options?: { optionalId?: boolean; partialAttributes?: boolean },
   ): SinglePrimaryType<TDefinition>;
+
+  createArrayPrimaryTypeSchema<
+    TDefinition extends ResourceDefinition = ResourceDefinition,
+  >(
+    definition: TDefinition,
+  ): ArrayPrimaryType<TDefinition>;
 
   createUpdateSchema<
     TDefinition extends ResourceDefinition = ResourceDefinition,

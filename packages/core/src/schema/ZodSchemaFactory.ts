@@ -1,4 +1,5 @@
 import {
+  ArrayPrimaryType,
   AttributesSchema,
   SinglePrimaryType,
   UpdateSchema,
@@ -63,33 +64,21 @@ export class ZodSchemaFactory implements SchemaFactory {
     };
   }
 
-  createCollectionEndpointParamsSchema(): EndpointSchema {
+  createEndpointSchema(options?: {
+    requestSchema?: any;
+    responseSchema?: any;
+    noId?: boolean;
+  }): EndpointSchema {
     return z.object({
-      parameters: z.object({
-        query: z.object({
-          include: z
-            .string()
-            .optional()
-            .openapi({ param: { name: 'include', in: 'query' } }),
-          fields: z
-            .string()
-            .optional()
-            .openapi({ param: { name: 'fields', in: 'query' } }),
-          // TODO: limit to fields in definition
-          sort: z
-            .string()
-            .optional()
-            .openapi({ param: { name: 'sort', in: 'query' } }),
-        }),
-      }),
-    });
-  }
-
-  createEndpointsParamsSchema(): EndpointSchema {
-    return z.object({
+      ...(options?.requestSchema ? { request: options.requestSchema } : {}),
+      ...(options?.responseSchema ? { response: options.responseSchema } : {}),
       parameters: z.object({
         path: z.object({
-          id: z.string().openapi({ param: { name: 'id', in: 'path' } }),
+          ...(options?.noId
+            ? {}
+            : {
+                id: z.string().openapi({ param: { name: 'id', in: 'path' } }),
+              }),
         }),
         query: z.object({
           include: z
@@ -112,14 +101,39 @@ export class ZodSchemaFactory implements SchemaFactory {
 
   createSinglePrimaryTypeSchema<
     TDefinition extends ResourceDefinition = ResourceDefinition,
-  >(definition: TDefinition): SinglePrimaryType<TDefinition> {
+  >(
+    definition: TDefinition,
+    options?: { optionalId?: boolean; partialAttributes?: boolean },
+  ): SinglePrimaryType<TDefinition> {
+    let attributes = definition.schema.shape.attributes;
+    if (options?.partialAttributes) {
+      attributes = attributes.deepPartial();
+    }
+
+    const id = options?.optionalId ? z.string().optional() : z.string();
+
     return z.object({
       data: z.object({
-        id: z.string().optional(),
+        id,
         type: definition.schema.shape.type,
-        attributes: definition.schema.shape.attributes,
+        attributes,
         relationships: definition.schema.shape.relationships,
       }),
+    }) as any;
+  }
+
+  createArrayPrimaryTypeSchema<
+    TDefinition extends ResourceDefinition = ResourceDefinition,
+  >(definition: TDefinition): ArrayPrimaryType<TDefinition> {
+    return z.object({
+      data: z.array(
+        z.object({
+          id: z.string().optional(),
+          type: definition.schema.shape.type,
+          attributes: definition.schema.shape.attributes,
+          relationships: definition.schema.shape.relationships,
+        }),
+      ),
     }) as any;
   }
 

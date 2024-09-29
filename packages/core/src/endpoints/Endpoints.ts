@@ -40,7 +40,7 @@ type MutateEndpoint<TDefinition extends ResourceDefinition> = {
     params: Params,
   ) => Promise<Resource<TDefinition> | undefined>;
   related?: RelatedEndpointsWithBody<TDefinition>;
-}
+};
 
 export type RelatedEndpointsWithoutBody<
   TDefinition extends ResourceDefinition,
@@ -81,8 +81,10 @@ export type Denormalized<TSchema extends ResourceDefinition> = {
   };
 
 export type EndpointSchema = ZodObject<{
+  request?: ZodRecord;
+  response?: ZodRecord;
   parameters: ZodObject<{
-    path?: ZodObject<{}>,
+    path?: ZodObject<{}>;
     query: ZodObject<{
       include: ZodOptional<ZodString>;
       fields: ZodOptional<ZodString>;

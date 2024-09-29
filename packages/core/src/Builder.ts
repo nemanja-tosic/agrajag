@@ -59,7 +59,11 @@ export class Builder {
 
     this.#endpointBuilder.addGet(
       definition,
-      this.#schemaFactory.createCollectionEndpointParamsSchema(),
+      this.#schemaFactory.createEndpointSchema({
+        responseSchema:
+          this.#schemaFactory.createArrayPrimaryTypeSchema(definition),
+        noId: true,
+      }),
       `/${type}`,
       async (params, respond) => {
         const body = await endpoints.fetch.collection(params);
@@ -74,7 +78,10 @@ export class Builder {
 
     this.#endpointBuilder.addGet(
       definition,
-      this.#schemaFactory.createEndpointsParamsSchema(),
+      this.#schemaFactory.createEndpointSchema({
+        responseSchema:
+          this.#schemaFactory.createSinglePrimaryTypeSchema(definition),
+      }),
       `/${type}/:id`,
       async (params, respond) => {
         const body = await endpoints.fetch.self(params);
@@ -90,7 +97,15 @@ export class Builder {
     if (endpoints.create?.self) {
       this.#endpointBuilder.addPost(
         definition,
-        this.#schemaFactory.createEndpointsParamsSchema(),
+        this.#schemaFactory.createEndpointSchema({
+          requestSchema: this.#schemaFactory.createSinglePrimaryTypeSchema(
+            definition,
+            { partialAttributes: true, optionalId: true },
+          ),
+          responseSchema:
+            this.#schemaFactory.createSinglePrimaryTypeSchema(definition),
+          noId: true,
+        }),
         `/${type}`,
         async (body, params, respond) => {
           const data = await endpoints.create!.self!(
@@ -110,7 +125,14 @@ export class Builder {
     if (endpoints.patch?.self) {
       this.#endpointBuilder.addPatch(
         definition,
-        this.#schemaFactory.createEndpointsParamsSchema(),
+        this.#schemaFactory.createEndpointSchema({
+          requestSchema: this.#schemaFactory.createSinglePrimaryTypeSchema(
+            definition,
+            { partialAttributes: true },
+          ),
+          responseSchema:
+            this.#schemaFactory.createSinglePrimaryTypeSchema(definition),
+        }),
         `/${type}/:id`,
         async (body, params, respond) => {
           const data = await endpoints.patch!.self!(
@@ -133,7 +155,10 @@ export class Builder {
     if (endpoints.delete?.self) {
       this.#endpointBuilder.addDelete(
         definition,
-        this.#schemaFactory.createEndpointsParamsSchema(),
+        this.#schemaFactory.createEndpointSchema({
+          responseSchema:
+            this.#schemaFactory.createSinglePrimaryTypeSchema(definition),
+        }),
         `/${type}/:id`,
         async (params, respond) => {
           const data = await endpoints.delete!.self!(params);
@@ -157,7 +182,7 @@ export class Builder {
 
       this.#endpointBuilder.addGet(
         relationship,
-        this.#schemaFactory.createEndpointsParamsSchema(),
+        this.#schemaFactory.createEndpointSchema(),
         `/${type}/:id/relationships/${key}`,
         async (params, respond) => {
           const data = await endpoints.fetch?.related?.[key](params);
@@ -172,7 +197,7 @@ export class Builder {
 
       this.#endpointBuilder.addPost(
         relationship,
-        this.#schemaFactory.createEndpointsParamsSchema(),
+        this.#schemaFactory.createEndpointSchema(),
         `/${type}/:id/relationships/${key}`,
         async (body, params, respond) => {
           //fixme: data is not denormalized
@@ -195,7 +220,7 @@ export class Builder {
 
       this.#endpointBuilder.addPatch(
         relationship,
-        this.#schemaFactory.createEndpointsParamsSchema(),
+        this.#schemaFactory.createEndpointSchema(),
         `/${type}/:id/relationships/${key}`,
         async (body, params, respond) => {
           //fixme: data is not denormalized
@@ -219,7 +244,7 @@ export class Builder {
       // NOTE: this should be possible only if it is a one-to-many relationship
       this.#endpointBuilder.addDelete(
         relationship,
-        this.#schemaFactory.createEndpointsParamsSchema(),
+        this.#schemaFactory.createEndpointSchema(),
         `/${type}/:id/relationships/${key}`,
         async (params, respond) => {
           const data = await endpoints.delete?.related?.[key](params);

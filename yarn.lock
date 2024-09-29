@@ -27,7 +27,7 @@ __metadata:
     ravendb: "file:../../ravendb-6.0.0.tgz"
     uuid: "npm:9.0.1"
     zod: "npm:3.23.8"
-    zod-openapi: "npm:2.17.0"
+    zod-openapi: "npm:2.19.0"
   languageName: unknown
   linkType: soft
 
@@ -51,7 +51,7 @@ __metadata:
     ravendb: "file:../../ravendb-6.0.0.tgz"
     uuid: "npm:9.0.1"
     zod: "npm:3.23.8"
-    zod-openapi: "npm:2.17.0"
+    zod-openapi: "npm:2.19.0"
   languageName: unknown
   linkType: soft
 
@@ -76,7 +76,7 @@ __metadata:
     uuid: "npm:9.0.1"
     wrangler: "npm:3.57.1"
     zod: "npm:3.23.8"
-    zod-openapi: "npm:2.17.0"
+    zod-openapi: "npm:2.19.0"
   languageName: unknown
   linkType: soft
 
@@ -1171,7 +1171,7 @@ __metadata:
     jsonapi-serializer: "npm:3.6.9"
     ramda: "npm:0.30.0"
     zod: "npm:3.23.8"
-    zod-openapi: "npm:2.17.0"
+    zod-openapi: "npm:2.19.0"
   peerDependencies:
     hono: ^4.0.0
   languageName: unknown
@@ -5071,12 +5071,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod-openapi@npm:2.17.0":
-  version: 2.17.0
-  resolution: "zod-openapi@npm:2.17.0"
+"zod-openapi@npm:2.19.0":
+  version: 2.19.0
+  resolution: "zod-openapi@npm:2.19.0"
   peerDependencies:
     zod: ^3.21.4
-  checksum: 10c0/e0012cbe364c281d67bc394c0f6add350b773da90e625fa6113f5a67887ee9c9dea8d2d0f289414354511e54042ef6b287fd0ccc10d9286ee86d36b72af5db5a
+  checksum: 10c0/8182304b245ecd6da80d634f1ff370a3c6170ce322d2263b8cc62eb4eb33f3187acabd52b625596901e1699bcf8d84f471e9f06a4f6d200a00cf52ddd5fc15ab
   languageName: node
   linkType: hard
 
