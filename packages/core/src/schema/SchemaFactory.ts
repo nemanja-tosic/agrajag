@@ -48,6 +48,9 @@ export interface SchemaFactory {
     definition: TDefinition,
   ): ArrayPrimaryType<TDefinition>;
 
+  /**
+   * @deprecated Use createSinglePrimaryTypeSchema instead
+   */
   createUpdateSchema<
     TDefinition extends ResourceDefinition = ResourceDefinition,
   >(

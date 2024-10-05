@@ -144,7 +144,7 @@ export class ZodSchemaFactory implements SchemaFactory {
   >(definition: TDefinition): UpdateSchema<TDefinition> {
     return z.object({
       data: z.object({
-        id: definition.schema.shape.id,
+        id: definition.schema.shape.id.optional(),
         type: definition.schema.shape.type,
         attributes: definition.schema.shape.attributes.deepPartial().optional(),
         relationships: z
