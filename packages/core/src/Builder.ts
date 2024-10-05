@@ -8,9 +8,10 @@ import {
   ResourceRelationships,
 } from './resources/ResourceDefinition.js';
 import { ZodSchemaFactory } from './schema/ZodSchemaFactory.js';
-import { SchemaFactory } from './schema/SchemaFactory.js';
+import { CreateSchemaOptions, SchemaFactory } from './schema/SchemaFactory.js';
 import { ServerBuilder } from './server/ServerBuilder.js';
-import { EndpointFactory } from './endpoints/createEndpoints.js';
+
+import { IEndpointFactory } from './endpoints/EndpointFactory.js';
 
 export class Builder {
   #serializer: Serializer = new JsonApiSerializer();
@@ -35,7 +36,7 @@ export class Builder {
   >(
     type: string,
     createAttributesSchema: (zod: typeof z) => TAttributes,
-    options?: { relationships?: TRelationships },
+    options?: CreateSchemaOptions<TRelationships>,
   ): ResourceDefinition<TAttributes, TRelationships> {
     return this.#schemaFactory.createSchema(
       type,
@@ -46,48 +47,56 @@ export class Builder {
 
   addResource<TDefinition extends ResourceDefinition>(
     definition: TDefinition,
-    factory: EndpointFactory<TDefinition>,
+    factory: IEndpointFactory<TDefinition>,
     endpointBuilder: ServerBuilder,
   ): this {
     const type = definition.type;
     const endpoints = factory.createEndpoints(definition, this.#serializer);
 
-    endpointBuilder.addGet(
-      definition,
-      this.#schemaFactory.createEndpointSchema({
-        responseSchema:
-          this.#schemaFactory.createArrayPrimaryTypeSchema(definition),
-        noId: true,
-      }),
-      `/${type}`,
-      async (params, respond) => {
-        const body = await endpoints.fetch.collection(params);
+    if (endpoints.fetch?.collection) {
+      const endpoint = endpoints.fetch.collection;
 
-        await respond({
-          body: body,
-          status: body ? 200 : 400,
-          headers: { 'Content-Type': 'application/vnd.api+json' },
-        });
-      },
-    );
+      endpointBuilder.addGet(
+        definition,
+        this.#schemaFactory.createEndpointSchema({
+          responseSchema:
+            this.#schemaFactory.createArrayPrimaryTypeSchema(definition),
+          noId: true,
+        }),
+        `/${type}`,
+        async (params, respond) => {
+          const body = await endpoint(params);
 
-    endpointBuilder.addGet(
-      definition,
-      this.#schemaFactory.createEndpointSchema({
-        responseSchema:
-          this.#schemaFactory.createSinglePrimaryTypeSchema(definition),
-      }),
-      `/${type}/:id`,
-      async (params, respond) => {
-        const body = await endpoints.fetch.self(params);
+          await respond({
+            body: body,
+            status: body ? 200 : 400,
+            headers: { 'Content-Type': 'application/vnd.api+json' },
+          });
+        },
+      );
+    }
 
-        await respond({
-          body,
-          status: body ? 200 : 404,
-          headers: { 'Content-Type': 'application/vnd.api+json' },
-        });
-      },
-    );
+    if (endpoints.fetch?.self) {
+      const endpoint = endpoints.fetch.self;
+
+      endpointBuilder.addGet(
+        definition,
+        this.#schemaFactory.createEndpointSchema({
+          responseSchema:
+            this.#schemaFactory.createSinglePrimaryTypeSchema(definition),
+        }),
+        `/${type}/:id`,
+        async (params, respond) => {
+          const body = await endpoint(params);
+
+          await respond({
+            body,
+            status: body ? 200 : 404,
+            headers: { 'Content-Type': 'application/vnd.api+json' },
+          });
+        },
+      );
+    }
 
     if (endpoints.create?.self) {
       endpointBuilder.addPost(

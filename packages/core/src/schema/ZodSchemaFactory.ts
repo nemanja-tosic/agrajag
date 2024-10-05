@@ -5,11 +5,12 @@ import {
   UpdateSchema,
 } from '../resources/ResourceSchema.js';
 import {
+  AllCapabilities,
   ResourceDefinition,
   ResourceRelationships,
 } from '../resources/ResourceDefinition.js';
 import { z } from 'zod';
-import { SchemaFactory } from './SchemaFactory.js';
+import { CreateSchemaOptions, SchemaFactory } from './SchemaFactory.js';
 import { EndpointSchema } from '../endpoints/Endpoints.js';
 import { extendZodWithOpenApi } from 'zod-openapi';
 
@@ -24,7 +25,7 @@ export class ZodSchemaFactory implements SchemaFactory {
   >(
     type: string,
     createAttributesSchema: (zod: typeof z) => TAttributes,
-    options?: { relationships?: TRelationships },
+    options?: CreateSchemaOptions<TRelationships>,
   ): ResourceDefinition<TAttributes, TRelationships> {
     const attributesSchema = createAttributesSchema(z);
 
@@ -59,6 +60,7 @@ export class ZodSchemaFactory implements SchemaFactory {
           ),
         ),
       }) as any,
+      capabilities: options?.capabilities ?? AllCapabilities,
       attributes: Object.keys(attributesSchema.shape),
       relationships: options?.relationships ?? ({} as TRelationships),
     };

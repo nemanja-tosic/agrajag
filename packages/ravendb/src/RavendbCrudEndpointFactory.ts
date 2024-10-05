@@ -1,6 +1,5 @@
 import {
-  Denormalized,
-  EndpointFactory,
+  BaseEndpointFactory,
   Normalized,
   Resolver,
   ResourceDefinition,
@@ -10,7 +9,7 @@ import { IDocumentStore } from 'ravendb';
 
 export class RavendbCrudEndpointFactory<
   TDefinition extends ResourceDefinition,
-> extends EndpointFactory<TDefinition> {
+> extends BaseEndpointFactory<TDefinition> {
   constructor(private documentStore: IDocumentStore) {
     super();
   }

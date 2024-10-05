@@ -11,17 +11,17 @@ import { ResourceLinkage } from '../resources/ResourceLinkageSchema.js';
 import { Resource } from '../resources/Resource.js';
 
 export type Endpoints<TDefinition extends ResourceDefinition> = {
-  fetch: FetchEndpoint<TDefinition>;
+  fetch?: FetchEndpoint<TDefinition>;
   create?: MutateEndpoint<TDefinition>;
   patch?: MutateEndpoint<TDefinition>;
   delete?: DeleteEndpoint<TDefinition>;
 };
 
 type FetchEndpoint<TDefinition extends ResourceDefinition> = {
-  self: (
+  self?: (
     params: { id: string } & QueryParams,
   ) => Promise<Resource<TDefinition> | undefined>;
-  collection: (
+  collection?: (
     params: QueryParams,
   ) => Promise<Resource<TDefinition>[] | undefined>;
   related?: RelatedEndpointsWithoutBody<TDefinition>;

@@ -5,11 +5,19 @@ import {
   UpdateSchema,
 } from '../resources/ResourceSchema.js';
 import {
+  ResourceCapabilities,
   ResourceDefinition,
   ResourceRelationships,
 } from '../resources/ResourceDefinition.js';
 import { z } from 'zod';
 import { EndpointSchema } from '../endpoints/Endpoints.js';
+
+export interface CreateSchemaOptions<
+  TRelationships extends ResourceRelationships,
+> {
+  relationships?: TRelationships;
+  capabilities?: ResourceCapabilities;
+}
 
 export interface SchemaFactory {
   createSchema<
@@ -18,7 +26,7 @@ export interface SchemaFactory {
   >(
     type: string,
     createAttributesSchema: (zod: typeof z) => TAttributes,
-    options?: { relationships?: TRelationships },
+    options?: CreateSchemaOptions<TRelationships>,
   ): ResourceDefinition<TAttributes, TRelationships>;
 
   createEndpointSchema(options?: {
