@@ -22,7 +22,7 @@ Before<World>(async function () {
     });
   };
 
-  this.builder = new Builder(fastifyBuilder);
+  this.builder = new Builder();
   this.serverBuilder = fastifyBuilder;
   this.fetch = (path, request) => {
     return fetch(`http://127.0.0.1:${addressInfo.port}${path}`, request);

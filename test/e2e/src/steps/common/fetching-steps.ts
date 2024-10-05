@@ -101,31 +101,37 @@ Before<World>(async function () {
   this.builder.addResource(
     article,
     new RavendbCrudEndpointFactory(this.documentStore),
+    this.serverBuilder,
   );
 
   this.builder.addResource(
     author,
     new RavendbCrudEndpointFactory(this.documentStore),
+    this.serverBuilder,
   );
 
   this.builder.addResource(
     photographer,
     new RavendbCrudEndpointFactory(this.documentStore),
+    this.serverBuilder,
   );
 
   this.builder.addResource(
     comment,
     new RavendbCrudEndpointFactory(this.documentStore),
+    this.serverBuilder,
   );
 
   this.builder.addResource(
     empty,
     new RavendbCrudEndpointFactory(this.documentStore),
+    this.serverBuilder,
   );
 
   this.builder.addResource(
     photo,
     new RavendbCrudEndpointFactory(this.documentStore),
+    this.serverBuilder,
   );
 
   await this.listen?.();

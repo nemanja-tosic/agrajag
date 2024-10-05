@@ -4,4 +4,4 @@ export const honoBuilder = new HonoBuilder();
 
 export const openApiBuilder = new OpenApiEndpointBuilderDecorator(honoBuilder);
 
-export const builder = new Builder(openApiBuilder);
+export const builder = new Builder();

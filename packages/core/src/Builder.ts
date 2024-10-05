@@ -13,19 +13,13 @@ import { ServerBuilder } from './server/ServerBuilder.js';
 import { EndpointFactory } from './endpoints/createEndpoints.js';
 
 export class Builder {
-  #endpointBuilder: ServerBuilder;
   #serializer: Serializer = new JsonApiSerializer();
   #schemaFactory: SchemaFactory = new ZodSchemaFactory();
 
-  constructor(
-    endpointBuilder: ServerBuilder,
-    options?: {
-      serializer?: Serializer;
-      schemaFactory?: SchemaFactory;
-    },
-  ) {
-    this.#endpointBuilder = endpointBuilder;
-
+  constructor(options?: {
+    serializer?: Serializer;
+    schemaFactory?: SchemaFactory;
+  }) {
     if (options?.serializer) {
       this.#serializer = options.serializer;
     }
@@ -53,11 +47,12 @@ export class Builder {
   addResource<TDefinition extends ResourceDefinition>(
     definition: TDefinition,
     factory: EndpointFactory<TDefinition>,
+    endpointBuilder: ServerBuilder,
   ): this {
     const type = definition.type;
     const endpoints = factory.createEndpoints(definition, this.#serializer);
 
-    this.#endpointBuilder.addGet(
+    endpointBuilder.addGet(
       definition,
       this.#schemaFactory.createEndpointSchema({
         responseSchema:
@@ -76,7 +71,7 @@ export class Builder {
       },
     );
 
-    this.#endpointBuilder.addGet(
+    endpointBuilder.addGet(
       definition,
       this.#schemaFactory.createEndpointSchema({
         responseSchema:
@@ -95,7 +90,7 @@ export class Builder {
     );
 
     if (endpoints.create?.self) {
-      this.#endpointBuilder.addPost(
+      endpointBuilder.addPost(
         definition,
         this.#schemaFactory.createEndpointSchema({
           requestSchema: this.#schemaFactory.createSinglePrimaryTypeSchema(
@@ -123,7 +118,7 @@ export class Builder {
     }
 
     if (endpoints.patch?.self) {
-      this.#endpointBuilder.addPatch(
+      endpointBuilder.addPatch(
         definition,
         this.#schemaFactory.createEndpointSchema({
           requestSchema: this.#schemaFactory.createSinglePrimaryTypeSchema(
@@ -153,7 +148,7 @@ export class Builder {
     }
 
     if (endpoints.delete?.self) {
-      this.#endpointBuilder.addDelete(
+      endpointBuilder.addDelete(
         definition,
         this.#schemaFactory.createEndpointSchema({
           responseSchema:
@@ -180,7 +175,7 @@ export class Builder {
     for (const [key, oneOrMany] of Object.entries(relationships)) {
       const relationship = Array.isArray(oneOrMany) ? oneOrMany[0] : oneOrMany;
 
-      this.#endpointBuilder.addGet(
+      endpointBuilder.addGet(
         relationship,
         this.#schemaFactory.createEndpointSchema(),
         `/${type}/:id/relationships/${key}`,
@@ -195,7 +190,7 @@ export class Builder {
         },
       );
 
-      this.#endpointBuilder.addPost(
+      endpointBuilder.addPost(
         relationship,
         this.#schemaFactory.createEndpointSchema(),
         `/${type}/:id/relationships/${key}`,
@@ -218,7 +213,7 @@ export class Builder {
         },
       );
 
-      this.#endpointBuilder.addPatch(
+      endpointBuilder.addPatch(
         relationship,
         this.#schemaFactory.createEndpointSchema(),
         `/${type}/:id/relationships/${key}`,
@@ -242,7 +237,7 @@ export class Builder {
       );
 
       // NOTE: this should be possible only if it is a one-to-many relationship
-      this.#endpointBuilder.addDelete(
+      endpointBuilder.addDelete(
         relationship,
         this.#schemaFactory.createEndpointSchema(),
         `/${type}/:id/relationships/${key}`,

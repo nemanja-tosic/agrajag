@@ -1,4 +1,4 @@
-import { builder } from './builder.js';
+import { builder, honoBuilder } from './builder.js';
 import {
   DocumentStore,
   RavendbCrudEndpointFactory,
@@ -28,8 +28,20 @@ const article = builder.createSchema(
 const documentStore = new DocumentStore('http://localhost:8080', 'test-crud');
 documentStore.initialize();
 
-builder.addResource(article, new RavendbCrudEndpointFactory(documentStore));
+builder.addResource(
+  article,
+  new RavendbCrudEndpointFactory(documentStore),
+  honoBuilder,
+);
 
-builder.addResource(author, new RavendbCrudEndpointFactory(documentStore));
+builder.addResource(
+  author,
+  new RavendbCrudEndpointFactory(documentStore),
+  honoBuilder,
+);
 
-builder.addResource(comment, new RavendbCrudEndpointFactory(documentStore));
+builder.addResource(
+  comment,
+  new RavendbCrudEndpointFactory(documentStore),
+  honoBuilder,
+);

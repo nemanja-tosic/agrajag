@@ -37,16 +37,19 @@ function createHono(env: Env): Hono {
   builder.addResource(
     AuthorSchema,
     new RavendbCrudEndpointFactory(documentStore),
+    honoBuilder,
   );
 
   builder.addResource(
     CommentSchema,
     new RavendbCrudEndpointFactory(documentStore),
+    honoBuilder,
   );
 
   builder.addResource(
     ArticleSchema,
     new RavendbCrudEndpointFactory(documentStore),
+    honoBuilder,
   );
 
   documentStore.initialize();
