@@ -9,9 +9,10 @@ import {
 } from './resources/ResourceDefinition.js';
 import { ZodSchemaFactory } from './schema/ZodSchemaFactory.js';
 import { CreateSchemaOptions, SchemaFactory } from './schema/SchemaFactory.js';
-import { ServerBuilder } from './server/ServerBuilder.js';
+import { Response, ServerBuilder } from './server/ServerBuilder.js';
 
 import { IEndpointFactory } from './endpoints/EndpointFactory.js';
+import { ErrorObject } from './resources/Error.js';
 
 export class Builder {
   #serializer: Serializer = new JsonApiSerializer();
@@ -65,13 +66,17 @@ export class Builder {
         }),
         `/${type}`,
         async (params, respond) => {
-          const body = await endpoint(params);
+          try {
+            const body = await endpoint(params);
 
-          await respond({
-            body: body,
-            status: body ? 200 : 400,
-            headers: { 'Content-Type': 'application/vnd.api+json' },
-          });
+            await respond({
+              body: body,
+              status: body ? 200 : 400,
+              headers: { 'Content-Type': 'application/vnd.api+json' },
+            });
+          } catch (error) {
+            await respond(this.#createError(error));
+          }
         },
       );
     }
@@ -87,13 +92,17 @@ export class Builder {
         }),
         `/${type}/:id`,
         async (params, respond) => {
-          const body = await endpoint(params);
+          try {
+            const body = await endpoint(params);
 
-          await respond({
-            body,
-            status: body ? 200 : 404,
-            headers: { 'Content-Type': 'application/vnd.api+json' },
-          });
+            await respond({
+              body,
+              status: body ? 200 : 404,
+              headers: { 'Content-Type': 'application/vnd.api+json' },
+            });
+          } catch (error) {
+            await respond(this.#createError(error));
+          }
         },
       );
     }
@@ -112,16 +121,20 @@ export class Builder {
         }),
         `/${type}`,
         async (body, params, respond) => {
-          const data = await endpoints.create!.self!(
-            this.#schemaFactory.createUpdateSchema(definition).parse(body),
-            params,
-          );
+          try {
+            const data = await endpoints.create!.self!(
+              this.#schemaFactory.createUpdateSchema(definition).parse(body),
+              params,
+            );
 
-          await respond({
-            body: data,
-            status: 201,
-            headers: { 'Content-Type': 'application/vnd.api+json' },
-          });
+            await respond({
+              body: data,
+              status: 201,
+              headers: { 'Content-Type': 'application/vnd.api+json' },
+            });
+          } catch (error) {
+            await respond(this.#createError(error));
+          }
         },
       );
     }
@@ -139,19 +152,23 @@ export class Builder {
         }),
         `/${type}/:id`,
         async (body, params, respond) => {
-          const data = await endpoints.patch!.self!(
-            this.#schemaFactory.createUpdateSchema(definition).parse(body),
-            params,
-          );
-          if (!data) {
-            return await respond({ status: 404 });
-          }
+          try {
+            const data = await endpoints.patch!.self!(
+              this.#schemaFactory.createUpdateSchema(definition).parse(body),
+              params,
+            );
+            if (!data) {
+              return await respond({ status: 404 });
+            }
 
-          await respond({
-            body: data,
-            status: 200,
-            headers: { 'Content-Type': 'application/vnd.api+json' },
-          });
+            await respond({
+              body: data,
+              status: 200,
+              headers: { 'Content-Type': 'application/vnd.api+json' },
+            });
+          } catch (error) {
+            await respond(this.#createError(error));
+          }
         },
       );
     }
@@ -165,16 +182,20 @@ export class Builder {
         }),
         `/${type}/:id`,
         async (params, respond) => {
-          const data = await endpoints.delete!.self!(params);
-          if (!data) {
-            return await respond({ status: 404 });
-          }
+          try {
+            const data = await endpoints.delete!.self!(params);
+            if (!data) {
+              return await respond({ status: 404 });
+            }
 
-          await respond({
-            body: data,
-            status: 200,
-            headers: { 'Content-Type': 'application/vnd.api+json' },
-          });
+            await respond({
+              body: data,
+              status: 200,
+              headers: { 'Content-Type': 'application/vnd.api+json' },
+            });
+          } catch (error) {
+            await respond(this.#createError(error));
+          }
         },
       );
     }
@@ -189,13 +210,17 @@ export class Builder {
         this.#schemaFactory.createEndpointSchema(),
         `/${type}/:id/relationships/${key}`,
         async (params, respond) => {
-          const data = await endpoints.fetch?.related?.[key](params);
+          try {
+            const data = await endpoints.fetch?.related?.[key](params);
 
-          await respond({
-            body: data,
-            status: 200,
-            headers: { 'Content-Type': 'application/vnd.api+json' },
-          });
+            await respond({
+              body: data,
+              status: 200,
+              headers: { 'Content-Type': 'application/vnd.api+json' },
+            });
+          } catch (error) {
+            await respond(this.#createError(error));
+          }
         },
       );
 
@@ -204,21 +229,25 @@ export class Builder {
         this.#schemaFactory.createEndpointSchema(),
         `/${type}/:id/relationships/${key}`,
         async (body, params, respond) => {
-          //fixme: data is not denormalized
-          const data = (await endpoints.create?.related?.[key](
-            body as any,
-            params,
-          )) as any;
+          try {
+            //fixme: data is not denormalized
+            const data = (await endpoints.create?.related?.[key](
+              body as any,
+              params,
+            )) as any;
 
-          if (!data) {
-            return await respond({ status: 404 });
+            if (!data) {
+              return await respond({ status: 404 });
+            }
+
+            await respond({
+              body: this.#serializer.serialize(relationship, data.data, params),
+              status: 200,
+              headers: { 'Content-Type': 'application/vnd.api+json' },
+            });
+          } catch (error) {
+            await respond(this.#createError(error));
           }
-
-          await respond({
-            body: this.#serializer.serialize(relationship, data.data, params),
-            status: 200,
-            headers: { 'Content-Type': 'application/vnd.api+json' },
-          });
         },
       );
 
@@ -227,21 +256,25 @@ export class Builder {
         this.#schemaFactory.createEndpointSchema(),
         `/${type}/:id/relationships/${key}`,
         async (body, params, respond) => {
-          //fixme: data is not denormalized
-          const data = (await endpoints.patch?.related?.[key](
-            body as any,
-            params,
-          )) as any;
+          try {
+            //fixme: data is not denormalized
+            const data = (await endpoints.patch?.related?.[key](
+              body as any,
+              params,
+            )) as any;
 
-          if (!data) {
-            return await respond({ status: 404 });
+            if (!data) {
+              return await respond({ status: 404 });
+            }
+
+            await respond({
+              body: this.#serializer.serialize(relationship, data.data, params),
+              status: 200,
+              headers: { 'Content-Type': 'application/vnd.api+json' },
+            });
+          } catch (error) {
+            await respond(this.#createError(error));
           }
-
-          await respond({
-            body: this.#serializer.serialize(relationship, data.data, params),
-            status: 200,
-            headers: { 'Content-Type': 'application/vnd.api+json' },
-          });
         },
       );
 
@@ -251,17 +284,36 @@ export class Builder {
         this.#schemaFactory.createEndpointSchema(),
         `/${type}/:id/relationships/${key}`,
         async (params, respond) => {
-          const data = await endpoints.delete?.related?.[key](params);
+          try {
+            const data = await endpoints.delete?.related?.[key](params);
 
-          await respond({
-            body: data,
-            status: 200,
-            headers: { 'Content-Type': 'application/vnd.api+json' },
-          });
+            await respond({
+              body: data,
+              status: 200,
+              headers: { 'Content-Type': 'application/vnd.api+json' },
+            });
+          } catch (error) {
+            await respond(this.#createError(error));
+          }
         },
       );
     }
 
     return this;
+  }
+
+  #createError(error: Error): Response {
+    return {
+      body: {
+        errors: [
+          {
+            status: '500',
+            detail: 'An unexpected error occurred',
+            title: 'Internal Server Error',
+          },
+        ],
+      },
+      status: 500,
+    };
   }
 }
