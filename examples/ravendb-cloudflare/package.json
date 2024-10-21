@@ -6,10 +6,10 @@
   },
   "dependencies": {
     "@agrajag/ravendb-adapter": "workspace:*",
-    "@hono/swagger-ui": "0.2.2",
+    "@hono/swagger-ui": "0.4.1",
     "@reduxjs/toolkit": "2.2.5",
     "agrajag": "workspace:*",
-    "hono": "4.3.11",
+    "hono": "4.6.5",
     "ramda": "0.30.0",
     "ravendb": "file:../../ravendb-6.0.0.tgz",
     "uuid": "9.0.1",

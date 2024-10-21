@@ -1,4 +1,4 @@
-import { builder, honoBuilder } from './builder.js';
+import { builder, openApiBuilder } from './builder.js';
 import {
   DocumentStore,
   RavendbCrudEndpointFactory,
@@ -31,17 +31,17 @@ documentStore.initialize();
 builder.addResource(
   article,
   new RavendbCrudEndpointFactory(documentStore),
-  honoBuilder,
+  openApiBuilder,
 );
 
 builder.addResource(
   author,
   new RavendbCrudEndpointFactory(documentStore),
-  honoBuilder,
+  openApiBuilder,
 );
 
 builder.addResource(
   comment,
   new RavendbCrudEndpointFactory(documentStore),
-  honoBuilder,
+  openApiBuilder,
 );

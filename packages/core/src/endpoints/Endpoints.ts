@@ -87,7 +87,8 @@ export type EndpointSchema = ZodObject<{
     path?: ZodObject<{}>;
     query: ZodObject<{
       include: ZodOptional<ZodString>;
-      fields: ZodOptional<ZodString>;
+      // TODO: define the fields based on latest changes
+      // fields: ZodOptional<ZodString>;
       sort: ZodOptional<ZodString>;
     }>;
   }>;

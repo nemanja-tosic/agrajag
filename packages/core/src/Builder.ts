@@ -59,7 +59,7 @@ export class Builder {
 
       endpointBuilder.addGet(
         definition,
-        this.#schemaFactory.createEndpointSchema({
+        this.#schemaFactory.createEndpointSchema(definition, {
           responseSchema:
             this.#schemaFactory.createArrayPrimaryTypeSchema(definition),
           noId: true,
@@ -86,7 +86,7 @@ export class Builder {
 
       endpointBuilder.addGet(
         definition,
-        this.#schemaFactory.createEndpointSchema({
+        this.#schemaFactory.createEndpointSchema(definition, {
           responseSchema:
             this.#schemaFactory.createSinglePrimaryTypeSchema(definition),
         }),
@@ -110,7 +110,7 @@ export class Builder {
     if (endpoints.create?.self) {
       endpointBuilder.addPost(
         definition,
-        this.#schemaFactory.createEndpointSchema({
+        this.#schemaFactory.createEndpointSchema(definition, {
           requestSchema: this.#schemaFactory.createSinglePrimaryTypeSchema(
             definition,
             { partialAttributes: true, optionalId: true },
@@ -142,7 +142,7 @@ export class Builder {
     if (endpoints.patch?.self) {
       endpointBuilder.addPatch(
         definition,
-        this.#schemaFactory.createEndpointSchema({
+        this.#schemaFactory.createEndpointSchema(definition, {
           requestSchema: this.#schemaFactory.createSinglePrimaryTypeSchema(
             definition,
             { partialAttributes: true },
@@ -176,7 +176,7 @@ export class Builder {
     if (endpoints.delete?.self) {
       endpointBuilder.addDelete(
         definition,
-        this.#schemaFactory.createEndpointSchema({
+        this.#schemaFactory.createEndpointSchema(definition, {
           responseSchema:
             this.#schemaFactory.createSinglePrimaryTypeSchema(definition),
         }),
@@ -207,7 +207,7 @@ export class Builder {
 
       endpointBuilder.addGet(
         relationship,
-        this.#schemaFactory.createEndpointSchema(),
+        this.#schemaFactory.createEndpointSchema(definition),
         `/${type}/:id/relationships/${key}`,
         async (params, respond) => {
           try {
@@ -226,7 +226,7 @@ export class Builder {
 
       endpointBuilder.addPost(
         relationship,
-        this.#schemaFactory.createEndpointSchema(),
+        this.#schemaFactory.createEndpointSchema(definition),
         `/${type}/:id/relationships/${key}`,
         async (body, params, respond) => {
           try {
@@ -253,7 +253,7 @@ export class Builder {
 
       endpointBuilder.addPatch(
         relationship,
-        this.#schemaFactory.createEndpointSchema(),
+        this.#schemaFactory.createEndpointSchema(definition),
         `/${type}/:id/relationships/${key}`,
         async (body, params, respond) => {
           try {
@@ -281,7 +281,7 @@ export class Builder {
       // NOTE: this should be possible only if it is a one-to-many relationship
       endpointBuilder.addDelete(
         relationship,
-        this.#schemaFactory.createEndpointSchema(),
+        this.#schemaFactory.createEndpointSchema(definition),
         `/${type}/:id/relationships/${key}`,
         async (params, respond) => {
           try {

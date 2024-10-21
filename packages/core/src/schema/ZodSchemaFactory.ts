@@ -66,11 +66,22 @@ export class ZodSchemaFactory implements SchemaFactory {
     };
   }
 
-  createEndpointSchema(options?: {
-    requestSchema?: any;
-    responseSchema?: any;
-    noId?: boolean;
-  }): EndpointSchema {
+  createEndpointSchema<
+    TDefinition extends ResourceDefinition = ResourceDefinition,
+  >(
+    definition: TDefinition,
+    options?: { requestSchema?: any; responseSchema?: any; noId?: boolean },
+  ): EndpointSchema {
+    // TODO: replace string so that we validate the fields we get
+    const querySchema = z.object({
+      [`fields[${definition.type}]`]: z.string().optional(),
+      ...Object.fromEntries(
+        Object.entries(definition.schema.shape.relationships.shape).map(
+          ([key]) => [`fields[${key}]`, z.string().optional()],
+        ),
+      ),
+    });
+
     return z.object({
       ...(options?.requestSchema ? { request: options.requestSchema } : {}),
       ...(options?.responseSchema ? { response: options.responseSchema } : {}),
@@ -87,11 +98,7 @@ export class ZodSchemaFactory implements SchemaFactory {
             .string()
             .optional()
             .openapi({ param: { name: 'include', in: 'query' } }),
-          fields: z
-            .string()
-            .optional()
-            .openapi({ param: { name: 'fields', in: 'query' } }),
-          // TODO: limit to fields in definition
+          ...querySchema.shape,
           sort: z
             .string()
             .optional()

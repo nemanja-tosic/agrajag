@@ -38,15 +38,15 @@ __metadata:
     "@agrajag/configs": "workspace:*"
     "@agrajag/ravendb-adapter": "workspace:*"
     "@cucumber/cucumber": "npm:10.8.0"
-    "@hono/node-server": "npm:1.11.1"
-    "@hono/swagger-ui": "npm:0.2.2"
+    "@hono/node-server": "npm:1.13.2"
+    "@hono/swagger-ui": "npm:0.4.1"
     "@reduxjs/toolkit": "npm:2.2.5"
     "@rtk-query/codegen-openapi": "npm:1.2.0"
     "@types/node": "npm:20.12.12"
     "@types/ramda": "npm:0.30.0"
     "@types/uuid": "npm:9.0.8"
     agrajag: "workspace:*"
-    hono: "npm:4.3.11"
+    hono: "npm:4.6.5"
     ramda: "npm:0.30.0"
     ravendb: "file:../../ravendb-6.0.0.tgz"
     uuid: "npm:9.0.1"
@@ -63,14 +63,14 @@ __metadata:
     "@agrajag/ravendb-adapter": "workspace:*"
     "@cloudflare/workers-types": "npm:4.20240512.0"
     "@cucumber/cucumber": "npm:10.8.0"
-    "@hono/swagger-ui": "npm:0.2.2"
+    "@hono/swagger-ui": "npm:0.4.1"
     "@reduxjs/toolkit": "npm:2.2.5"
     "@types/node": "npm:20.12.12"
     "@types/ramda": "npm:0.30.0"
     "@types/uuid": "npm:9.0.8"
     agrajag: "workspace:*"
     esbuild: "npm:0.21.4"
-    hono: "npm:4.3.11"
+    hono: "npm:4.6.5"
     ramda: "npm:0.30.0"
     ravendb: "file:../../ravendb-6.0.0.tgz"
     uuid: "npm:9.0.1"
@@ -794,19 +794,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hono/node-server@npm:1.11.1":
-  version: 1.11.1
-  resolution: "@hono/node-server@npm:1.11.1"
-  checksum: 10c0/87ad10b0e79c5434935cd83172d1923eb04c7ac1853e79b60303cae983876fc3c736e1826b824b34adae7a3e7289c99d764ecefe13b650f81b1f9d5baea3ed4a
+"@hono/node-server@npm:1.13.2":
+  version: 1.13.2
+  resolution: "@hono/node-server@npm:1.13.2"
+  peerDependencies:
+    hono: ^4
+  checksum: 10c0/75840850faa5c4ac0a94fe788244ae689461dd43f6f6148a66964362db1765c982b5d5d10929d70634922f620474900b2923be5d4dcc414eb276293a7705e7ce
   languageName: node
   linkType: hard
 
-"@hono/swagger-ui@npm:0.2.2":
-  version: 0.2.2
-  resolution: "@hono/swagger-ui@npm:0.2.2"
+"@hono/swagger-ui@npm:0.4.1":
+  version: 0.4.1
+  resolution: "@hono/swagger-ui@npm:0.4.1"
   peerDependencies:
     hono: "*"
-  checksum: 10c0/927010a0f5f0dd3986b9c4af98b40e4c8d76b846d5b4ed3daa9bb63b7517b0fa88ae851d3377b61da404924e429267d0bfff68e55a8b6d7bed70a17249c3f931
+  checksum: 10c0/772bf6d6c71ee70ff9e083088d38fb367103f286cd57007279e75a404962a99d09f823ce5efaac54ba9bdb90a21fbdf5e1d80bc4ba13168eeaf48b745162c2ba
   languageName: node
   linkType: hard
 
@@ -1167,7 +1169,7 @@ __metadata:
     "@types/jsonapi-serializer": "npm:3.6.8"
     "@types/node": "npm:20.12.12"
     "@types/ramda": "npm:0.30.0"
-    hono: "npm:4.3.11"
+    hono: "npm:4.6.5"
     jsonapi-serializer: "npm:3.6.9"
     ramda: "npm:0.30.0"
     zod: "npm:3.23.8"
@@ -2512,10 +2514,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hono@npm:4.3.11":
-  version: 4.3.11
-  resolution: "hono@npm:4.3.11"
-  checksum: 10c0/f31ecb13cba1027b39def05f22449da229aad944771dfa45ebcefda0ade66123b23a0e54e3a567dd4adbc77ff0bcba6026af04b9f5d7be4d629a177a6398a2c0
+"hono@npm:4.6.5":
+  version: 4.6.5
+  resolution: "hono@npm:4.6.5"
+  checksum: 10c0/a99a58ce2ea4cfda36d8da9715a69f048abc1f9b1c32b7ae873cbd9a0698e66a118d6939e0ea79531fe0e916b736caf53c1c011fb33f826efb0979958e2a81e0
   languageName: node
   linkType: hard
 

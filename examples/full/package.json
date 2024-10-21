@@ -3,16 +3,16 @@
   "type": "module",
   "scripts": {
     "build": "yarn build:ts",
-    "start": "node --watch --inspect-brk ./dist/src/start.js",
+    "start": "node --watch ./dist/src/start.js",
     "codegen": "yarn rtk-query-codegen-openapi src/openapi-config.cjs"
   },
   "dependencies": {
     "@agrajag/ravendb-adapter": "workspace:*",
-    "@hono/node-server": "1.11.1",
-    "@hono/swagger-ui": "0.2.2",
+    "@hono/node-server": "1.13.2",
+    "@hono/swagger-ui": "0.4.1",
     "@reduxjs/toolkit": "2.2.5",
     "agrajag": "workspace:*",
-    "hono": "4.3.11",
+    "hono": "4.6.5",
     "ramda": "0.30.0",
     "ravendb": "file:../../ravendb-6.0.0.tgz",
     "uuid": "9.0.1",

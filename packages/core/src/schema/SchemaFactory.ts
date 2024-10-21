@@ -29,11 +29,12 @@ export interface SchemaFactory {
     options?: CreateSchemaOptions<TRelationships>,
   ): ResourceDefinition<TAttributes, TRelationships>;
 
-  createEndpointSchema(options?: {
-    responseSchema?: any;
-    requestSchema?: any;
-    noId?: boolean;
-  }): EndpointSchema;
+  createEndpointSchema<
+    TDefinition extends ResourceDefinition = ResourceDefinition,
+  >(
+    definition: TDefinition,
+    options?: { responseSchema?: any; requestSchema?: any; noId?: boolean },
+  ): EndpointSchema;
 
   createSinglePrimaryTypeSchema<
     TDefinition extends ResourceDefinition = ResourceDefinition,

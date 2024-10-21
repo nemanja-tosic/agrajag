@@ -23,7 +23,7 @@
     "@types/jsonapi-serializer": "3.6.8",
     "@types/node": "20.12.12",
     "@types/ramda": "0.30.0",
-    "hono": "4.3.11"
+    "hono": "4.6.5"
   },
   "peerDependencies": {
     "hono": "^4.0.0"
