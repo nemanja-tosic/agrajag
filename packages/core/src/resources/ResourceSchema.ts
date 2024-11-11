@@ -11,11 +11,12 @@ import { ResourceDefinition } from './ResourceDefinition.js';
 import { ResourceLinkageSchema } from './ResourceLinkageSchema.js';
 
 export type ResourceSchema<
+  TType extends string = string,
   TAttrs extends AttributesSchema = AttributesSchema,
   TRels extends RelationshipsSchema = RelationshipsSchema,
 > = ZodObject<{
   id: ZodString;
-  type: ZodLiteral<string>;
+  type: ZodLiteral<TType>;
   attributes: TAttrs;
   relationships: TRels;
 }>;

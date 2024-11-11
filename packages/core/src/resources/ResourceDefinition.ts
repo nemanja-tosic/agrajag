@@ -28,14 +28,16 @@ export const AllCapabilities: ResourceCapabilities =
   ResourceCapabilities.Delete;
 
 export interface ResourceDefinition<
+  TType extends string = string,
   TAttributes extends AttributesSchema = AttributesSchema,
   TRelationships extends ResourceRelationships = ResourceRelationships,
 > {
-  type: string;
+  type: TType;
   attributes: (string & keyof TAttributes['shape'])[];
   relationships: TRelationships;
   capabilities: ResourceCapabilities;
   schema: ResourceSchema<
+    TType,
     TAttributes,
     ZodObject<{
       // TODO: based on relationship

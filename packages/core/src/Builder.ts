@@ -32,13 +32,14 @@ export class Builder {
   }
 
   createSchema<
+    TType extends string = string,
     TAttributes extends AttributesSchema = AttributesSchema,
     TRelationships extends ResourceRelationships = ResourceRelationships,
   >(
-    type: string,
+    type: TType,
     createAttributesSchema: (zod: typeof z) => TAttributes,
     options?: CreateSchemaOptions<TRelationships>,
-  ): ResourceDefinition<TAttributes, TRelationships> {
+  ): ResourceDefinition<TType, TAttributes, TRelationships> {
     return this.#schemaFactory.createSchema(
       type,
       createAttributesSchema,

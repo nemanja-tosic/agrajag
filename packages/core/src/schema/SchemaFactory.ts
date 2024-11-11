@@ -21,13 +21,14 @@ export interface CreateSchemaOptions<
 
 export interface SchemaFactory {
   createSchema<
+    TType extends string = string,
     TAttributes extends AttributesSchema = AttributesSchema,
     TRelationships extends ResourceRelationships = ResourceRelationships,
   >(
-    type: string,
+    type: TType,
     createAttributesSchema: (zod: typeof z) => TAttributes,
     options?: CreateSchemaOptions<TRelationships>,
-  ): ResourceDefinition<TAttributes, TRelationships>;
+  ): ResourceDefinition<TType, TAttributes, TRelationships>;
 
   createEndpointSchema<
     TDefinition extends ResourceDefinition = ResourceDefinition,
