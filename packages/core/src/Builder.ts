@@ -12,15 +12,20 @@ import { CreateSchemaOptions, SchemaFactory } from './schema/SchemaFactory.js';
 import { Response, ServerBuilder } from './server/ServerBuilder.js';
 
 import { IEndpointFactory } from './endpoints/EndpointFactory.js';
-import { ErrorObject } from './resources/Error.js';
+
+export interface Logger {
+  error: (error: Error) => void | Promise<void>;
+}
 
 export class Builder {
-  #serializer: Serializer = new JsonApiSerializer();
-  #schemaFactory: SchemaFactory = new ZodSchemaFactory();
+  readonly #serializer: Serializer = new JsonApiSerializer();
+  readonly #schemaFactory: SchemaFactory = new ZodSchemaFactory();
+  readonly #logger: Logger = console;
 
   constructor(options?: {
     serializer?: Serializer;
     schemaFactory?: SchemaFactory;
+    logger?: Logger;
   }) {
     if (options?.serializer) {
       this.#serializer = options.serializer;
@@ -28,6 +33,10 @@ export class Builder {
 
     if (options?.schemaFactory) {
       this.#schemaFactory = options.schemaFactory;
+    }
+
+    if (options?.logger) {
+      this.#logger = options.logger;
     }
   }
 
@@ -76,7 +85,8 @@ export class Builder {
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
           } catch (error) {
-            await respond(this.#createError(error));
+            await this.#logError(error);
+            await respond(this.#createUnhandledErrorResponse(error));
           }
         },
       );
@@ -102,7 +112,8 @@ export class Builder {
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
           } catch (error) {
-            await respond(this.#createError(error));
+            await this.#logError(error);
+            await respond(this.#createUnhandledErrorResponse(error));
           }
         },
       );
@@ -134,7 +145,8 @@ export class Builder {
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
           } catch (error) {
-            await respond(this.#createError(error));
+            await this.#logError(error);
+            await respond(this.#createUnhandledErrorResponse(error));
           }
         },
       );
@@ -168,7 +180,8 @@ export class Builder {
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
           } catch (error) {
-            await respond(this.#createError(error));
+            await this.#logError(error);
+            await respond(this.#createUnhandledErrorResponse(error));
           }
         },
       );
@@ -195,7 +208,8 @@ export class Builder {
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
           } catch (error) {
-            await respond(this.#createError(error));
+            await this.#logError(error);
+            await respond(this.#createUnhandledErrorResponse(error));
           }
         },
       );
@@ -220,7 +234,8 @@ export class Builder {
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
           } catch (error) {
-            await respond(this.#createError(error));
+            await this.#logError(error);
+            await respond(this.#createUnhandledErrorResponse(error));
           }
         },
       );
@@ -247,7 +262,8 @@ export class Builder {
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
           } catch (error) {
-            await respond(this.#createError(error));
+            await this.#logError(error);
+            await respond(this.#createUnhandledErrorResponse(error));
           }
         },
       );
@@ -274,7 +290,8 @@ export class Builder {
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
           } catch (error) {
-            await respond(this.#createError(error));
+            await this.#logError(error);
+            await respond(this.#createUnhandledErrorResponse(error));
           }
         },
       );
@@ -294,7 +311,8 @@ export class Builder {
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
           } catch (error) {
-            await respond(this.#createError(error));
+            await this.#logError(error);
+            await respond(this.#createUnhandledErrorResponse(error));
           }
         },
       );
@@ -303,7 +321,11 @@ export class Builder {
     return this;
   }
 
-  #createError(error: Error): Response {
+  async #logError(error: Error): Promise<void> {
+    this.#logger.error(error);
+  }
+
+  #createUnhandledErrorResponse(error: Error): Response {
     return {
       body: {
         errors: [
