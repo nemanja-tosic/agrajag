@@ -104,6 +104,7 @@ export class ZodSchemaFactory implements SchemaFactory {
             .string()
             .optional()
             .openapi({ param: { name: 'sort', in: 'query' } }),
+          filter: z.string().optional(),
         }),
       }),
     });

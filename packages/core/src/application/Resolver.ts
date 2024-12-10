@@ -1,6 +1,7 @@
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import { Normalized } from '../endpoints/Endpoints.js';
 import { ResourceIdentifier } from '../resources/ResourceLinkageSchema.js';
+import { QueryParams } from '../endpoints/QueryParams.js';
 
 // @ts-ignore
 Symbol.asyncDispose ??= Symbol('Symbol.asyncDispose');
@@ -15,17 +16,13 @@ export interface Resolver<
 
   byType(
     type: string,
-    options?: { sort?: TDefinition['attributes'] },
+    params: QueryParams<TDefinition>,
   ): Promise<Normalized<TDefinition>[]> | undefined;
 
   relationshipByKey(
     id: string,
     key: keyof TDefinition['relationships'],
-  ): Promise<
-    | undefined
-    | ResourceIdentifier
-    | ResourceIdentifier[]
-  >;
+  ): Promise<undefined | ResourceIdentifier | ResourceIdentifier[]>;
 
   save(entity: Normalized<TDefinition>): Promise<void>;
 

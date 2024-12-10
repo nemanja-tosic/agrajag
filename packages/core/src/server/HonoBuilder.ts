@@ -1,4 +1,4 @@
-import { Context, Hono } from 'hono';
+import { Hono } from 'hono';
 import { EndpointSchema } from '../endpoints/Endpoints.js';
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import {
@@ -6,7 +6,6 @@ import {
   FetchDeleteHandler,
   MutationHandler,
   Response,
-  Server,
 } from './ServerBuilder.js';
 
 export class HonoBuilder extends ServerBuilder<Hono> {
@@ -103,6 +102,7 @@ export class HonoBuilder extends ServerBuilder<Hono> {
           .map(([key, value]) => [key.match(/fields\[(.*?)\]/)![1], value]),
       ),
       sort: c.req.query('sort'),
+      filter: c.req.query('filter'),
     };
   }
 

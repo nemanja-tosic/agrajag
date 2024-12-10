@@ -22,14 +22,14 @@ type FetchEndpoint<TDefinition extends ResourceDefinition> = {
     params: { id: string } & QueryParams,
   ) => Promise<Resource<TDefinition> | undefined>;
   collection?: (
-    params: QueryParams,
+    params: QueryParams<TDefinition>,
   ) => Promise<Resource<TDefinition>[] | undefined>;
   related?: RelatedEndpointsWithoutBody<TDefinition>;
 };
 
 type DeleteEndpoint<TDefinition extends ResourceDefinition> = {
   self: (
-    params: { id: string } & QueryParams,
+    params: { id: string } & QueryParams<TDefinition>,
   ) => Promise<Resource<TDefinition> | undefined>;
   related?: RelatedEndpointsWithoutBody<TDefinition>;
 };
@@ -90,6 +90,7 @@ export type EndpointSchema = ZodObject<{
       // TODO: define the fields based on latest changes
       // fields: ZodOptional<ZodString>;
       sort: ZodOptional<ZodString>;
+      filter: ZodOptional<ZodString>;
     }>;
   }>;
 }>;

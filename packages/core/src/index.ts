@@ -10,3 +10,4 @@ export * from './resources/ResourceLinkageSchema.js';
 export * from './server/ServerBuilder.js';
 export * from './resources/Resource.js';
 export * from './endpoints/EndpointFactory.js';
+export * from './endpoints/QueryParams.js';

@@ -84,9 +84,7 @@ export abstract class BaseEndpointFactory<
           collection: async params => {
             await using external = this.createExternal(definition);
 
-            const entities = await external.byType(definition.type, {
-              sort: params.sort,
-            });
+            const entities = await external.byType(definition.type, params);
 
             if (!entities) {
               return undefined;
