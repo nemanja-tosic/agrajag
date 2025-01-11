@@ -1,5 +1,5 @@
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
-import { Normalized } from '../endpoints/Endpoints.js';
+import { Stored } from '../endpoints/Endpoints.js';
 import { ResourceIdentifier } from '../resources/ResourceLinkageSchema.js';
 import { QueryParams } from '../endpoints/QueryParams.js';
 
@@ -9,24 +9,22 @@ Symbol.asyncDispose ??= Symbol('Symbol.asyncDispose');
 export interface Resolver<
   TDefinition extends ResourceDefinition = ResourceDefinition,
 > extends AsyncDisposable {
-  // realistically, this should be shallow - do not force the client to
-  // load all relationships
-  byId(id: string): Promise<Normalized<TDefinition> | undefined>;
-  byId(ids: string[]): Promise<Normalized<TDefinition>[]>;
+  byId(id: string): Promise<Stored<TDefinition> | undefined>;
+  byId(ids: string[]): Promise<Stored<TDefinition>[]>;
 
   byType(
     type: string,
     params: QueryParams<TDefinition>,
-  ): Promise<Normalized<TDefinition>[]> | undefined;
+  ): Promise<Stored<TDefinition>[]> | undefined;
 
   relationshipByKey(
     id: string,
-    key: keyof TDefinition['relationships'],
+    key: string & keyof TDefinition['relationships'],
   ): Promise<undefined | ResourceIdentifier | ResourceIdentifier[]>;
 
-  save(entity: Normalized<TDefinition>): Promise<void>;
+  save(entity: Stored<TDefinition>): Promise<void>;
 
-  delete(entity: Normalized<TDefinition>): Promise<void>;
+  delete(entity: Stored<TDefinition>): Promise<void>;
 
   saveUow?(): Promise<void>;
 }

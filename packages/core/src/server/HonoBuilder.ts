@@ -103,6 +103,7 @@ export class HonoBuilder extends ServerBuilder<Hono> {
       ),
       sort: c.req.query('sort'),
       filter: c.req.query('filter'),
+      user: c.req.user,
     };
   }
 

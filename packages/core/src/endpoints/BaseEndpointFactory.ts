@@ -8,6 +8,7 @@ import {
   Normalized,
   RelatedEndpointsWithBody,
   RelatedEndpointsWithoutBody,
+  Stored,
 } from './Endpoints.js';
 import { Resolver } from '../application/Resolver.js';
 import { Serializer } from '../serialization/Serializer.js';
@@ -28,7 +29,7 @@ export abstract class BaseEndpointFactory<
     definition: ResourceDefinition,
     external: Resolver,
     serializer: Serializer,
-    entity: Normalized<ResourceDefinition> | Normalized<ResourceDefinition>[],
+    entity: Stored<ResourceDefinition> | Stored<ResourceDefinition>[],
     params: QueryParams,
   ): Promise<Resource> {
     return serializer.serialize(
@@ -36,10 +37,16 @@ export abstract class BaseEndpointFactory<
       Array.isArray(entity)
         ? await Promise.all(
             entity.map(entity =>
-              this.#denormalize(definition, entity, id => external.byId(id)),
+              this.#denormalize(definition, entity, async id => {
+                const d = await external.byId(id);
+                return d;
+              }),
             ),
           )
-        : await this.#denormalize(definition, entity, id => external.byId(id)),
+        : await this.#denormalize(definition, entity, async id => {
+            const d = await external.byId(id);
+            return d;
+          }),
       params,
     );
   }
@@ -85,7 +92,6 @@ export abstract class BaseEndpointFactory<
             await using external = this.createExternal(definition);
 
             const entities = await external.byType(definition.type, params);
-
             if (!entities) {
               return undefined;
             }
@@ -161,18 +167,16 @@ export abstract class BaseEndpointFactory<
 
             await using external = this.createExternal(definition);
 
-            // convert from JSON:API to RavenDB entity
-            // is this not the deserialized version?
+            // TODO: introduce a createNormalized factory
             const entity: Normalized<TDefinition> = {
               id: body.data.id ?? createId(),
               ...body.data.attributes,
-              // relationships are marked with a suffix of "Id" or "Ids"
               ...Object.fromEntries(
                 Object.entries(body.data.relationships ?? {}).map(
                   ([key, value]) =>
                     Array.isArray(value.data)
-                      ? [`${key}Ids`, value.data.map(d => d.id)]
-                      : [`${key}Id`, value.data?.id],
+                      ? [this.normalizedRelKey(key), value.data.map(d => d.id)]
+                      : [this.normalizedRelKey(key), value.data?.id],
                 ),
               ),
             };
@@ -195,7 +199,7 @@ export abstract class BaseEndpointFactory<
             );
           },
           related: Object.fromEntries(
-            Object.entries(definition.relationships).map(([key, value]) => [
+            Object.entries(definition.relationships).map(([key]) => [
               key,
               async (body, params) => {
                 await using external = this.createExternal(definition);
@@ -205,9 +209,7 @@ export abstract class BaseEndpointFactory<
                   throw new Error('Failed to load relationship');
                 }
 
-                const property = Array.isArray(value)
-                  ? `${key}Ids`
-                  : `${key}Id`;
+                const property = this.normalizedRelKey(key);
 
                 Object.assign(entity, {
                   [property]: Array.isArray(body.data)
@@ -259,7 +261,7 @@ export abstract class BaseEndpointFactory<
             );
           },
           related: Object.fromEntries(
-            Object.entries(definition.relationships).map(([key, value]) => {
+            Object.entries(definition.relationships).map(([key]) => {
               return [
                 key,
                 async params => {
@@ -270,11 +272,7 @@ export abstract class BaseEndpointFactory<
                     return undefined;
                   }
 
-                  const property = Array.isArray(value)
-                    ? `${key}Ids`
-                    : `${key}Id`;
-
-                  delete (entity as any)[property];
+                  delete (entity as any)[this.normalizedRelKey(key)];
 
                   if (!external.saveUow) {
                     await external.save(entity);
@@ -309,17 +307,20 @@ export abstract class BaseEndpointFactory<
               return undefined;
             }
 
+            // TODO: introduce a createNormalized factory
             Object.assign(
               entity,
               Object.assign(entity, {
                 ...body.data.attributes,
-                // relationships are marked with a suffix of "Id" or "Ids"
                 ...Object.fromEntries(
                   Object.entries(body.data.relationships ?? {}).map(
                     ([key, value]) =>
                       Array.isArray(value.data)
-                        ? [`${key}Ids`, value.data.map(d => d.id)]
-                        : [`${key}Id`, value.data?.id],
+                        ? [
+                            this.normalizedRelKey(key),
+                            value.data.map(d => d.id),
+                          ]
+                        : [this.normalizedRelKey(key), value.data?.id],
                   ),
                 ),
               }),
@@ -344,7 +345,7 @@ export abstract class BaseEndpointFactory<
             );
           },
           related: Object.fromEntries(
-            Object.entries(definition.relationships).map(([key, value]) => {
+            Object.entries(definition.relationships).map(([key]) => {
               return [
                 key,
                 async (body, params) => {
@@ -355,12 +356,8 @@ export abstract class BaseEndpointFactory<
                     return undefined;
                   }
 
-                  const property = Array.isArray(value)
-                    ? `${key}Ids`
-                    : `${key}Id`;
-
                   Object.assign(entity, {
-                    [property]: Array.isArray(body.data)
+                    [this.normalizedRelKey(key)]: Array.isArray(body.data)
                       ? [...new Set(body.data.map(d => d.id))]
                       : body.data.id,
                   });
@@ -386,24 +383,33 @@ export abstract class BaseEndpointFactory<
 
   async #denormalize<TDefinition extends ResourceDefinition>(
     definition: TDefinition,
-    entity: Normalized<TDefinition>,
-    relationship: (key: string) => Promise<Normalized<TDefinition> | undefined>,
+    entity: Stored<TDefinition>,
+    relationship: (key: string[]) => Promise<Stored<TDefinition>[]>,
   ): Promise<Denormalized<TDefinition>> {
     return {
       ...entity,
       ...Object.fromEntries(
         await Promise.all(
-          Object.entries(definition.relationships).map(async ([key, value]) => {
-            const relationshipId =
-              entity[Array.isArray(value) ? `${key}Ids` : `${key}Id`];
-            if (relationshipId === undefined) {
-              return [key, undefined];
-            }
+          Object.keys(definition.relationships)
+            // if we get the denormalized version, we can skip loading relationships
+            .filter(key => entity[key] === undefined)
+            .map(async key => {
+              const relationshipId = entity[this.normalizedRelKey(key)];
+              if (relationshipId === undefined) {
+                return [key, undefined];
+              }
 
-            return [key, await relationship(relationshipId)];
-          }),
+              return [key, await relationship(relationshipId)];
+            }),
         ),
       ),
     };
+  }
+
+  protected normalizedRelKey(key: string): string {
+    const isPlural = key.endsWith('s');
+    const singularKey = isPlural ? key.slice(0, -1) : key;
+
+    return isPlural ? `${singularKey}Ids` : `${singularKey}Id`;
   }
 }

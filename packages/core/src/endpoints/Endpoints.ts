@@ -65,6 +65,10 @@ type MapKeyToId<K, V> = K extends string
   ? `${Singularize<K>}${V extends any[] ? 'Ids' : 'Id'}`
   : never;
 
+export type Stored<TSchema extends ResourceDefinition> =
+  | Normalized<TSchema>
+  | Denormalized<TSchema>;
+
 export type Normalized<TSchema extends ResourceDefinition> = {
   _flavor?: 'Normalized';
 } & {
@@ -87,7 +91,11 @@ export type Denormalized<TSchema extends ResourceDefinition> = {
       ? { id: string } & z.infer<
           TSchema['relationships'][K]['schema']['shape']['attributes']
         >
-      : {};
+      : TSchema['relationships'][K] extends ResourceDefinition[]
+        ? ({ id: string } & z.infer<
+            TSchema['relationships'][K][number]['schema']['shape']['attributes']
+          >)[]
+        : {};
   };
 
 export type EndpointSchema = ZodObject<{

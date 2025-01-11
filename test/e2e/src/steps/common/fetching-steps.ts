@@ -7,26 +7,36 @@ import { RavendbCrudEndpointFactory } from '@agrajag/ravendb-adapter';
 import { ZodArray, ZodObject, ZodString } from 'zod';
 
 type AuthorDefinition = ResourceDefinition<
+  'authors',
   ZodObject<{ name: ZodString; category: ZodString }>
 >;
 
 type PhotographerDefinition = ResourceDefinition<
+  'photographers',
   ZodObject<{ name?: ZodString; category: ZodString }>
 >;
 
 type CommentDefinition = ResourceDefinition<
+  'comments',
   ZodObject<{ body: ZodString }>,
   { author: AuthorDefinition }
 >;
 
 type PhotoDefinition = ResourceDefinition<
+  'photos',
   ZodObject<{ name: ZodString }>,
   { photographer: PhotographerDefinition }
 >;
 
 type ArticleDefinition = ResourceDefinition<
+  'articles',
   ZodObject<{ title: ZodString; body: ZodString; tags: ZodArray<ZodString> }>,
   { author: AuthorDefinition; comments: [CommentDefinition] }
+>;
+
+type EmptyDefinition = ResourceDefinition<
+  'empty',
+  ZodObject<{ name: ZodString; category: ZodString }>
 >;
 
 export interface World {
@@ -39,7 +49,7 @@ export interface World {
     article: ArticleDefinition;
     author: AuthorDefinition;
     comment: CommentDefinition;
-    empty: AuthorDefinition;
+    empty: EmptyDefinition;
     photo: PhotoDefinition;
     photographer: PhotographerDefinition;
   };

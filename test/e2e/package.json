@@ -6,7 +6,7 @@
     "build": "yarn build:ts",
     "test-e2e-fastify": "yarn _test-e2e fastify",
     "test-e2e-hono": "yarn _test-e2e hono",
-    "test-e2e": "yarn test-e2e-fastify",
+    "test-e2e": "yarn test-e2e-hono",
     "_test-e2e": "cucumber-js --import dist/src/steps/implementation/${0:-hono} --import 'dist/src/steps/common/**/*.js' src/features"
   },
   "dependencies": {

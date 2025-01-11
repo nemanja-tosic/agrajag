@@ -1,6 +1,6 @@
 {
   "name": "agrajag",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "type": "module",
   "scripts": {
     "build": "yarn build:ts"

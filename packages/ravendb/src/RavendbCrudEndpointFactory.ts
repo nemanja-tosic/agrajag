@@ -63,7 +63,7 @@ export class RavendbCrudEndpointFactory<
             `,
           )
           .addParameter('id', id)
-          .addParameter('key', key);
+          .addParameter('key', this.normalizedRelKey(key));
 
         if (Array.isArray(definition.relationships[key])) {
           return await query.all();
@@ -108,8 +108,17 @@ const denormalize = `
 
 const getRelationship = `
   declare function getRelationship(entity, key) {
-    if (entity[\`\${key}Id\`] !== undefined) {
-      const relationship = load(entity[\`\${key}Id\`]);
+    if (Array.isArray(entity[key])) {
+      const relationships = load(entity[key]);
+      
+      return relationships
+        .filter(relationship => relationship != null)
+        .map(relationship => ({
+          id: id(relationship),
+          type: relationship['@metadata']['@collection']
+        }));
+    } else if (entity[key] !== undefined) {
+      const relationship = load(entity[key]);
       if (relationship == null) {
         return [];
       }
@@ -118,15 +127,6 @@ const getRelationship = `
         id: id(relationship),
         type: relationship['@metadata']['@collection']
       };
-    } else if (entity[\`\${key}Ids\`] !== undefined) {
-      const relationships = load(entity[\`\${key}Ids\`]);
-      
-      return relationships
-        .filter(relationship => relationship != null)
-        .map(relationship => ({
-          id: id(relationship),
-          type: relationship['@metadata']['@collection']
-        }));
     }
     
     return [];
