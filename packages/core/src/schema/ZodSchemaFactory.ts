@@ -11,7 +11,7 @@ import {
 } from '../resources/ResourceDefinition.js';
 import { z } from 'zod';
 import { CreateSchemaOptions, SchemaFactory } from './SchemaFactory.js';
-import { EndpointSchema } from '../endpoints/Endpoints.js';
+import { createDenormalized, EndpointSchema } from '../endpoints/Endpoints.js';
 import { extendZodWithOpenApi } from 'zod-openapi';
 
 export class ZodSchemaFactory implements SchemaFactory {
@@ -130,6 +130,7 @@ export class ZodSchemaFactory implements SchemaFactory {
         attributes,
         relationships: definition.schema.shape.relationships,
       }),
+      'x-denormalized': createDenormalized(definition).optional(),
     }) as any;
   }
 
@@ -145,6 +146,7 @@ export class ZodSchemaFactory implements SchemaFactory {
           relationships: definition.schema.shape.relationships,
         }),
       ),
+      'x-denormalized': z.array(createDenormalized(definition)).optional(),
     }) as any;
   }
 

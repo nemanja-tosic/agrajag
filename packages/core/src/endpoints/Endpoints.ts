@@ -98,6 +98,22 @@ export type Denormalized<TSchema extends ResourceDefinition> = {
         : {};
   };
 
+export function createDenormalized<TSchema extends ResourceDefinition>(
+  schema: TSchema,
+): z.ZodObject<Denormalized<TSchema>> {
+  return z.object({
+    id: schema.schema.shape.id,
+    ...schema.schema.shape.attributes.shape,
+    ...Object.fromEntries(
+      Object.entries(schema.relationships).map(([key, value]) =>
+        Array.isArray(value)
+          ? [key, z.array(createDenormalized(value[0]))]
+          : [key, createDenormalized(value)],
+      ),
+    ),
+  }) as any;
+}
+
 export type EndpointSchema = ZodObject<{
   request?: ZodRecord;
   response?: ZodRecord;
