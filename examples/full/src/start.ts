@@ -1,9 +1,10 @@
-import { honoBuilder, openApiBuilder } from './builder.js';
+import { builder, honoBuilder, openApiBuilder } from './builder.js';
 import { swaggerUI } from '@hono/swagger-ui';
 import { serve } from '@hono/node-server';
 
 import './schema.js';
 
+await builder.build();
 const hono = honoBuilder.build();
 const openapi = openApiBuilder.build();
 

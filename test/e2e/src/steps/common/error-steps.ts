@@ -1,10 +1,11 @@
 import { Before } from '@cucumber/cucumber';
+import { z } from 'agrajag';
 // import { World } from './fetching-steps.js';
 
 Before<any>(function () {
   // an endpoint that fails processing
   this.builder.addResource(
-    this.builder.createSchema('errors', (z: any) => z.object({})),
+    this.builder.createSchema('errors', z.object({})),
     {
       createEndpoints: () => ({
         fetch: {

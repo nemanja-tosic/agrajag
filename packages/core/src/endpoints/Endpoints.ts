@@ -1,8 +1,4 @@
-import {
-  ArrayPrimaryType,
-  SinglePrimaryType,
-  UpdateSchema,
-} from '../resources/ResourceSchema.js';
+import { UpdateSchema } from '../resources/ResourceSchema.js';
 import { Params } from './Params.js';
 import { z, ZodObject, ZodOptional, ZodRecord, ZodString } from 'zod';
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
@@ -31,7 +27,7 @@ type DeleteEndpoint<TDefinition extends ResourceDefinition> = {
   self: (
     params: { id: string } & QueryParams<TDefinition>,
   ) => Promise<Resource<TDefinition> | undefined>;
-  related?: RelatedEndpointsWithoutBody<TDefinition>;
+  related?: RelatedEndpointsWithBody<TDefinition>;
 };
 
 type MutateEndpoint<TDefinition extends ResourceDefinition> = {
@@ -52,51 +48,58 @@ export type RelatedEndpointsWithoutBody<
 
 export type RelatedEndpointsWithBody<TDefinition extends ResourceDefinition> = {
   [K in keyof TDefinition['relationships']]: (
-    body: z.infer<SinglePrimaryType | ArrayPrimaryType>,
-    params: { id: string },
-  ) => Promise<ResourceLinkage>;
+    body: ResourceLinkage,
+    params: { id: string } & QueryParams<TDefinition>,
+  ) => Promise<Stored<TDefinition>>;
 };
 
-type Singularize<Key extends string> = Key extends `${infer Base}s`
-  ? `${Base}`
-  : Key;
-
-type MapKeyToId<K, V> = K extends string
-  ? `${Singularize<K>}${V extends any[] ? 'Ids' : 'Id'}`
-  : never;
-
-export type Stored<TSchema extends ResourceDefinition> =
-  | Normalized<TSchema>
-  | Denormalized<TSchema>;
-
-export type Normalized<TSchema extends ResourceDefinition> = {
-  _flavor?: 'Normalized';
-} & {
-  id: z.infer<TSchema['schema']['shape']['id']>;
-} & z.infer<TSchema['schema']['shape']['attributes']> & {
-    [K in keyof TSchema['relationships'] as MapKeyToId<
-      K,
-      TSchema['relationships'][K]
-    >]: TSchema['relationships'][K] extends ResourceDefinition
-      ? string
-      : string[];
-  };
-
-export type Denormalized<TSchema extends ResourceDefinition> = {
-  _flavor?: 'Denormalized';
-} & {
-  id: z.infer<TSchema['schema']['shape']['id']>;
-} & z.infer<TSchema['schema']['shape']['attributes']> & {
+export type Stored<TSchema extends ResourceDefinition> = Flavor<
+  z.infer<IdPlusAttributes<TSchema>> & {
     [K in keyof TSchema['relationships']]: TSchema['relationships'][K] extends ResourceDefinition
-      ? { id: string } & z.infer<
-          TSchema['relationships'][K]['schema']['shape']['attributes']
-        >
+      ?
+          | z.infer<TSchema['relationships'][K]['schema']['shape']['id']>
+          | Stored<TSchema['relationships'][K]>
       : TSchema['relationships'][K] extends ResourceDefinition[]
-        ? ({ id: string } & z.infer<
-            TSchema['relationships'][K][number]['schema']['shape']['attributes']
-          >)[]
+        ?
+            | z.infer<
+                TSchema['relationships'][K][number]['schema']['shape']['id']
+              >[]
+            | Stored<TSchema['relationships'][K][number]>[]
         : {};
-  };
+  },
+  'Normalized' | 'Denormalized'
+>;
+
+type Flavor<T, F> = T & { _flavor?: F };
+
+export type Normalized<TSchema extends ResourceDefinition> = Flavor<
+  z.infer<IdPlusAttributes<TSchema>> & {
+    [K in keyof TSchema['relationships']]: TSchema['relationships'][K] extends ResourceDefinition
+      ? z.infer<TSchema['relationships'][K]['schema']['shape']['id']>
+      : TSchema['relationships'][K] extends ResourceDefinition[]
+        ? z.infer<
+            TSchema['relationships'][K][number]['schema']['shape']['id']
+          >[]
+        : {};
+  },
+  'Normalized'
+>;
+
+export type Denormalized<TSchema extends ResourceDefinition> = Flavor<
+  z.infer<IdPlusAttributes<TSchema>> & {
+    [K in keyof TSchema['relationships']]: TSchema['relationships'][K] extends ResourceDefinition
+      ? Denormalized<TSchema['relationships'][K]>
+      : TSchema['relationships'][K] extends ResourceDefinition[]
+        ? Denormalized<TSchema['relationships'][K][number]>[]
+        : {};
+  },
+  'Denormalized'
+>;
+
+export type IdPlusAttributes<
+  TSchema extends ResourceDefinition,
+  TShape extends TSchema['schema']['shape'] = TSchema['schema']['shape'],
+> = ZodObject<{ id: TShape['id'] } & TShape['attributes']['shape']>;
 
 export type EndpointSchema = ZodObject<{
   request?: ZodRecord;

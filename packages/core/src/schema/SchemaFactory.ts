@@ -7,14 +7,15 @@ import {
 import {
   ResourceCapabilities,
   ResourceDefinition,
-  ResourceRelationships,
 } from '../resources/ResourceDefinition.js';
-import { z } from 'zod';
 import { EndpointSchema } from '../endpoints/Endpoints.js';
+import {
+  ResourceLinkageSchema,
+  ToManyLinkageSchema,
+} from '../resources/ResourceLinkageSchema.js';
+import { DeferredRelationships, UndeferredRelationships } from '../Builder.js';
 
-export interface CreateSchemaOptions<
-  TRelationships extends ResourceRelationships,
-> {
+export interface CreateSchemaOptions<TRelationships> {
   relationships?: TRelationships;
   capabilities?: ResourceCapabilities;
 }
@@ -23,12 +24,16 @@ export interface SchemaFactory {
   createSchema<
     TType extends string = string,
     TAttributes extends AttributesSchema = AttributesSchema,
-    TRelationships extends ResourceRelationships = ResourceRelationships,
+    TRelationships extends DeferredRelationships = DeferredRelationships,
   >(
     type: TType,
-    createAttributesSchema: (zod: typeof z) => TAttributes,
+    attributesSchema: TAttributes,
     options?: CreateSchemaOptions<TRelationships>,
-  ): ResourceDefinition<TType, TAttributes, TRelationships>;
+  ): ResourceDefinition<
+    TType,
+    TAttributes,
+    UndeferredRelationships<TRelationships>
+  >;
 
   createEndpointSchema<
     TDefinition extends ResourceDefinition = ResourceDefinition,
@@ -41,14 +46,29 @@ export interface SchemaFactory {
     TDefinition extends ResourceDefinition = ResourceDefinition,
   >(
     definition: TDefinition,
-    options?: { optionalId?: boolean; partialAttributes?: boolean },
+    options?: {
+      optionalId?: boolean;
+      partialAttributes?: boolean;
+      withDenormalize?: boolean;
+    },
   ): SinglePrimaryType<TDefinition>;
 
   createArrayPrimaryTypeSchema<
     TDefinition extends ResourceDefinition = ResourceDefinition,
   >(
     definition: TDefinition,
+    options?: {
+      withDenormalize?: boolean;
+    },
   ): ArrayPrimaryType<TDefinition>;
+
+  createResourceSingleLinkageSchema(
+    definition: ResourceDefinition,
+  ): ResourceLinkageSchema;
+
+  createResourceMultiLinkageSchema(
+    definition: ResourceDefinition,
+  ): ToManyLinkageSchema;
 
   /**
    * @deprecated Use createSinglePrimaryTypeSchema instead

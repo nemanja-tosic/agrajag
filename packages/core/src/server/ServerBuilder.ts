@@ -15,33 +15,30 @@ export abstract class ServerBuilder<TResult = unknown> {
     TDefinition extends ResourceDefinition = ResourceDefinition,
   >(
     definition: TDefinition,
-    endpointSchema: EndpointSchema,
+    createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: FetchDeleteHandler<TPath, TDefinition>,
   ): void;
 
   abstract addPost<TPath extends string = string>(
     definition: ResourceDefinition,
-    endpointSchema: EndpointSchema,
+    createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: MutationHandler<TPath>,
   ): void;
 
   abstract addPatch<TPath extends string = string>(
     definition: ResourceDefinition,
-    endpointSchema: EndpointSchema,
+    createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: MutationHandler<TPath>,
   ): void;
 
-  abstract addDelete<
-    TPath extends string = string,
-    TDefinition extends ResourceDefinition = ResourceDefinition,
-  >(
+  abstract addDelete<TPath extends string = string>(
     definition: ResourceDefinition,
-    endpointSchema: EndpointSchema,
+    createEndpointSchema: () => EndpointSchema,
     path: TPath,
-    handler: FetchDeleteHandler<TPath, TDefinition>,
+    handler: MutationHandler<TPath>,
   ): void;
 
   abstract build(): TResult;

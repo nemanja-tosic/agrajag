@@ -1,12 +1,18 @@
 {
   "name": "agrajag",
-  "version": "0.0.12",
+  "version": "0.0.22",
   "type": "module",
   "scripts": {
     "build": "yarn build:ts"
   },
   "exports": {
-    ".": "./dist/src/index.js"
+    ".": {
+      "types": [
+        "./src/index.ts",
+        "./dist/src/index.d.ts"
+      ],
+      "default": "./dist/src/index.js"
+    }
   },
   "files": [
     "README.md",
@@ -20,12 +26,22 @@
   },
   "devDependencies": {
     "@agrajag/configs": "workspace:*",
+    "@types/chai": "5.2.2",
     "@types/jsonapi-serializer": "3.6.8",
-    "@types/node": "20.12.12",
+    "@types/mocha": "10.0.10",
+    "@types/node": "22.18.6",
     "@types/ramda": "0.30.0",
-    "hono": "4.6.5"
+    "chai": "5.2.1",
+    "hono": "4.6.5",
+    "mocha": "11.7.1",
+    "tsd": "0.33.0"
   },
   "peerDependencies": {
     "hono": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "hono": {
+      "optional": true
+    }
   }
 }

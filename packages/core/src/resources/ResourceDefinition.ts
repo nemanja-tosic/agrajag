@@ -1,4 +1,4 @@
-import { ZodObject } from 'zod';
+import { ZodLazy, ZodObject } from 'zod';
 
 import { AttributesSchema, ResourceSchema } from './ResourceSchema.js';
 import {
@@ -39,9 +39,11 @@ export interface ResourceDefinition<
   schema: ResourceSchema<
     TType,
     TAttributes,
-    ZodObject<{
-      // TODO: based on relationship
-      [K in keyof TRelationships]: ToOneLinkageSchema | ToManyLinkageSchema;
-    }>
+    ZodLazy<
+      ZodObject<{
+        // TODO: based on relationship
+        [K in keyof TRelationships]: ToOneLinkageSchema | ToManyLinkageSchema;
+      }>
+    >
   >;
 }

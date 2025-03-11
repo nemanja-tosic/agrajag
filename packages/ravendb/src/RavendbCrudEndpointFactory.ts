@@ -51,6 +51,21 @@ export class RavendbCrudEndpointFactory<
 
         return query.all();
       },
+      async post() {
+        throw new Error('Not implemented');
+      },
+      async postRelationship() {
+        throw new Error('Not implemented');
+      },
+      async patch() {
+        throw new Error('Not implemented');
+      },
+      async patchRelationship() {
+        throw new Error('Not implemented');
+      },
+      deleteRelationship: () => {
+        throw new Error('Not implemented');
+      },
       relationshipByKey: async (id, key) => {
         const query = session.advanced
           .rawQuery<ResourceIdentifier>(
@@ -72,16 +87,7 @@ export class RavendbCrudEndpointFactory<
         }
       },
       saveUow: () => session.saveChanges(),
-      delete: entity => session.delete(entity.id),
-      save: entity =>
-        session.store(
-          Object.assign(entity, {
-            '@metadata': {
-              ...entity['@metadata'],
-              '@collection': definition.type,
-            },
-          }),
-        ),
+      delete: entity => session.delete(entity.id!),
       [Symbol.asyncDispose]: async () => session.dispose(),
     };
   }

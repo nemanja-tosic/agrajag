@@ -8,6 +8,7 @@ const injectedRtkApi = api.injectEndpoints({
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
@@ -20,159 +21,176 @@ const injectedRtkApi = api.injectEndpoints({
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    getArticlesId: build.query<GetArticlesIdApiResponse, GetArticlesIdApiArg>({
+    getArticlesById: build.query<
+      GetArticlesByIdApiResponse,
+      GetArticlesByIdApiArg
+    >({
       query: queryArg => ({
-        url: `/articles/:id`,
+        url: `/articles/${queryArg.id}`,
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    patchArticlesId: build.mutation<
-      PatchArticlesIdApiResponse,
-      PatchArticlesIdApiArg
+    patchArticlesById: build.mutation<
+      PatchArticlesByIdApiResponse,
+      PatchArticlesByIdApiArg
     >({
       query: queryArg => ({
-        url: `/articles/:id`,
+        url: `/articles/${queryArg.id}`,
         method: 'PATCH',
         body: queryArg.body,
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    deleteArticlesId: build.mutation<
-      DeleteArticlesIdApiResponse,
-      DeleteArticlesIdApiArg
+    deleteArticlesById: build.mutation<
+      DeleteArticlesByIdApiResponse,
+      DeleteArticlesByIdApiArg
     >({
       query: queryArg => ({
-        url: `/articles/:id`,
+        url: `/articles/${queryArg.id}`,
         method: 'DELETE',
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    getArticlesIdRelationshipsAuthor: build.query<
-      GetArticlesIdRelationshipsAuthorApiResponse,
-      GetArticlesIdRelationshipsAuthorApiArg
+    getArticlesByIdRelationshipsAuthor: build.query<
+      GetArticlesByIdRelationshipsAuthorApiResponse,
+      GetArticlesByIdRelationshipsAuthorApiArg
     >({
       query: queryArg => ({
-        url: `/articles/:id/relationships/author`,
+        url: `/articles/${queryArg.id}/relationships/author`,
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    postArticlesIdRelationshipsAuthor: build.mutation<
-      PostArticlesIdRelationshipsAuthorApiResponse,
-      PostArticlesIdRelationshipsAuthorApiArg
+    postArticlesByIdRelationshipsAuthor: build.mutation<
+      PostArticlesByIdRelationshipsAuthorApiResponse,
+      PostArticlesByIdRelationshipsAuthorApiArg
     >({
       query: queryArg => ({
-        url: `/articles/:id/relationships/author`,
+        url: `/articles/${queryArg.id}/relationships/author`,
         method: 'POST',
         body: queryArg.body,
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    patchArticlesIdRelationshipsAuthor: build.mutation<
-      PatchArticlesIdRelationshipsAuthorApiResponse,
-      PatchArticlesIdRelationshipsAuthorApiArg
+    patchArticlesByIdRelationshipsAuthor: build.mutation<
+      PatchArticlesByIdRelationshipsAuthorApiResponse,
+      PatchArticlesByIdRelationshipsAuthorApiArg
     >({
       query: queryArg => ({
-        url: `/articles/:id/relationships/author`,
+        url: `/articles/${queryArg.id}/relationships/author`,
         method: 'PATCH',
         body: queryArg.body,
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    deleteArticlesIdRelationshipsAuthor: build.mutation<
-      DeleteArticlesIdRelationshipsAuthorApiResponse,
-      DeleteArticlesIdRelationshipsAuthorApiArg
+    deleteArticlesByIdRelationshipsAuthor: build.mutation<
+      DeleteArticlesByIdRelationshipsAuthorApiResponse,
+      DeleteArticlesByIdRelationshipsAuthorApiArg
     >({
       query: queryArg => ({
-        url: `/articles/:id/relationships/author`,
+        url: `/articles/${queryArg.id}/relationships/author`,
         method: 'DELETE',
+        body: queryArg.body,
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    getArticlesIdRelationshipsComments: build.query<
-      GetArticlesIdRelationshipsCommentsApiResponse,
-      GetArticlesIdRelationshipsCommentsApiArg
+    getArticlesByIdRelationshipsComments: build.query<
+      GetArticlesByIdRelationshipsCommentsApiResponse,
+      GetArticlesByIdRelationshipsCommentsApiArg
     >({
       query: queryArg => ({
-        url: `/articles/:id/relationships/comments`,
+        url: `/articles/${queryArg.id}/relationships/comments`,
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    postArticlesIdRelationshipsComments: build.mutation<
-      PostArticlesIdRelationshipsCommentsApiResponse,
-      PostArticlesIdRelationshipsCommentsApiArg
+    postArticlesByIdRelationshipsComments: build.mutation<
+      PostArticlesByIdRelationshipsCommentsApiResponse,
+      PostArticlesByIdRelationshipsCommentsApiArg
     >({
       query: queryArg => ({
-        url: `/articles/:id/relationships/comments`,
+        url: `/articles/${queryArg.id}/relationships/comments`,
         method: 'POST',
         body: queryArg.body,
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    patchArticlesIdRelationshipsComments: build.mutation<
-      PatchArticlesIdRelationshipsCommentsApiResponse,
-      PatchArticlesIdRelationshipsCommentsApiArg
+    patchArticlesByIdRelationshipsComments: build.mutation<
+      PatchArticlesByIdRelationshipsCommentsApiResponse,
+      PatchArticlesByIdRelationshipsCommentsApiArg
     >({
       query: queryArg => ({
-        url: `/articles/:id/relationships/comments`,
+        url: `/articles/${queryArg.id}/relationships/comments`,
         method: 'PATCH',
         body: queryArg.body,
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    deleteArticlesIdRelationshipsComments: build.mutation<
-      DeleteArticlesIdRelationshipsCommentsApiResponse,
-      DeleteArticlesIdRelationshipsCommentsApiArg
+    deleteArticlesByIdRelationshipsComments: build.mutation<
+      DeleteArticlesByIdRelationshipsCommentsApiResponse,
+      DeleteArticlesByIdRelationshipsCommentsApiArg
     >({
       query: queryArg => ({
-        url: `/articles/:id/relationships/comments`,
+        url: `/articles/${queryArg.id}/relationships/comments`,
         method: 'DELETE',
+        body: queryArg.body,
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
@@ -183,6 +201,7 @@ const injectedRtkApi = api.injectEndpoints({
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
@@ -195,45 +214,114 @@ const injectedRtkApi = api.injectEndpoints({
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    getAuthorsId: build.query<GetAuthorsIdApiResponse, GetAuthorsIdApiArg>({
+    getAuthorsById: build.query<
+      GetAuthorsByIdApiResponse,
+      GetAuthorsByIdApiArg
+    >({
       query: queryArg => ({
-        url: `/authors/:id`,
+        url: `/authors/${queryArg.id}`,
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    patchAuthorsId: build.mutation<
-      PatchAuthorsIdApiResponse,
-      PatchAuthorsIdApiArg
+    patchAuthorsById: build.mutation<
+      PatchAuthorsByIdApiResponse,
+      PatchAuthorsByIdApiArg
     >({
       query: queryArg => ({
-        url: `/authors/:id`,
+        url: `/authors/${queryArg.id}`,
         method: 'PATCH',
         body: queryArg.body,
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    deleteAuthorsId: build.mutation<
-      DeleteAuthorsIdApiResponse,
-      DeleteAuthorsIdApiArg
+    deleteAuthorsById: build.mutation<
+      DeleteAuthorsByIdApiResponse,
+      DeleteAuthorsByIdApiArg
     >({
       query: queryArg => ({
-        url: `/authors/:id`,
+        url: `/authors/${queryArg.id}`,
         method: 'DELETE',
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
+        },
+      }),
+    }),
+    getAuthorsByIdRelationshipsComments: build.query<
+      GetAuthorsByIdRelationshipsCommentsApiResponse,
+      GetAuthorsByIdRelationshipsCommentsApiArg
+    >({
+      query: queryArg => ({
+        url: `/authors/${queryArg.id}/relationships/comments`,
+        params: {
+          include: queryArg.include,
+          fields: queryArg.fields,
+          sort: queryArg.sort,
+          filter: queryArg.filter,
+        },
+      }),
+    }),
+    postAuthorsByIdRelationshipsComments: build.mutation<
+      PostAuthorsByIdRelationshipsCommentsApiResponse,
+      PostAuthorsByIdRelationshipsCommentsApiArg
+    >({
+      query: queryArg => ({
+        url: `/authors/${queryArg.id}/relationships/comments`,
+        method: 'POST',
+        body: queryArg.body,
+        params: {
+          include: queryArg.include,
+          fields: queryArg.fields,
+          sort: queryArg.sort,
+          filter: queryArg.filter,
+        },
+      }),
+    }),
+    patchAuthorsByIdRelationshipsComments: build.mutation<
+      PatchAuthorsByIdRelationshipsCommentsApiResponse,
+      PatchAuthorsByIdRelationshipsCommentsApiArg
+    >({
+      query: queryArg => ({
+        url: `/authors/${queryArg.id}/relationships/comments`,
+        method: 'PATCH',
+        body: queryArg.body,
+        params: {
+          include: queryArg.include,
+          fields: queryArg.fields,
+          sort: queryArg.sort,
+          filter: queryArg.filter,
+        },
+      }),
+    }),
+    deleteAuthorsByIdRelationshipsComments: build.mutation<
+      DeleteAuthorsByIdRelationshipsCommentsApiResponse,
+      DeleteAuthorsByIdRelationshipsCommentsApiArg
+    >({
+      query: queryArg => ({
+        url: `/authors/${queryArg.id}/relationships/comments`,
+        method: 'DELETE',
+        body: queryArg.body,
+        params: {
+          include: queryArg.include,
+          fields: queryArg.fields,
+          sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
@@ -244,6 +332,7 @@ const injectedRtkApi = api.injectEndpoints({
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
@@ -256,102 +345,114 @@ const injectedRtkApi = api.injectEndpoints({
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    getCommentsId: build.query<GetCommentsIdApiResponse, GetCommentsIdApiArg>({
+    getCommentsById: build.query<
+      GetCommentsByIdApiResponse,
+      GetCommentsByIdApiArg
+    >({
       query: queryArg => ({
-        url: `/comments/:id`,
+        url: `/comments/${queryArg.id}`,
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    patchCommentsId: build.mutation<
-      PatchCommentsIdApiResponse,
-      PatchCommentsIdApiArg
+    patchCommentsById: build.mutation<
+      PatchCommentsByIdApiResponse,
+      PatchCommentsByIdApiArg
     >({
       query: queryArg => ({
-        url: `/comments/:id`,
+        url: `/comments/${queryArg.id}`,
         method: 'PATCH',
         body: queryArg.body,
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    deleteCommentsId: build.mutation<
-      DeleteCommentsIdApiResponse,
-      DeleteCommentsIdApiArg
+    deleteCommentsById: build.mutation<
+      DeleteCommentsByIdApiResponse,
+      DeleteCommentsByIdApiArg
     >({
       query: queryArg => ({
-        url: `/comments/:id`,
+        url: `/comments/${queryArg.id}`,
         method: 'DELETE',
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    getCommentsIdRelationshipsAuthor: build.query<
-      GetCommentsIdRelationshipsAuthorApiResponse,
-      GetCommentsIdRelationshipsAuthorApiArg
+    getCommentsByIdRelationshipsAuthor: build.query<
+      GetCommentsByIdRelationshipsAuthorApiResponse,
+      GetCommentsByIdRelationshipsAuthorApiArg
     >({
       query: queryArg => ({
-        url: `/comments/:id/relationships/author`,
+        url: `/comments/${queryArg.id}/relationships/author`,
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    postCommentsIdRelationshipsAuthor: build.mutation<
-      PostCommentsIdRelationshipsAuthorApiResponse,
-      PostCommentsIdRelationshipsAuthorApiArg
+    postCommentsByIdRelationshipsAuthor: build.mutation<
+      PostCommentsByIdRelationshipsAuthorApiResponse,
+      PostCommentsByIdRelationshipsAuthorApiArg
     >({
       query: queryArg => ({
-        url: `/comments/:id/relationships/author`,
+        url: `/comments/${queryArg.id}/relationships/author`,
         method: 'POST',
         body: queryArg.body,
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    patchCommentsIdRelationshipsAuthor: build.mutation<
-      PatchCommentsIdRelationshipsAuthorApiResponse,
-      PatchCommentsIdRelationshipsAuthorApiArg
+    patchCommentsByIdRelationshipsAuthor: build.mutation<
+      PatchCommentsByIdRelationshipsAuthorApiResponse,
+      PatchCommentsByIdRelationshipsAuthorApiArg
     >({
       query: queryArg => ({
-        url: `/comments/:id/relationships/author`,
+        url: `/comments/${queryArg.id}/relationships/author`,
         method: 'PATCH',
         body: queryArg.body,
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
-    deleteCommentsIdRelationshipsAuthor: build.mutation<
-      DeleteCommentsIdRelationshipsAuthorApiResponse,
-      DeleteCommentsIdRelationshipsAuthorApiArg
+    deleteCommentsByIdRelationshipsAuthor: build.mutation<
+      DeleteCommentsByIdRelationshipsAuthorApiResponse,
+      DeleteCommentsByIdRelationshipsAuthorApiArg
     >({
       query: queryArg => ({
-        url: `/comments/:id/relationships/author`,
+        url: `/comments/${queryArg.id}/relationships/author`,
         method: 'DELETE',
+        body: queryArg.body,
         params: {
           include: queryArg.include,
           fields: queryArg.fields,
           sort: queryArg.sort,
+          filter: queryArg.filter,
         },
       }),
     }),
@@ -360,62 +461,43 @@ const injectedRtkApi = api.injectEndpoints({
 });
 export { injectedRtkApi as exampleApi };
 export type GetArticlesApiResponse = /** status 200 undefined */ {
-  id: string;
-  type: 'articles';
-  attributes: {
-    title: string;
-    body: string;
-    tags: string[];
-  };
-  relationships: {
-    author: {
-      data: {
-        id: string;
-        type: 'authors';
+  data: {
+    id?: string;
+    type: 'articles';
+    attributes: {
+      title: string;
+      body: string;
+      tags: string[];
+    };
+    relationships: {
+      author: {
+        data: {
+          id: string;
+          type: 'authors';
+        };
+      };
+      comments: {
+        data: {
+          id: string;
+          type: 'comments';
+        }[];
       };
     };
-    comments: {
-      data: {
-        id: string;
-        type: 'comments';
-      }[];
-    };
-  };
+  }[];
+  'x-denormalized'?: Articles[];
 };
 export type GetArticlesApiArg = {
   include?: string;
-  fields?: string;
+  fields?: {
+    articles?: string;
+    author?: string;
+    comments?: string;
+  };
   sort?: string;
+  filter?: string;
 };
 export type PostArticlesApiResponse = /** status 200 undefined */ {
-  id: string;
-  type: 'articles';
-  attributes: {
-    title: string;
-    body: string;
-    tags: string[];
-  };
-  relationships: {
-    author: {
-      data: {
-        id: string;
-        type: 'authors';
-      };
-    };
-    comments: {
-      data: {
-        id: string;
-        type: 'comments';
-      }[];
-    };
-  };
-};
-export type PostArticlesApiArg = {
-  id: string;
-  include?: string;
-  fields?: string;
-  sort?: string;
-  body: {
+  data: {
     id: string;
     type: 'articles';
     attributes: {
@@ -438,175 +520,51 @@ export type PostArticlesApiArg = {
       };
     };
   };
+  'x-denormalized'?: Articles;
 };
-export type GetArticlesIdApiResponse = /** status 200 undefined */ {
-  id: string;
-  type: 'articles';
-  attributes: {
-    title: string;
-    body: string;
-    tags: string[];
-  };
-  relationships: {
-    author: {
-      data: {
-        id: string;
-        type: 'authors';
-      };
-    };
-    comments: {
-      data: {
-        id: string;
-        type: 'comments';
-      }[];
-    };
-  };
-};
-export type GetArticlesIdApiArg = {
-  id: string;
+export type PostArticlesApiArg = {
   include?: string;
-  fields?: string;
+  fields?: {
+    articles?: string;
+    author?: string;
+    comments?: string;
+  };
   sort?: string;
-};
-export type PatchArticlesIdApiResponse = /** status 200 undefined */ {
-  id: string;
-  type: 'articles';
-  attributes: {
-    title: string;
-    body: string;
-    tags: string[];
-  };
-  relationships: {
-    author: {
-      data: {
-        id: string;
-        type: 'authors';
-      };
-    };
-    comments: {
-      data: {
-        id: string;
-        type: 'comments';
-      }[];
-    };
-  };
-};
-export type PatchArticlesIdApiArg = {
-  id: string;
-  include?: string;
-  fields?: string;
-  sort?: string;
-  body: any;
-};
-export type DeleteArticlesIdApiResponse = /** status 200 undefined */ {
-  id: string;
-  type: 'articles';
-  attributes: {
-    title: string;
-    body: string;
-    tags: string[];
-  };
-  relationships: {
-    author: {
-      data: {
-        id: string;
-        type: 'authors';
-      };
-    };
-    comments: {
-      data: {
-        id: string;
-        type: 'comments';
-      }[];
-    };
-  };
-};
-export type DeleteArticlesIdApiArg = {
-  id: string;
-  include?: string;
-  fields?: string;
-  sort?: string;
-};
-export type GetArticlesIdRelationshipsAuthorApiResponse =
-  /** status 200 undefined */ {
-    id: string;
-    type: 'authors';
-    attributes: {
-      name: string;
-      category: string;
-    };
-    relationships: object;
-  };
-export type GetArticlesIdRelationshipsAuthorApiArg = {
-  id: string;
-  include?: string;
-  fields?: string;
-  sort?: string;
-};
-export type PostArticlesIdRelationshipsAuthorApiResponse =
-  /** status 200 undefined */ {
-    id: string;
-    type: 'authors';
-    attributes: {
-      name: string;
-      category: string;
-    };
-    relationships: object;
-  };
-export type PostArticlesIdRelationshipsAuthorApiArg = {
-  id: string;
-  include?: string;
-  fields?: string;
-  sort?: string;
+  filter?: string;
   body: {
-    id: string;
-    type: 'authors';
-    attributes: {
-      name: string;
-      category: string;
+    data: {
+      id?: string;
+      type: 'articles';
+      attributes: {
+        title?: string;
+        body?: string;
+        tags?: string[];
+      };
+      relationships: {
+        author: {
+          data: {
+            id: string;
+            type: 'authors';
+          };
+        };
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
+        };
+      };
     };
-    relationships: object;
   };
 };
-export type PatchArticlesIdRelationshipsAuthorApiResponse =
-  /** status 200 undefined */ {
+export type GetArticlesByIdApiResponse = /** status 200 undefined */ {
+  data: {
     id: string;
-    type: 'authors';
+    type: 'articles';
     attributes: {
-      name: string;
-      category: string;
-    };
-    relationships: object;
-  };
-export type PatchArticlesIdRelationshipsAuthorApiArg = {
-  id: string;
-  include?: string;
-  fields?: string;
-  sort?: string;
-  body: any;
-};
-export type DeleteArticlesIdRelationshipsAuthorApiResponse =
-  /** status 200 undefined */ {
-    id: string;
-    type: 'authors';
-    attributes: {
-      name: string;
-      category: string;
-    };
-    relationships: object;
-  };
-export type DeleteArticlesIdRelationshipsAuthorApiArg = {
-  id: string;
-  include?: string;
-  fields?: string;
-  sort?: string;
-};
-export type GetArticlesIdRelationshipsCommentsApiResponse =
-  /** status 200 undefined */ {
-    id: string;
-    type: 'comments';
-    attributes: {
+      title: string;
       body: string;
+      tags: string[];
     };
     relationships: {
       author: {
@@ -615,20 +573,35 @@ export type GetArticlesIdRelationshipsCommentsApiResponse =
           type: 'authors';
         };
       };
+      comments: {
+        data: {
+          id: string;
+          type: 'comments';
+        }[];
+      };
     };
   };
-export type GetArticlesIdRelationshipsCommentsApiArg = {
+  'x-denormalized'?: Articles;
+};
+export type GetArticlesByIdApiArg = {
   id: string;
   include?: string;
-  fields?: string;
+  fields?: {
+    articles?: string;
+    author?: string;
+    comments?: string;
+  };
   sort?: string;
+  filter?: string;
 };
-export type PostArticlesIdRelationshipsCommentsApiResponse =
-  /** status 200 undefined */ {
+export type PatchArticlesByIdApiResponse = /** status 200 undefined */ {
+  data: {
     id: string;
-    type: 'comments';
+    type: 'articles';
     attributes: {
+      title: string;
       body: string;
+      tags: string[];
     };
     relationships: {
       author: {
@@ -637,35 +610,60 @@ export type PostArticlesIdRelationshipsCommentsApiResponse =
           type: 'authors';
         };
       };
+      comments: {
+        data: {
+          id: string;
+          type: 'comments';
+        }[];
+      };
     };
   };
-export type PostArticlesIdRelationshipsCommentsApiArg = {
+  'x-denormalized'?: Articles;
+};
+export type PatchArticlesByIdApiArg = {
   id: string;
   include?: string;
-  fields?: string;
+  fields?: {
+    articles?: string;
+    author?: string;
+    comments?: string;
+  };
   sort?: string;
+  filter?: string;
   body: {
-    id: string;
-    type: 'comments';
-    attributes: {
-      body: string;
-    };
-    relationships: {
-      author: {
-        data: {
-          id: string;
-          type: 'authors';
+    data: {
+      id: string;
+      type: 'articles';
+      attributes: {
+        title?: string;
+        body?: string;
+        tags?: string[];
+      };
+      relationships: {
+        author: {
+          data: {
+            id: string;
+            type: 'authors';
+          };
+        };
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
         };
       };
     };
   };
 };
-export type PatchArticlesIdRelationshipsCommentsApiResponse =
-  /** status 200 undefined */ {
+export type DeleteArticlesByIdApiResponse = /** status 200 undefined */ {
+  data: {
     id: string;
-    type: 'comments';
+    type: 'articles';
     attributes: {
+      title: string;
       body: string;
+      tags: string[];
     };
     relationships: {
       author: {
@@ -674,162 +672,681 @@ export type PatchArticlesIdRelationshipsCommentsApiResponse =
           type: 'authors';
         };
       };
+      comments: {
+        data: {
+          id: string;
+          type: 'comments';
+        }[];
+      };
     };
   };
-export type PatchArticlesIdRelationshipsCommentsApiArg = {
-  id: string;
-  include?: string;
-  fields?: string;
-  sort?: string;
-  body: any;
+  'x-denormalized'?: Articles;
 };
-export type DeleteArticlesIdRelationshipsCommentsApiResponse =
+export type DeleteArticlesByIdApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    articles?: string;
+    author?: string;
+    comments?: string;
+  };
+  sort?: string;
+  filter?: string;
+};
+export type GetArticlesByIdRelationshipsAuthorApiResponse =
+  /** status 200 undefined */ Blob;
+export type GetArticlesByIdRelationshipsAuthorApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    articles?: string;
+    author?: string;
+    comments?: string;
+  };
+  sort?: string;
+  filter?: string;
+};
+export type PostArticlesByIdRelationshipsAuthorApiResponse =
   /** status 200 undefined */ {
-    id: string;
-    type: 'comments';
-    attributes: {
-      body: string;
+    data: {
+      id: string;
+      type: 'articles';
+      attributes: {
+        title: string;
+        body: string;
+        tags: string[];
+      };
+      relationships: {
+        author: {
+          data: {
+            id: string;
+            type: 'authors';
+          };
+        };
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
+        };
+      };
     };
-    relationships: {
-      author: {
-        data: {
-          id: string;
-          type: 'authors';
+    'x-denormalized'?: Articles;
+  };
+export type PostArticlesByIdRelationshipsAuthorApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    articles?: string;
+    author?: string;
+    comments?: string;
+  };
+  sort?: string;
+  filter?: string;
+  body: {
+    data: {
+      id: string;
+      type: 'authors';
+      attributes: {
+        name: string;
+        category: string;
+      };
+      relationships: {
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
         };
       };
     };
   };
-export type DeleteArticlesIdRelationshipsCommentsApiArg = {
+};
+export type PatchArticlesByIdRelationshipsAuthorApiResponse =
+  /** status 200 undefined */ {
+    data: {
+      id: string;
+      type: 'articles';
+      attributes: {
+        title: string;
+        body: string;
+        tags: string[];
+      };
+      relationships: {
+        author: {
+          data: {
+            id: string;
+            type: 'authors';
+          };
+        };
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
+        };
+      };
+    };
+    'x-denormalized'?: Articles;
+  };
+export type PatchArticlesByIdRelationshipsAuthorApiArg = {
   id: string;
   include?: string;
-  fields?: string;
+  fields?: {
+    articles?: string;
+    author?: string;
+    comments?: string;
+  };
   sort?: string;
+  filter?: string;
+  body: {
+    data: {
+      id: string;
+      type: 'authors';
+      attributes: {
+        name: string;
+        category: string;
+      };
+      relationships: {
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
+        };
+      };
+    };
+  };
+};
+export type DeleteArticlesByIdRelationshipsAuthorApiResponse =
+  /** status 200 undefined */ {
+    data: {
+      id: string;
+      type: 'articles';
+      attributes: {
+        title: string;
+        body: string;
+        tags: string[];
+      };
+      relationships: {
+        author: {
+          data: {
+            id: string;
+            type: 'authors';
+          };
+        };
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
+        };
+      };
+    };
+    'x-denormalized'?: Articles;
+  };
+export type DeleteArticlesByIdRelationshipsAuthorApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    articles?: string;
+    author?: string;
+    comments?: string;
+  };
+  sort?: string;
+  filter?: string;
+  body: {
+    data: {
+      id: string;
+      type: 'authors';
+      attributes: {
+        name: string;
+        category: string;
+      };
+      relationships: {
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
+        };
+      };
+    };
+  };
+};
+export type GetArticlesByIdRelationshipsCommentsApiResponse =
+  /** status 200 undefined */ Blob;
+export type GetArticlesByIdRelationshipsCommentsApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    articles?: string;
+    author?: string;
+    comments?: string;
+  };
+  sort?: string;
+  filter?: string;
+};
+export type PostArticlesByIdRelationshipsCommentsApiResponse =
+  /** status 200 undefined */ {
+    data: {
+      id?: string;
+      type: 'articles';
+      attributes: {
+        title: string;
+        body: string;
+        tags: string[];
+      };
+      relationships: {
+        author: {
+          data: {
+            id: string;
+            type: 'authors';
+          };
+        };
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
+        };
+      };
+    }[];
+    'x-denormalized'?: Articles[];
+  };
+export type PostArticlesByIdRelationshipsCommentsApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    articles?: string;
+    author?: string;
+    comments?: string;
+  };
+  sort?: string;
+  filter?: string;
+  body: {
+    data: {
+      id: string;
+      type: 'comments';
+    }[];
+  };
+};
+export type PatchArticlesByIdRelationshipsCommentsApiResponse =
+  /** status 200 undefined */ {
+    data: {
+      id?: string;
+      type: 'articles';
+      attributes: {
+        title: string;
+        body: string;
+        tags: string[];
+      };
+      relationships: {
+        author: {
+          data: {
+            id: string;
+            type: 'authors';
+          };
+        };
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
+        };
+      };
+    }[];
+    'x-denormalized'?: Articles[];
+  };
+export type PatchArticlesByIdRelationshipsCommentsApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    articles?: string;
+    author?: string;
+    comments?: string;
+  };
+  sort?: string;
+  filter?: string;
+  body: {
+    data: {
+      id: string;
+      type: 'comments';
+    }[];
+  };
+};
+export type DeleteArticlesByIdRelationshipsCommentsApiResponse =
+  /** status 200 undefined */ {
+    data: {
+      id?: string;
+      type: 'articles';
+      attributes: {
+        title: string;
+        body: string;
+        tags: string[];
+      };
+      relationships: {
+        author: {
+          data: {
+            id: string;
+            type: 'authors';
+          };
+        };
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
+        };
+      };
+    }[];
+    'x-denormalized'?: Articles[];
+  };
+export type DeleteArticlesByIdRelationshipsCommentsApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    articles?: string;
+    author?: string;
+    comments?: string;
+  };
+  sort?: string;
+  filter?: string;
+  body: {
+    data: {
+      id: string;
+      type: 'comments';
+    }[];
+  };
 };
 export type GetAuthorsApiResponse = /** status 200 undefined */ {
-  id: string;
-  type: 'authors';
-  attributes: {
-    name: string;
-    category: string;
-  };
-  relationships: object;
+  data: {
+    id?: string;
+    type: 'authors';
+    attributes: {
+      name: string;
+      category: string;
+    };
+    relationships: {
+      comments: {
+        data: {
+          id: string;
+          type: 'comments';
+        }[];
+      };
+    };
+  }[];
+  'x-denormalized'?: Authors[];
 };
 export type GetAuthorsApiArg = {
   include?: string;
-  fields?: string;
+  fields?: {
+    authors?: string;
+    comments?: string;
+  };
   sort?: string;
+  filter?: string;
 };
 export type PostAuthorsApiResponse = /** status 200 undefined */ {
-  id: string;
-  type: 'authors';
-  attributes: {
-    name: string;
-    category: string;
-  };
-  relationships: object;
-};
-export type PostAuthorsApiArg = {
-  id: string;
-  include?: string;
-  fields?: string;
-  sort?: string;
-  body: {
+  data: {
     id: string;
     type: 'authors';
     attributes: {
       name: string;
       category: string;
     };
-    relationships: object;
-  };
-};
-export type GetAuthorsIdApiResponse = /** status 200 undefined */ {
-  id: string;
-  type: 'authors';
-  attributes: {
-    name: string;
-    category: string;
-  };
-  relationships: object;
-};
-export type GetAuthorsIdApiArg = {
-  id: string;
-  include?: string;
-  fields?: string;
-  sort?: string;
-};
-export type PatchAuthorsIdApiResponse = /** status 200 undefined */ {
-  id: string;
-  type: 'authors';
-  attributes: {
-    name: string;
-    category: string;
-  };
-  relationships: object;
-};
-export type PatchAuthorsIdApiArg = {
-  id: string;
-  include?: string;
-  fields?: string;
-  sort?: string;
-  body: any;
-};
-export type DeleteAuthorsIdApiResponse = /** status 200 undefined */ {
-  id: string;
-  type: 'authors';
-  attributes: {
-    name: string;
-    category: string;
-  };
-  relationships: object;
-};
-export type DeleteAuthorsIdApiArg = {
-  id: string;
-  include?: string;
-  fields?: string;
-  sort?: string;
-};
-export type GetCommentsApiResponse = /** status 200 undefined */ {
-  id: string;
-  type: 'comments';
-  attributes: {
-    body: string;
-  };
-  relationships: {
-    author: {
-      data: {
-        id: string;
-        type: 'authors';
+    relationships: {
+      comments: {
+        data: {
+          id: string;
+          type: 'comments';
+        }[];
       };
     };
   };
+  'x-denormalized'?: Authors;
+};
+export type PostAuthorsApiArg = {
+  include?: string;
+  fields?: {
+    authors?: string;
+    comments?: string;
+  };
+  sort?: string;
+  filter?: string;
+  body: {
+    data: {
+      id?: string;
+      type: 'authors';
+      attributes: {
+        name?: string;
+        category?: string;
+      };
+      relationships: {
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
+        };
+      };
+    };
+  };
+};
+export type GetAuthorsByIdApiResponse = /** status 200 undefined */ {
+  data: {
+    id: string;
+    type: 'authors';
+    attributes: {
+      name: string;
+      category: string;
+    };
+    relationships: {
+      comments: {
+        data: {
+          id: string;
+          type: 'comments';
+        }[];
+      };
+    };
+  };
+  'x-denormalized'?: Authors;
+};
+export type GetAuthorsByIdApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    authors?: string;
+    comments?: string;
+  };
+  sort?: string;
+  filter?: string;
+};
+export type PatchAuthorsByIdApiResponse = /** status 200 undefined */ {
+  data: {
+    id: string;
+    type: 'authors';
+    attributes: {
+      name: string;
+      category: string;
+    };
+    relationships: {
+      comments: {
+        data: {
+          id: string;
+          type: 'comments';
+        }[];
+      };
+    };
+  };
+  'x-denormalized'?: Authors;
+};
+export type PatchAuthorsByIdApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    authors?: string;
+    comments?: string;
+  };
+  sort?: string;
+  filter?: string;
+  body: {
+    data: {
+      id: string;
+      type: 'authors';
+      attributes: {
+        name?: string;
+        category?: string;
+      };
+      relationships: {
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
+        };
+      };
+    };
+  };
+};
+export type DeleteAuthorsByIdApiResponse = /** status 200 undefined */ {
+  data: {
+    id: string;
+    type: 'authors';
+    attributes: {
+      name: string;
+      category: string;
+    };
+    relationships: {
+      comments: {
+        data: {
+          id: string;
+          type: 'comments';
+        }[];
+      };
+    };
+  };
+  'x-denormalized'?: Authors;
+};
+export type DeleteAuthorsByIdApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    authors?: string;
+    comments?: string;
+  };
+  sort?: string;
+  filter?: string;
+};
+export type GetAuthorsByIdRelationshipsCommentsApiResponse =
+  /** status 200 undefined */ Blob;
+export type GetAuthorsByIdRelationshipsCommentsApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    authors?: string;
+    comments?: string;
+  };
+  sort?: string;
+  filter?: string;
+};
+export type PostAuthorsByIdRelationshipsCommentsApiResponse =
+  /** status 200 undefined */ {
+    data: {
+      id?: string;
+      type: 'authors';
+      attributes: {
+        name: string;
+        category: string;
+      };
+      relationships: {
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
+        };
+      };
+    }[];
+    'x-denormalized'?: Authors[];
+  };
+export type PostAuthorsByIdRelationshipsCommentsApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    authors?: string;
+    comments?: string;
+  };
+  sort?: string;
+  filter?: string;
+  body: {
+    data: {
+      id: string;
+      type: 'comments';
+    }[];
+  };
+};
+export type PatchAuthorsByIdRelationshipsCommentsApiResponse =
+  /** status 200 undefined */ {
+    data: {
+      id?: string;
+      type: 'authors';
+      attributes: {
+        name: string;
+        category: string;
+      };
+      relationships: {
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
+        };
+      };
+    }[];
+    'x-denormalized'?: Authors[];
+  };
+export type PatchAuthorsByIdRelationshipsCommentsApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    authors?: string;
+    comments?: string;
+  };
+  sort?: string;
+  filter?: string;
+  body: {
+    data: {
+      id: string;
+      type: 'comments';
+    }[];
+  };
+};
+export type DeleteAuthorsByIdRelationshipsCommentsApiResponse =
+  /** status 200 undefined */ {
+    data: {
+      id?: string;
+      type: 'authors';
+      attributes: {
+        name: string;
+        category: string;
+      };
+      relationships: {
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
+        };
+      };
+    }[];
+    'x-denormalized'?: Authors[];
+  };
+export type DeleteAuthorsByIdRelationshipsCommentsApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    authors?: string;
+    comments?: string;
+  };
+  sort?: string;
+  filter?: string;
+  body: {
+    data: {
+      id: string;
+      type: 'comments';
+    }[];
+  };
+};
+export type GetCommentsApiResponse = /** status 200 undefined */ {
+  data: {
+    id?: string;
+    type: 'comments';
+    attributes: {
+      body: string;
+    };
+    relationships: {
+      author: {
+        data: {
+          id: string;
+          type: 'authors';
+        };
+      };
+    };
+  }[];
+  'x-denormalized'?: Comments[];
 };
 export type GetCommentsApiArg = {
   include?: string;
-  fields?: string;
+  fields?: {
+    comments?: string;
+    author?: string;
+  };
   sort?: string;
+  filter?: string;
 };
 export type PostCommentsApiResponse = /** status 200 undefined */ {
-  id: string;
-  type: 'comments';
-  attributes: {
-    body: string;
-  };
-  relationships: {
-    author: {
-      data: {
-        id: string;
-        type: 'authors';
-      };
-    };
-  };
-};
-export type PostCommentsApiArg = {
-  id: string;
-  include?: string;
-  fields?: string;
-  sort?: string;
-  body: {
+  data: {
     id: string;
     type: 'comments';
     attributes: {
@@ -844,142 +1361,304 @@ export type PostCommentsApiArg = {
       };
     };
   };
+  'x-denormalized'?: Comments;
 };
-export type GetCommentsIdApiResponse = /** status 200 undefined */ {
-  id: string;
-  type: 'comments';
-  attributes: {
-    body: string;
-  };
-  relationships: {
-    author: {
-      data: {
-        id: string;
-        type: 'authors';
-      };
-    };
-  };
-};
-export type GetCommentsIdApiArg = {
-  id: string;
+export type PostCommentsApiArg = {
   include?: string;
-  fields?: string;
+  fields?: {
+    comments?: string;
+    author?: string;
+  };
   sort?: string;
-};
-export type PatchCommentsIdApiResponse = /** status 200 undefined */ {
-  id: string;
-  type: 'comments';
-  attributes: {
-    body: string;
-  };
-  relationships: {
-    author: {
-      data: {
-        id: string;
-        type: 'authors';
-      };
-    };
-  };
-};
-export type PatchCommentsIdApiArg = {
-  id: string;
-  include?: string;
-  fields?: string;
-  sort?: string;
-  body: any;
-};
-export type DeleteCommentsIdApiResponse = /** status 200 undefined */ {
-  id: string;
-  type: 'comments';
-  attributes: {
-    body: string;
-  };
-  relationships: {
-    author: {
-      data: {
-        id: string;
-        type: 'authors';
-      };
-    };
-  };
-};
-export type DeleteCommentsIdApiArg = {
-  id: string;
-  include?: string;
-  fields?: string;
-  sort?: string;
-};
-export type GetCommentsIdRelationshipsAuthorApiResponse =
-  /** status 200 undefined */ {
-    id: string;
-    type: 'authors';
-    attributes: {
-      name: string;
-      category: string;
-    };
-    relationships: object;
-  };
-export type GetCommentsIdRelationshipsAuthorApiArg = {
-  id: string;
-  include?: string;
-  fields?: string;
-  sort?: string;
-};
-export type PostCommentsIdRelationshipsAuthorApiResponse =
-  /** status 200 undefined */ {
-    id: string;
-    type: 'authors';
-    attributes: {
-      name: string;
-      category: string;
-    };
-    relationships: object;
-  };
-export type PostCommentsIdRelationshipsAuthorApiArg = {
-  id: string;
-  include?: string;
-  fields?: string;
-  sort?: string;
+  filter?: string;
   body: {
-    id: string;
-    type: 'authors';
-    attributes: {
-      name: string;
-      category: string;
+    data: {
+      id?: string;
+      type: 'comments';
+      attributes: {
+        body?: string;
+      };
+      relationships: {
+        author: {
+          data: {
+            id: string;
+            type: 'authors';
+          };
+        };
+      };
     };
-    relationships: object;
   };
 };
-export type PatchCommentsIdRelationshipsAuthorApiResponse =
-  /** status 200 undefined */ {
+export type GetCommentsByIdApiResponse = /** status 200 undefined */ {
+  data: {
     id: string;
-    type: 'authors';
+    type: 'comments';
     attributes: {
-      name: string;
-      category: string;
+      body: string;
     };
-    relationships: object;
+    relationships: {
+      author: {
+        data: {
+          id: string;
+          type: 'authors';
+        };
+      };
+    };
   };
-export type PatchCommentsIdRelationshipsAuthorApiArg = {
-  id: string;
-  include?: string;
-  fields?: string;
-  sort?: string;
-  body: any;
+  'x-denormalized'?: Comments;
 };
-export type DeleteCommentsIdRelationshipsAuthorApiResponse =
-  /** status 200 undefined */ {
-    id: string;
-    type: 'authors';
-    attributes: {
-      name: string;
-      category: string;
-    };
-    relationships: object;
-  };
-export type DeleteCommentsIdRelationshipsAuthorApiArg = {
+export type GetCommentsByIdApiArg = {
   id: string;
   include?: string;
-  fields?: string;
+  fields?: {
+    comments?: string;
+    author?: string;
+  };
   sort?: string;
+  filter?: string;
+};
+export type PatchCommentsByIdApiResponse = /** status 200 undefined */ {
+  data: {
+    id: string;
+    type: 'comments';
+    attributes: {
+      body: string;
+    };
+    relationships: {
+      author: {
+        data: {
+          id: string;
+          type: 'authors';
+        };
+      };
+    };
+  };
+  'x-denormalized'?: Comments;
+};
+export type PatchCommentsByIdApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    comments?: string;
+    author?: string;
+  };
+  sort?: string;
+  filter?: string;
+  body: {
+    data: {
+      id: string;
+      type: 'comments';
+      attributes: {
+        body?: string;
+      };
+      relationships: {
+        author: {
+          data: {
+            id: string;
+            type: 'authors';
+          };
+        };
+      };
+    };
+  };
+};
+export type DeleteCommentsByIdApiResponse = /** status 200 undefined */ {
+  data: {
+    id: string;
+    type: 'comments';
+    attributes: {
+      body: string;
+    };
+    relationships: {
+      author: {
+        data: {
+          id: string;
+          type: 'authors';
+        };
+      };
+    };
+  };
+  'x-denormalized'?: Comments;
+};
+export type DeleteCommentsByIdApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    comments?: string;
+    author?: string;
+  };
+  sort?: string;
+  filter?: string;
+};
+export type GetCommentsByIdRelationshipsAuthorApiResponse =
+  /** status 200 undefined */ Blob;
+export type GetCommentsByIdRelationshipsAuthorApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    comments?: string;
+    author?: string;
+  };
+  sort?: string;
+  filter?: string;
+};
+export type PostCommentsByIdRelationshipsAuthorApiResponse =
+  /** status 200 undefined */ {
+    data: {
+      id: string;
+      type: 'comments';
+      attributes: {
+        body: string;
+      };
+      relationships: {
+        author: {
+          data: {
+            id: string;
+            type: 'authors';
+          };
+        };
+      };
+    };
+    'x-denormalized'?: Comments;
+  };
+export type PostCommentsByIdRelationshipsAuthorApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    comments?: string;
+    author?: string;
+  };
+  sort?: string;
+  filter?: string;
+  body: {
+    data: {
+      id: string;
+      type: 'authors';
+      attributes: {
+        name: string;
+        category: string;
+      };
+      relationships: {
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
+        };
+      };
+    };
+  };
+};
+export type PatchCommentsByIdRelationshipsAuthorApiResponse =
+  /** status 200 undefined */ {
+    data: {
+      id: string;
+      type: 'comments';
+      attributes: {
+        body: string;
+      };
+      relationships: {
+        author: {
+          data: {
+            id: string;
+            type: 'authors';
+          };
+        };
+      };
+    };
+    'x-denormalized'?: Comments;
+  };
+export type PatchCommentsByIdRelationshipsAuthorApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    comments?: string;
+    author?: string;
+  };
+  sort?: string;
+  filter?: string;
+  body: {
+    data: {
+      id: string;
+      type: 'authors';
+      attributes: {
+        name: string;
+        category: string;
+      };
+      relationships: {
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
+        };
+      };
+    };
+  };
+};
+export type DeleteCommentsByIdRelationshipsAuthorApiResponse =
+  /** status 200 undefined */ {
+    data: {
+      id: string;
+      type: 'comments';
+      attributes: {
+        body: string;
+      };
+      relationships: {
+        author: {
+          data: {
+            id: string;
+            type: 'authors';
+          };
+        };
+      };
+    };
+    'x-denormalized'?: Comments;
+  };
+export type DeleteCommentsByIdRelationshipsAuthorApiArg = {
+  id: string;
+  include?: string;
+  fields?: {
+    comments?: string;
+    author?: string;
+  };
+  sort?: string;
+  filter?: string;
+  body: {
+    data: {
+      id: string;
+      type: 'authors';
+      attributes: {
+        name: string;
+        category: string;
+      };
+      relationships: {
+        comments: {
+          data: {
+            id: string;
+            type: 'comments';
+          }[];
+        };
+      };
+    };
+  };
+};
+export type Comments = {
+  id: string;
+  body: string;
+  author: Authors;
+};
+export type Authors = {
+  id: string;
+  name: string;
+  category: string;
+  comments: Comments[];
+};
+export type Articles = {
+  id: string;
+  title: string;
+  body: string;
+  tags: string[];
+  author: Authors;
+  comments: Comments[];
 };

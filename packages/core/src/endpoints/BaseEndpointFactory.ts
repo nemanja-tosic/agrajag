@@ -169,25 +169,22 @@ export abstract class BaseEndpointFactory<
 
             // TODO: introduce a createNormalized factory
             const entity: Normalized<TDefinition> = {
-              id: body.data.id ?? createId(),
+              id: body.data.id,
               ...body.data.attributes,
               ...Object.fromEntries(
                 Object.entries(body.data.relationships ?? {}).map(
                   ([key, value]) =>
                     Array.isArray(value.data)
-                      ? [this.normalizedRelKey(key), value.data.map(d => d.id)]
-                      : [this.normalizedRelKey(key), value.data?.id],
+                      ? [key, value.data.map(d => d.id)]
+                      : [key, value.data?.id],
                 ),
               ),
             };
 
-            await external.save(entity);
+            const data = await external.post(entity);
             await external.saveUow?.();
-
-            // separate load step as we potentially need to load relationships
-            const data = await external.byId(entity.id);
             if (!data) {
-              throw new Error('Failed to save entity');
+              return;
             }
 
             return this.#serialize(
@@ -204,31 +201,13 @@ export abstract class BaseEndpointFactory<
               async (body, params) => {
                 await using external = this.createExternal(definition);
 
-                const entity = await external.byId(params.id);
-                if (!entity) {
-                  throw new Error('Failed to load relationship');
-                }
-
-                const property = this.normalizedRelKey(key);
-
-                Object.assign(entity, {
-                  [property]: Array.isArray(body.data)
-                    ? [
-                        ...new Set(
-                          entity[property].concat(body.data.map(d => d.id)),
-                        ),
-                      ]
-                    : body.data.id,
-                });
-
-                if (!external.saveUow) {
-                  await external.save(entity);
-                }
+                const data = await external.postRelationship(
+                  params.id,
+                  body,
+                  params,
+                );
                 await external.saveUow?.();
-
-                return {
-                  data: await external.relationshipByKey(params.id, key),
-                } as ResourceLinkage;
+                return data;
               },
             ]),
           ) as RelatedEndpointsWithBody<TDefinition>,
@@ -261,31 +240,21 @@ export abstract class BaseEndpointFactory<
             );
           },
           related: Object.fromEntries(
-            Object.entries(definition.relationships).map(([key]) => {
-              return [
-                key,
-                async params => {
-                  await using external = this.createExternal(definition);
+            Object.entries(definition.relationships).map(([key]) => [
+              key,
+              async (body, params) => {
+                await using external = this.createExternal(definition);
 
-                  const entity = await external.byId(params.id);
-                  if (!entity) {
-                    return undefined;
-                  }
-
-                  delete (entity as any)[this.normalizedRelKey(key)];
-
-                  if (!external.saveUow) {
-                    await external.save(entity);
-                  }
-                  await external.saveUow?.();
-
-                  return {
-                    data: await external.relationshipByKey(params.id, key),
-                  } as ResourceLinkage;
-                },
-              ];
-            }),
-          ) as RelatedEndpointsWithoutBody<TDefinition>,
+                const data = await external.deleteRelationship(
+                  params.id,
+                  body,
+                  params,
+                );
+                await external.saveUow?.();
+                return data;
+              },
+            ]),
+          ) as RelatedEndpointsWithBody<TDefinition>,
         },
       };
     }
@@ -302,38 +271,23 @@ export abstract class BaseEndpointFactory<
 
             await using external = this.createExternal(definition);
 
-            const entity = await external.byId(body.data.id);
-            if (!entity) {
-              return undefined;
-            }
-
-            // TODO: introduce a createNormalized factory
-            Object.assign(
-              entity,
-              Object.assign(entity, {
-                ...body.data.attributes,
-                ...Object.fromEntries(
-                  Object.entries(body.data.relationships ?? {}).map(
-                    ([key, value]) =>
-                      Array.isArray(value.data)
-                        ? [
-                            this.normalizedRelKey(key),
-                            value.data.map(d => d.id),
-                          ]
-                        : [this.normalizedRelKey(key), value.data?.id],
-                  ),
+            const entity = {
+              id: body.data.id,
+              ...body.data.attributes,
+              ...Object.fromEntries(
+                Object.entries(body.data.relationships ?? {}).map(
+                  ([key, value]) =>
+                    Array.isArray(value.data)
+                      ? [key, value.data.map(d => d.id)]
+                      : [key, value.data?.id],
                 ),
-              }),
-            );
+              ),
+            };
 
-            if (!external.saveUow) {
-              await external.save(entity);
-            }
+            const data = await external.patch(entity);
             await external.saveUow?.();
-
-            const data = await external.byId(body.data.id);
             if (!data) {
-              throw new Error('Failed to save entity');
+              return;
             }
 
             return this.#serialize(
@@ -351,25 +305,13 @@ export abstract class BaseEndpointFactory<
                 async (body, params) => {
                   await using external = this.createExternal(definition);
 
-                  const entity = await external.byId(params.id);
-                  if (!entity) {
-                    return undefined;
-                  }
-
-                  Object.assign(entity, {
-                    [this.normalizedRelKey(key)]: Array.isArray(body.data)
-                      ? [...new Set(body.data.map(d => d.id))]
-                      : body.data.id,
-                  });
-
-                  if (!external.saveUow) {
-                    await external.save(entity);
-                  }
+                  const data = await external.patchRelationship(
+                    params.id,
+                    body,
+                    params,
+                  );
                   await external.saveUow?.();
-
-                  return {
-                    data: await external.relationshipByKey(params.id, key),
-                  } as ResourceLinkage;
+                  return data;
                 },
               ];
             }),

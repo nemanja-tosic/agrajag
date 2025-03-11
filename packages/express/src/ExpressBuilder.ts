@@ -96,12 +96,12 @@ export class ExpressBuilder extends ServerBuilder {
     schema: TDefinition,
     endpointSchema: EndpointSchema,
     path: TPath,
-    handler: FetchDeleteHandler<TPath, TDefinition>,
+    handler: MutationHandler<TPath>,
   ): this {
     this.#express.delete(path, async (req, res) => {
       const { body, status, headers } = await new Promise<Response>(
         async resolve =>
-          handler(this.#extractParams(req), async response =>
+          handler(await req.body, this.#extractParams(req), async response =>
             resolve(response),
           ),
       );

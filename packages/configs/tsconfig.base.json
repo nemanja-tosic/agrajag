@@ -15,12 +15,12 @@
     "sourceMap": true,
     "incremental": true,
     "noEmitOnError": true,
+    "noErrorTruncation": true,
 
     "preserveConstEnums": true,
     "newLine": "lf",
     "pretty": true,
-
-    "useUnknownInCatchVariables": false,
+    "skipDefaultLibCheck": true
   },
   "watchOptions": {
     "watchFile": "useFsEventsOnParentDirectory",

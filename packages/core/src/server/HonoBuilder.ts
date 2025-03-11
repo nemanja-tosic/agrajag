@@ -16,7 +16,7 @@ export class HonoBuilder extends ServerBuilder<Hono> {
     TDefinition extends ResourceDefinition = ResourceDefinition,
   >(
     schema: TDefinition,
-    endpointSchema: EndpointSchema,
+    createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: FetchDeleteHandler<TPath, TDefinition>,
   ): this {
@@ -33,7 +33,7 @@ export class HonoBuilder extends ServerBuilder<Hono> {
 
   addPost<TPath extends string = string>(
     schema: ResourceDefinition,
-    endpointSchema: EndpointSchema,
+    createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: MutationHandler<TPath>,
   ): this {
@@ -53,7 +53,7 @@ export class HonoBuilder extends ServerBuilder<Hono> {
 
   addPatch<TPath extends string = string>(
     schema: ResourceDefinition,
-    endpointSchema: EndpointSchema,
+    createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: MutationHandler<TPath>,
   ): this {
@@ -76,14 +76,20 @@ export class HonoBuilder extends ServerBuilder<Hono> {
     TDefinition extends ResourceDefinition = ResourceDefinition,
   >(
     schema: TDefinition,
-    endpointSchema: EndpointSchema,
+    createEndpointSchema: () => EndpointSchema,
     path: TPath,
-    handler: FetchDeleteHandler<TPath, TDefinition>,
+    handler: MutationHandler<TPath>,
   ): this {
     this.#hono.delete(path, async c => {
       const { body, status, headers } = await new Promise<Response>(
         async resolve =>
-          handler(this.#extractParams(c), async response => resolve(response)),
+          handler(
+            c.req.header('content-type') === 'application/json'
+              ? await c.req.json()
+              : undefined,
+            this.#extractParams(c),
+            async response => resolve(response),
+          ),
       );
 
       return c.json(body, status, headers);

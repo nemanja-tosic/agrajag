@@ -1,12 +1,7 @@
-import { z } from 'zod';
-
 import { AttributesSchema } from './resources/ResourceSchema.js';
 import { Serializer } from './serialization/Serializer.js';
 import { JsonApiSerializer } from './serialization/JsonApiSerializer.js';
-import {
-  ResourceDefinition,
-  ResourceRelationships,
-} from './resources/ResourceDefinition.js';
+import { ResourceDefinition } from './resources/ResourceDefinition.js';
 import { ZodSchemaFactory } from './schema/ZodSchemaFactory.js';
 import { CreateSchemaOptions, SchemaFactory } from './schema/SchemaFactory.js';
 import { Response, ServerBuilder } from './server/ServerBuilder.js';
@@ -16,6 +11,18 @@ import { IEndpointFactory } from './endpoints/EndpointFactory.js';
 export interface Logger {
   error: (error: Error) => void | Promise<void>;
 }
+
+export type DeferredRelationships = unknown;
+
+export type UndeferredRelationships<
+  TRelationships extends DeferredRelationships,
+> = {
+  [K in keyof TRelationships]: TRelationships[K] extends (...args: any[]) => any
+    ? ReturnType<TRelationships[K]> extends any[]
+      ? [ReturnType<TRelationships[K]>[number]]
+      : ReturnType<TRelationships[K]>
+    : never;
+};
 
 export class Builder {
   readonly #serializer: Serializer = new JsonApiSerializer();
@@ -43,18 +50,20 @@ export class Builder {
   createSchema<
     TType extends string = string,
     TAttributes extends AttributesSchema = AttributesSchema,
-    TRelationships extends ResourceRelationships = ResourceRelationships,
+    TRelationships extends DeferredRelationships = DeferredRelationships,
   >(
     type: TType,
-    createAttributesSchema: (zod: typeof z) => TAttributes,
+    attributesSchema: TAttributes,
     options?: CreateSchemaOptions<TRelationships>,
-  ): ResourceDefinition<TType, TAttributes, TRelationships> {
-    return this.#schemaFactory.createSchema(
-      type,
-      createAttributesSchema,
-      options,
-    );
+  ): ResourceDefinition<
+    TType,
+    TAttributes,
+    UndeferredRelationships<TRelationships>
+  > {
+    return this.#schemaFactory.createSchema(type, attributesSchema, options);
   }
+
+  async build(): Promise<void> {}
 
   addResource<TDefinition extends ResourceDefinition>(
     definition: TDefinition,
@@ -69,11 +78,14 @@ export class Builder {
 
       endpointBuilder.addGet(
         definition,
-        this.#schemaFactory.createEndpointSchema(definition, {
-          responseSchema:
-            this.#schemaFactory.createArrayPrimaryTypeSchema(definition),
-          noId: true,
-        }),
+        () =>
+          this.#schemaFactory.createEndpointSchema(definition, {
+            responseSchema: this.#schemaFactory.createArrayPrimaryTypeSchema(
+              definition,
+              { withDenormalize: true },
+            ),
+            noId: true,
+          }),
         `/${type}`,
         async (params, respond) => {
           try {
@@ -85,8 +97,8 @@ export class Builder {
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
           } catch (error) {
-            await this.#logError(error);
-            await respond(this.#createUnhandledErrorResponse(error));
+            await this.#logError(error as Error);
+            await respond(this.#createUnhandledErrorResponse(error as Error));
           }
         },
       );
@@ -97,10 +109,13 @@ export class Builder {
 
       endpointBuilder.addGet(
         definition,
-        this.#schemaFactory.createEndpointSchema(definition, {
-          responseSchema:
-            this.#schemaFactory.createSinglePrimaryTypeSchema(definition),
-        }),
+        () =>
+          this.#schemaFactory.createEndpointSchema(definition, {
+            responseSchema: this.#schemaFactory.createSinglePrimaryTypeSchema(
+              definition,
+              { withDenormalize: true },
+            ),
+          }),
         `/${type}/:id`,
         async (params, respond) => {
           try {
@@ -112,8 +127,8 @@ export class Builder {
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
           } catch (error) {
-            await this.#logError(error);
-            await respond(this.#createUnhandledErrorResponse(error));
+            await this.#logError(error as Error);
+            await respond(this.#createUnhandledErrorResponse(error as Error));
           }
         },
       );
@@ -122,15 +137,18 @@ export class Builder {
     if (endpoints.create?.self) {
       endpointBuilder.addPost(
         definition,
-        this.#schemaFactory.createEndpointSchema(definition, {
-          requestSchema: this.#schemaFactory.createSinglePrimaryTypeSchema(
-            definition,
-            { partialAttributes: true, optionalId: true },
-          ),
-          responseSchema:
-            this.#schemaFactory.createSinglePrimaryTypeSchema(definition),
-          noId: true,
-        }),
+        () =>
+          this.#schemaFactory.createEndpointSchema(definition, {
+            requestSchema: this.#schemaFactory.createSinglePrimaryTypeSchema(
+              definition,
+              { partialAttributes: true, optionalId: true },
+            ),
+            responseSchema: this.#schemaFactory.createSinglePrimaryTypeSchema(
+              definition,
+              { withDenormalize: true },
+            ),
+            noId: true,
+          }),
         `/${type}`,
         async (body, params, respond) => {
           try {
@@ -145,8 +163,8 @@ export class Builder {
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
           } catch (error) {
-            await this.#logError(error);
-            await respond(this.#createUnhandledErrorResponse(error));
+            await this.#logError(error as Error);
+            await respond(this.#createUnhandledErrorResponse(error as Error));
           }
         },
       );
@@ -155,14 +173,17 @@ export class Builder {
     if (endpoints.patch?.self) {
       endpointBuilder.addPatch(
         definition,
-        this.#schemaFactory.createEndpointSchema(definition, {
-          requestSchema: this.#schemaFactory.createSinglePrimaryTypeSchema(
-            definition,
-            { partialAttributes: true },
-          ),
-          responseSchema:
-            this.#schemaFactory.createSinglePrimaryTypeSchema(definition),
-        }),
+        () =>
+          this.#schemaFactory.createEndpointSchema(definition, {
+            requestSchema: this.#schemaFactory.createSinglePrimaryTypeSchema(
+              definition,
+              { partialAttributes: true },
+            ),
+            responseSchema: this.#schemaFactory.createSinglePrimaryTypeSchema(
+              definition,
+              { withDenormalize: true },
+            ),
+          }),
         `/${type}/:id`,
         async (body, params, respond) => {
           try {
@@ -180,8 +201,8 @@ export class Builder {
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
           } catch (error) {
-            await this.#logError(error);
-            await respond(this.#createUnhandledErrorResponse(error));
+            await this.#logError(error as Error);
+            await respond(this.#createUnhandledErrorResponse(error as Error));
           }
         },
       );
@@ -190,12 +211,15 @@ export class Builder {
     if (endpoints.delete?.self) {
       endpointBuilder.addDelete(
         definition,
-        this.#schemaFactory.createEndpointSchema(definition, {
-          responseSchema:
-            this.#schemaFactory.createSinglePrimaryTypeSchema(definition),
-        }),
+        () =>
+          this.#schemaFactory.createEndpointSchema(definition, {
+            responseSchema: this.#schemaFactory.createSinglePrimaryTypeSchema(
+              definition,
+              { withDenormalize: true },
+            ),
+          }),
         `/${type}/:id`,
-        async (params, respond) => {
+        async (body, params, respond) => {
           try {
             const data = await endpoints.delete!.self!(params);
             if (!data) {
@@ -208,21 +232,27 @@ export class Builder {
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
           } catch (error) {
-            await this.#logError(error);
-            await respond(this.#createUnhandledErrorResponse(error));
+            await this.#logError(error as Error);
+            await respond(this.#createUnhandledErrorResponse(error as Error));
           }
         },
       );
     }
 
     const relationships = definition.relationships;
+    const visited = new Set<ResourceDefinition>();
 
     for (const [key, oneOrMany] of Object.entries(relationships)) {
       const relationship = Array.isArray(oneOrMany) ? oneOrMany[0] : oneOrMany;
+      if (visited.has(relationship)) {
+        continue;
+      }
+
+      visited.add(relationship);
 
       endpointBuilder.addGet(
         relationship,
-        this.#schemaFactory.createEndpointSchema(definition),
+        () => this.#schemaFactory.createEndpointSchema(definition),
         `/${type}/:id/relationships/${key}`,
         async (params, respond) => {
           try {
@@ -234,15 +264,29 @@ export class Builder {
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
           } catch (error) {
-            await this.#logError(error);
-            await respond(this.#createUnhandledErrorResponse(error));
+            await this.#logError(error as Error);
+            await respond(this.#createUnhandledErrorResponse(error as Error));
           }
         },
       );
 
       endpointBuilder.addPost(
         relationship,
-        this.#schemaFactory.createEndpointSchema(definition),
+        () =>
+          this.#schemaFactory.createEndpointSchema(definition, {
+            requestSchema: Array.isArray(oneOrMany)
+              ? this.#schemaFactory.createResourceMultiLinkageSchema(
+                  relationship,
+                )
+              : this.#schemaFactory.createSinglePrimaryTypeSchema(relationship),
+            responseSchema: Array.isArray(oneOrMany)
+              ? this.#schemaFactory.createArrayPrimaryTypeSchema(definition, {
+                  withDenormalize: true,
+                })
+              : this.#schemaFactory.createSinglePrimaryTypeSchema(definition, {
+                  withDenormalize: true,
+                }),
+          }),
         `/${type}/:id/relationships/${key}`,
         async (body, params, respond) => {
           try {
@@ -262,15 +306,29 @@ export class Builder {
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
           } catch (error) {
-            await this.#logError(error);
-            await respond(this.#createUnhandledErrorResponse(error));
+            await this.#logError(error as Error);
+            await respond(this.#createUnhandledErrorResponse(error as Error));
           }
         },
       );
 
       endpointBuilder.addPatch(
         relationship,
-        this.#schemaFactory.createEndpointSchema(definition),
+        () =>
+          this.#schemaFactory.createEndpointSchema(definition, {
+            requestSchema: Array.isArray(oneOrMany)
+              ? this.#schemaFactory.createResourceMultiLinkageSchema(
+                  relationship,
+                )
+              : this.#schemaFactory.createSinglePrimaryTypeSchema(relationship),
+            responseSchema: Array.isArray(oneOrMany)
+              ? this.#schemaFactory.createArrayPrimaryTypeSchema(definition, {
+                  withDenormalize: true,
+                })
+              : this.#schemaFactory.createSinglePrimaryTypeSchema(definition, {
+                  withDenormalize: true,
+                }),
+          }),
         `/${type}/:id/relationships/${key}`,
         async (body, params, respond) => {
           try {
@@ -290,8 +348,8 @@ export class Builder {
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
           } catch (error) {
-            await this.#logError(error);
-            await respond(this.#createUnhandledErrorResponse(error));
+            await this.#logError(error as Error);
+            await respond(this.#createUnhandledErrorResponse(error as Error));
           }
         },
       );
@@ -299,20 +357,37 @@ export class Builder {
       // NOTE: this should be possible only if it is a one-to-many relationship
       endpointBuilder.addDelete(
         relationship,
-        this.#schemaFactory.createEndpointSchema(definition),
+        () =>
+          this.#schemaFactory.createEndpointSchema(definition, {
+            requestSchema: Array.isArray(oneOrMany)
+              ? this.#schemaFactory.createResourceMultiLinkageSchema(
+                  relationship,
+                )
+              : this.#schemaFactory.createSinglePrimaryTypeSchema(relationship),
+            responseSchema: Array.isArray(oneOrMany)
+              ? this.#schemaFactory.createArrayPrimaryTypeSchema(definition, {
+                  withDenormalize: true,
+                })
+              : this.#schemaFactory.createSinglePrimaryTypeSchema(definition, {
+                  withDenormalize: true,
+                }),
+          }),
         `/${type}/:id/relationships/${key}`,
-        async (params, respond) => {
+        async (body, params, respond) => {
           try {
-            const data = await endpoints.delete?.related?.[key](params);
+            const data = await endpoints.delete?.related?.[key](
+              body as any,
+              params,
+            );
 
             await respond({
-              body: data,
+              body: data as any,
               status: 200,
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
           } catch (error) {
-            await this.#logError(error);
-            await respond(this.#createUnhandledErrorResponse(error));
+            await this.#logError(error as Error);
+            await respond(this.#createUnhandledErrorResponse(error as Error));
           }
         },
       );

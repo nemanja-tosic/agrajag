@@ -1,42 +1,41 @@
 import { After, Before, Given, Then, When } from '@cucumber/cucumber';
-import { Builder, ServerBuilder } from 'agrajag';
+import { z, Builder, ServerBuilder } from 'agrajag';
 import { deepStrictEqual, strictEqual, notStrictEqual } from 'node:assert';
 import { DocumentStore, DeleteByQueryOperation } from 'ravendb';
 import { Resource, ResourceDefinition } from 'agrajag';
 import { RavendbCrudEndpointFactory } from '@agrajag/ravendb-adapter';
-import { ZodArray, ZodObject, ZodString } from 'zod';
 
 type AuthorDefinition = ResourceDefinition<
   'authors',
-  ZodObject<{ name: ZodString; category: ZodString }>
+  z.ZodObject<{ name: z.ZodString; category: z.ZodString }>
 >;
 
 type PhotographerDefinition = ResourceDefinition<
   'photographers',
-  ZodObject<{ name?: ZodString; category: ZodString }>
+  z.ZodObject<{ name?: z.ZodString; category: z.ZodString }>
 >;
 
 type CommentDefinition = ResourceDefinition<
   'comments',
-  ZodObject<{ body: ZodString }>,
+  z.ZodObject<{ body: z.ZodString }>,
   { author: AuthorDefinition }
 >;
 
 type PhotoDefinition = ResourceDefinition<
   'photos',
-  ZodObject<{ name: ZodString }>,
+  z.ZodObject<{ name: z.ZodString }>,
   { photographer: PhotographerDefinition }
 >;
 
 type ArticleDefinition = ResourceDefinition<
   'articles',
-  ZodObject<{ title: ZodString; body: ZodString; tags: ZodArray<ZodString> }>,
+  z.ZodObject<{ title: z.ZodString; body: z.ZodString; tags: z.ZodArray<z.ZodString> }>,
   { author: AuthorDefinition; comments: [CommentDefinition] }
 >;
 
 type EmptyDefinition = ResourceDefinition<
   'empty',
-  ZodObject<{ name: ZodString; category: ZodString }>
+  z.ZodObject<{ name: z.ZodString; category: z.ZodString }>
 >;
 
 export interface World {
@@ -59,38 +58,41 @@ export interface World {
 }
 
 Before<World>(async function () {
-  const author = this.builder.createSchema('authors', z =>
+  const author = this.builder.createSchema(
+    'authors',
     z.object({ name: z.string(), category: z.string() }),
   );
 
-  const photographer = this.builder.createSchema('photographers', z =>
+  const photographer = this.builder.createSchema(
+    'photographers',
     z.object({ name: z.string(), category: z.string() }),
   );
 
   const photo = this.builder.createSchema(
     'photos',
-    z => z.object({ name: z.string() }),
+    z.object({ name: z.string() }),
     { relationships: { photographer } },
   );
 
   const comment = this.builder.createSchema(
     'comments',
-    z => z.object({ body: z.string() }),
+    z.object({ body: z.string() }),
     { relationships: { author } },
   );
 
   const article = this.builder.createSchema(
     'articles',
-    z =>
-      z.object({
-        title: z.string(),
-        body: z.string(),
-        tags: z.array(z.string()),
-      }),
+
+    z.object({
+      title: z.string(),
+      body: z.string(),
+      tags: z.array(z.string()),
+    }),
     { relationships: { author, comments: [comment] } },
   );
 
-  const empty = this.builder.createSchema('empty', z =>
+  const empty = this.builder.createSchema(
+    'empty',
     z.object({ name: z.string(), category: z.string() }),
   );
 

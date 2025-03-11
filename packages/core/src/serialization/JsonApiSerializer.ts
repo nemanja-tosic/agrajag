@@ -1,9 +1,7 @@
 import jsonapiSerializer, { SerializerOptions } from 'jsonapi-serializer';
 import { Serializer } from './Serializer.js';
 import { QueryParams } from '../endpoints/QueryParams.js';
-import {
-  ResourceDefinition,
-} from '../resources/ResourceDefinition.js';
+import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import { Denormalized } from '../endpoints/Endpoints.js';
 import { Resource } from '../resources/Resource.js';
 
@@ -36,7 +34,7 @@ export class JsonApiSerializer implements Serializer {
   ): jsonapiSerializer.Serializer {
     const type = definition.type;
 
-    const options = this.#createOptions(definition, params);
+    const options = this.#createOptions(definition, params, new Set());
 
     return new jsonapiSerializer.Serializer(type, options);
   }
@@ -44,6 +42,7 @@ export class JsonApiSerializer implements Serializer {
   #createOptions(
     definition: ResourceDefinition,
     params: QueryParams,
+    visited: Set<ResourceDefinition | ResourceDefinition[]> = new Set(),
     options?: { relationshipKey?: string },
   ): SerializerOptions {
     const type = definition.type;
@@ -66,14 +65,20 @@ export class JsonApiSerializer implements Serializer {
       // keep attribute keys as is
       keyForAttribute: attribute => attribute,
       ...Object.fromEntries(
-        Object.entries(relationships).map(([key, value]) => {
-          const relationship = Array.isArray(value) ? value[0] : value;
+        Object.entries(relationships)
+          .filter(([key, value]) => !visited.has(value))
+          .map(([key, value]) => {
+            visited.add(value);
 
-          return [
-            key,
-            this.#createOptions(relationship, params, { relationshipKey: key }),
-          ];
-        }),
+            const relationship = Array.isArray(value) ? value[0] : value;
+
+            return [
+              key,
+              this.#createOptions(relationship, params, visited, {
+                relationshipKey: key,
+              }),
+            ];
+          }),
       ),
     };
   }

@@ -29,7 +29,7 @@ export class FastifyBuilder extends ServerBuilder<FastifyInstance> {
         try {
           done(null, JSON.parse(body));
         } catch (error) {
-          done(error);
+          done(error as Error);
         }
       },
     );
@@ -128,7 +128,7 @@ export class FastifyBuilder extends ServerBuilder<FastifyInstance> {
     schema: TDefinition,
     endpointSchema: EndpointSchema,
     path: TPath,
-    handler: FetchDeleteHandler<TPath, TDefinition>,
+    handler: MutationHandler<TPath>,
   ): this {
     this.#fastify.route({
       method: 'DELETE',
@@ -136,7 +136,7 @@ export class FastifyBuilder extends ServerBuilder<FastifyInstance> {
       handler: async (req, res) => {
         const { body, status, headers } = await new Promise<Response>(
           async resolve =>
-            handler(this.#extractParams(req), async response =>
+            handler(await req.body, this.#extractParams(req), async response =>
               resolve(response),
             ),
         );

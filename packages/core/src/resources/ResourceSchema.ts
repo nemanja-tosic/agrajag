@@ -1,5 +1,6 @@
 import {
   ZodArray,
+  ZodLazy,
   ZodLiteral,
   ZodNull,
   ZodObject,
@@ -21,13 +22,16 @@ export type ResourceSchema<
   relationships: TRels;
 }>;
 
-export type AttributesSchema = ZodObject<ZodRawShape>;
+export type AttributesSchema<T extends ZodRawShape = ZodRawShape> =
+  ZodObject<T>;
 
 export type RelationshipsSchema<
   TLinkage extends ResourceLinkageSchema = ResourceLinkageSchema,
-> = ZodObject<{
-  [key: string]: TLinkage;
-}>;
+> = ZodLazy<
+  ZodObject<{
+    [key: string]: TLinkage;
+  }>
+>;
 
 export type UpdateSchema<TDefinition extends ResourceDefinition> = ZodObject<{
   data: ZodObject<{
@@ -36,7 +40,7 @@ export type UpdateSchema<TDefinition extends ResourceDefinition> = ZodObject<{
     attributes: ZodOptional<TDefinition['schema']['shape']['attributes']>;
     relationships: ZodOptional<
       ZodObject<{
-        [K in keyof TDefinition['schema']['shape']['relationships']['shape']]: ZodObject<{
+        [K in keyof TDefinition['schema']['shape']['relationships']['schema']['shape']]: ZodObject<{
           data: ZodObject<{ id: ZodString; type: ZodString }> | ZodNull;
         }>;
       }>

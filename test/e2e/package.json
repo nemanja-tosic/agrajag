@@ -15,14 +15,12 @@
     "agrajag": "workspace:*",
     "ramda": "0.30.0",
     "ravendb": "file:../../ravendb-6.0.0.tgz",
-    "uuid": "9.0.1",
-    "zod": "3.23.8",
-    "zod-openapi": "2.19.0"
+    "uuid": "9.0.1"
   },
   "devDependencies": {
     "@agrajag/configs": "workspace:*",
     "@cucumber/cucumber": "10.8.0",
-    "@types/node": "20.12.12",
+    "@types/node": "22.18.6",
     "@types/ramda": "0.30.0",
     "@types/uuid": "9.0.8"
   }
