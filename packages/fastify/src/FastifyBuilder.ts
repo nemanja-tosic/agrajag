@@ -40,7 +40,7 @@ export class FastifyBuilder extends ServerBuilder<FastifyInstance> {
     TDefinition extends ResourceDefinition = ResourceDefinition,
   >(
     schema: TDefinition,
-    endpointSchema: EndpointSchema,
+    createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: FetchDeleteHandler<TPath, TDefinition>,
   ): this {
@@ -67,7 +67,7 @@ export class FastifyBuilder extends ServerBuilder<FastifyInstance> {
 
   addPost<TPath extends string = string>(
     schema: ResourceDefinition,
-    endpointSchema: EndpointSchema,
+    createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: MutationHandler<TPath>,
   ): this {
@@ -95,7 +95,7 @@ export class FastifyBuilder extends ServerBuilder<FastifyInstance> {
 
   addPatch<TPath extends string = string>(
     schema: ResourceDefinition,
-    endpointSchema: EndpointSchema,
+    createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: MutationHandler<TPath>,
   ): this {
@@ -126,7 +126,7 @@ export class FastifyBuilder extends ServerBuilder<FastifyInstance> {
     TDefinition extends ResourceDefinition = ResourceDefinition,
   >(
     schema: TDefinition,
-    endpointSchema: EndpointSchema,
+    createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: MutationHandler<TPath>,
   ): this {

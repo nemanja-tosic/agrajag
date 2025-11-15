@@ -42,7 +42,7 @@ export class JsonApiSerializer implements Serializer {
   #createOptions(
     definition: ResourceDefinition,
     params: QueryParams,
-    visited: Set<ResourceDefinition | ResourceDefinition[]> = new Set(),
+    visited: Set<ResourceDefinition> = new Set(),
     options?: { relationshipKey?: string },
   ): SerializerOptions {
     const type = definition.type;
@@ -66,11 +66,12 @@ export class JsonApiSerializer implements Serializer {
       keyForAttribute: attribute => attribute,
       ...Object.fromEntries(
         Object.entries(relationships)
-          .filter(([key, value]) => !visited.has(value))
-          .map(([key, value]) => {
-            visited.add(value);
-
-            const relationship = Array.isArray(value) ? value[0] : value;
+          .map(
+            ([key, value]) => [key, this.#unwrapRelationship(value)] as const,
+          )
+          .filter(([, value]) => !visited.has(value))
+          .map(([key, relationship]) => {
+            visited.add(relationship);
 
             return [
               key,
@@ -81,5 +82,11 @@ export class JsonApiSerializer implements Serializer {
           }),
       ),
     };
+  }
+
+  #unwrapRelationship(
+    relationship: ResourceDefinition | ResourceDefinition[],
+  ): ResourceDefinition {
+    return Array.isArray(relationship) ? relationship[0] : relationship;
   }
 }
