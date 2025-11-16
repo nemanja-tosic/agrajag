@@ -34,7 +34,7 @@ export class JsonApiSerializer implements Serializer {
   ): jsonapiSerializer.Serializer {
     const type = definition.type;
 
-    const options = this.#createOptions(definition, params, new Set());
+    const options = this.#createOptions(definition, params, []);
 
     return new jsonapiSerializer.Serializer(type, options);
   }
@@ -42,44 +42,39 @@ export class JsonApiSerializer implements Serializer {
   #createOptions(
     definition: ResourceDefinition,
     params: QueryParams,
-    visited: Set<ResourceDefinition> = new Set(),
+    path: string[],
     options?: { relationshipKey?: string },
   ): SerializerOptions {
     const type = definition.type;
     const relationships = definition.relationships;
     const fields = params?.fields?.[type]?.split(',');
 
-    const attributes = [
-      ...(definition.attributes as string[]).filter(
-        key => fields?.includes(key) ?? true,
-      ),
-      ...Object.keys(relationships),
-    ];
+    const isInIncludes = (key: string) =>
+      params?.include?.split(',').includes([...path, key].join('.')) ?? false;
 
     return {
       ref: 'id',
-      included: options?.relationshipKey
-        ? params?.include?.split(',').includes(options.relationshipKey) ?? false
-        : true,
-      attributes,
+      included: options?.relationshipKey !== undefined,
+      attributes: [
+        ...(definition.attributes as string[]).filter(
+          key => fields?.includes(key) ?? true,
+        ),
+        ...Object.keys(relationships).filter(key => isInIncludes(key)),
+      ],
       // keep attribute keys as is
       keyForAttribute: attribute => attribute,
       ...Object.fromEntries(
         Object.entries(relationships)
+          .filter(([key]) => isInIncludes(key))
           .map(
             ([key, value]) => [key, this.#unwrapRelationship(value)] as const,
           )
-          .filter(([, value]) => !visited.has(value))
-          .map(([key, relationship]) => {
-            visited.add(relationship);
-
-            return [
-              key,
-              this.#createOptions(relationship, params, visited, {
-                relationshipKey: key,
-              }),
-            ];
-          }),
+          .map(([key, relationship]) => [
+            key,
+            this.#createOptions(relationship, params, [...path, key], {
+              relationshipKey: key,
+            }),
+          ]),
       ),
     };
   }
