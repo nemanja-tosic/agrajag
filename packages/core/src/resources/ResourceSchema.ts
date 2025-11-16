@@ -1,4 +1,5 @@
 import {
+  output,
   ZodArray,
   ZodLazy,
   ZodLiteral,
@@ -40,9 +41,11 @@ export type UpdateSchema<TDefinition extends ResourceDefinition> = ZodObject<{
     attributes: ZodOptional<TDefinition['schema']['shape']['attributes']>;
     relationships: ZodOptional<
       ZodObject<{
-        [K in keyof TDefinition['schema']['shape']['relationships']['schema']['shape']]: ZodObject<{
-          data: ZodObject<{ id: ZodString; type: ZodString }> | ZodNull;
-        }>;
+        [K in keyof TDefinition['schema']['shape']['relationships']['schema']['shape']]: ZodOptional<
+          ZodObject<{
+            data: ZodObject<{ id: ZodString; type: ZodString }> | ZodNull;
+          }>
+        >;
       }>
     >;
   }>;

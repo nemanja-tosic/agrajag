@@ -163,7 +163,9 @@ export class ZodSchemaFactory implements SchemaFactory {
         id,
         type: definition.schema.shape.type,
         attributes,
-        relationships: definition.schema.shape.relationships,
+        relationships: z
+          .lazy(() => definition.schema.shape.relationships.schema.partial())
+          .optional(),
       }),
       ...(options?.withDenormalize
         ? {
@@ -188,7 +190,9 @@ export class ZodSchemaFactory implements SchemaFactory {
           id: z.string().optional(),
           type: definition.schema.shape.type,
           attributes: definition.schema.shape.attributes,
-          relationships: definition.schema.shape.relationships,
+          relationships: z
+            .lazy(() => definition.schema.shape.relationships.schema.partial())
+            .optional(),
         }),
       ),
       ...(options?.withDenormalize
@@ -237,7 +241,7 @@ export class ZodSchemaFactory implements SchemaFactory {
               ).map(key => [
                 key,
                 // FIXME
-                z.any(),
+                z.any().nullish(),
                 // z.object({
                 //   data: z
                 //     .object({ id: z.string(), type: z.string() })
@@ -246,6 +250,7 @@ export class ZodSchemaFactory implements SchemaFactory {
               ]),
             ),
           )
+          .partial()
           .optional(),
       }),
     }) as any;
