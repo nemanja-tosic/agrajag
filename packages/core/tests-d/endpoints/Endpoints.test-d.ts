@@ -1,9 +1,7 @@
 import { expectAssignable } from 'tsd';
-import { Denormalized, Normalized, z, Builder, Stored } from 'agrajag';
+import { Denormalized, Normalized, z, createSchema, Stored } from 'agrajag';
 
-const builder = new Builder();
-
-const user = builder.createSchema(
+const user = createSchema(
   'users',
   z.object({ name: z.string(), age: z.string() }),
   { relationships: { posts: () => [post] } },
@@ -12,11 +10,11 @@ const user = builder.createSchema(
 type DenormalizedUser = Denormalized<typeof user>;
 type NormalizedUser = Normalized<typeof user>;
 
-const post = builder.createSchema('posts', z.object({ text: z.string() }), {
+const post = createSchema('posts', z.object({ text: z.string() }), {
   relationships: { author: () => user, comments: () => [comment] },
 });
 
-const comment = builder.createSchema('posts', z.object({ text: z.string() }));
+const comment = createSchema('posts', z.object({ text: z.string() }));
 
 type DenormalizedPost = Denormalized<typeof post>;
 type NormalizedPost = Normalized<typeof post>;

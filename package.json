@@ -1,12 +1,12 @@
 {
   "type": "module",
   "private": true,
-  "packageManager": "yarn@4.10.3",
   "scripts": {
     "codegen": "yarn workspaces foreach --worktree --topological --parallel --interlaced run codegen",
     "build": "yarn workspaces foreach --worktree --topological --parallel --interlaced run build",
     "build:ts": "cd $INIT_CWD && tsc -b tsconfig.json",
     "publish": "yarn build && yarn workspaces foreach --all --no-private npm publish --tolerate-republish",
+    "test": "yarn workspaces foreach --worktree --topological run test",
     "test-e2e": "yarn workspaces foreach --worktree --topological run test-e2e"
   },
   "workspaces": [
@@ -20,5 +20,6 @@
   },
   "resolutions": {
     "inflected": "2.1.0"
-  }
+  },
+  "packageManager": "yarn@4.12.0"
 }

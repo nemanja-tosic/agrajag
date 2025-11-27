@@ -2,22 +2,18 @@
   "name": "agrajag",
   "version": "0.0.26",
   "type": "module",
-  "scripts": {
-    "build": "yarn build:ts"
-  },
+  "types": "./dist/src/index.d.ts",
   "exports": {
-    ".": {
-      "types": [
-        "./src/index.ts",
-        "./dist/src/index.d.ts"
-      ],
-      "default": "./dist/src/index.js"
-    }
+    ".": "./dist/src/index.js"
   },
   "files": [
     "README.md",
     "dist/src/**"
   ],
+  "scripts": {
+    "build": "yarn build:ts",
+    "test": "tsd --files 'tests-d/**/*.test-d.ts'"
+  },
   "dependencies": {
     "jsonapi-serializer": "3.6.9",
     "zod": "3.25.76",

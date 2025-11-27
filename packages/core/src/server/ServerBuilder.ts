@@ -5,11 +5,7 @@ import { ResourceLinkage } from '../resources/ResourceLinkageSchema.js';
 import { Resource } from '../resources/Resource.js';
 import { ErrorObject } from '../resources/Error.js';
 
-export interface Server {
-  request(path: string, body: unknown): Response | Promise<Response>;
-}
-
-export abstract class ServerBuilder<TResult = unknown> {
+export abstract class ServerBuilder {
   abstract addGet<
     TPath extends string = string,
     TDefinition extends ResourceDefinition = ResourceDefinition,
@@ -40,8 +36,6 @@ export abstract class ServerBuilder<TResult = unknown> {
     path: TPath,
     handler: MutationHandler<TPath>,
   ): void;
-
-  abstract build(): TResult;
 }
 
 export type StatusCode = 200 | 201 | 204 | 400 | 401 | 403 | 404 | 500;

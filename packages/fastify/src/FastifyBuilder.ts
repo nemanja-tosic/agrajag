@@ -11,12 +11,11 @@ import {
   FetchDeleteHandler,
   MutationHandler,
   Response,
-  Server,
 } from 'agrajag';
 
 export { ServerBuilder } from 'agrajag';
 
-export class FastifyBuilder extends ServerBuilder<FastifyInstance> {
+export class FastifyBuilder extends ServerBuilder {
   #fastify = Fastify();
 
   constructor() {

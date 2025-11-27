@@ -120,6 +120,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@agrajag/redux-adapter@workspace:packages/redux":
+  version: 0.0.0-use.local
+  resolution: "@agrajag/redux-adapter@workspace:packages/redux"
+  dependencies:
+    "@agrajag/configs": "workspace:*"
+    "@reduxjs/toolkit": "npm:2.10.1"
+    "@types/node": "npm:22.18.6"
+    agrajag: "workspace:*"
+    tsd: "npm:0.33.0"
+  peerDependencies:
+    agrajag: "*"
+    ravendb: "*"
+  languageName: unknown
+  linkType: soft
+
 "@apidevtools/json-schema-ref-parser@npm:11.7.2":
   version: 11.7.2
   resolution: "@apidevtools/json-schema-ref-parser@npm:11.7.2"

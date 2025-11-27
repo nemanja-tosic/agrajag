@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@agrajag/ravendb-adapter": "workspace:*",
+    "@agrajag/redux-adapter": "workspace:*",
     "@hono/node-server": "1.19.6",
     "@hono/swagger-ui": "0.5.2",
     "@reduxjs/toolkit": "2.10.1",

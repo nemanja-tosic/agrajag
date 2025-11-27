@@ -37,16 +37,10 @@ export abstract class BaseEndpointFactory<
       Array.isArray(entity)
         ? await Promise.all(
             entity.map(entity =>
-              this.#denormalize(definition, entity, async id => {
-                const d = await external.byId(id);
-                return d;
-              }),
+              this.#denormalize(definition, entity, external.byId),
             ),
           )
-        : await this.#denormalize(definition, entity, async id => {
-            const d = await external.byId(id);
-            return d;
-          }),
+        : await this.#denormalize(definition, entity, external.byId),
       params,
     );
   }

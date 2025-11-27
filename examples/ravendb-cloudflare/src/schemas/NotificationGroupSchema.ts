@@ -1,17 +1,17 @@
-import { z, builder } from '../builder.js';
+import { z, createSchema } from '../builder.js';
 
-export const AuthorSchema = builder.createSchema(
+export const AuthorSchema = createSchema(
   'authors',
   z.object({ name: z.string(), category: z.string() }),
 );
 
-export const CommentSchema = builder.createSchema(
+export const CommentSchema = createSchema(
   'comments',
   z.object({ body: z.string() }),
   { relationships: { AuthorSchema } },
 );
 
-export const ArticleSchema = builder.createSchema(
+export const ArticleSchema = createSchema(
   'articles',
   z.object({
     title: z.string(),

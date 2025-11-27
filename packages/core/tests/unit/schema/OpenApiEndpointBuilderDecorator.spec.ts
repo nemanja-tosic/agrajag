@@ -1,22 +1,20 @@
-import { z, Builder, OpenApiEndpointBuilderDecorator } from 'agrajag';
+import {
+  z,
+  Builder,
+  createSchema,
+  OpenApiEndpointBuilderDecorator,
+} from 'agrajag';
 import { StubServerBuilder } from './StubServerBuilder.js';
 import { StubEndpointFactory } from './StubEndpointFactory.js';
+import { DefinitionCollection } from '../../../src/index.js';
 
 describe('denormalization', () => {
   it('should handle cyclical references', async () => {
-    const builder = new Builder();
+    const article = createSchema('articles', z.object({ body: z.string() }), {
+      relationships: { author: () => author },
+    });
 
-    const serverBuilder = new OpenApiEndpointBuilderDecorator(
-      new StubServerBuilder(),
-    );
-
-    const article = builder.createSchema(
-      'articles',
-      z.object({ body: z.string() }),
-      { relationships: { author: () => author } },
-    );
-
-    const author = builder.createSchema(
+    const author = createSchema(
       'authors',
       z.object({ name: z.string(), category: z.string() }),
       {
@@ -27,17 +25,26 @@ describe('denormalization', () => {
       },
     );
 
-    const comment = builder.createSchema(
-      'comments',
-      z.object({ body: z.string() }),
-      { relationships: { author: () => author } },
+    const comment = createSchema('comments', z.object({ body: z.string() }), {
+      relationships: { author: () => author },
+    });
+
+    const serverBuilder = new OpenApiEndpointBuilderDecorator(
+      new StubServerBuilder(),
     );
 
-    builder.addResource(author, new StubEndpointFactory(), serverBuilder);
-    builder.addResource(article, new StubEndpointFactory(), serverBuilder);
-    builder.addResource(comment, new StubEndpointFactory(), serverBuilder);
-
-    await builder.build();
+    new Builder(serverBuilder)
+      .addDefinitions(
+        new DefinitionCollection()
+          .addDefinition(article)
+          .addDefinition(author)
+          .addDefinition(comment),
+      )
+      .addEndpointFactories({
+        articles: new StubEndpointFactory(),
+        authors: new StubEndpointFactory(),
+        comments: new StubEndpointFactory(),
+      });
 
     serverBuilder.build();
 

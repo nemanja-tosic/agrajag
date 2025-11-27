@@ -8,7 +8,7 @@ import {
   Response,
 } from './ServerBuilder.js';
 
-export class HonoBuilder extends ServerBuilder<Hono> {
+export class HonoBuilder extends ServerBuilder {
   #hono = new Hono();
 
   addGet<

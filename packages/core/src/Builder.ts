@@ -1,12 +1,16 @@
-import { AttributesSchema } from './resources/ResourceSchema.js';
 import { Serializer } from './serialization/Serializer.js';
 import { JsonApiSerializer } from './serialization/JsonApiSerializer.js';
-import { ResourceDefinition } from './resources/ResourceDefinition.js';
+import {
+  ResourceCapabilities,
+  ResourceDefinition,
+} from './resources/ResourceDefinition.js';
 import { ZodSchemaFactory } from './schema/ZodSchemaFactory.js';
-import { CreateSchemaOptions, SchemaFactory } from './schema/SchemaFactory.js';
+import { SchemaFactory } from './schema/SchemaFactory.js';
 import { Response, ServerBuilder } from './server/ServerBuilder.js';
-
 import { IEndpointFactory } from './endpoints/EndpointFactory.js';
+import { Definitions } from './api/Definitions.js';
+import { DefinitionCollection } from './api/DefinitionCollection.js';
+import { Endpoints } from './endpoints/Endpoints.js';
 
 export interface Logger {
   error: (error: Error) => void | Promise<void>;
@@ -24,59 +28,62 @@ export type UndeferredRelationships<
     : never;
 };
 
-export class Builder {
+export class Builder<TDefinitions extends Definitions = {}> {
   readonly #serializer: Serializer = new JsonApiSerializer();
   readonly #schemaFactory: SchemaFactory = new ZodSchemaFactory();
   readonly #logger: Logger = console;
+  readonly #definitions = new DefinitionCollection<TDefinitions>();
+  readonly #endpointBuilder: ServerBuilder;
 
-  constructor(options?: {
-    serializer?: Serializer;
-    schemaFactory?: SchemaFactory;
-    logger?: Logger;
-  }) {
+  constructor(
+    endpointBuilder: ServerBuilder,
+    options?: {
+      serializer?: Serializer;
+      schemaFactory?: SchemaFactory;
+      logger?: Logger;
+    },
+  ) {
+    this.#endpointBuilder = endpointBuilder;
+
     if (options?.serializer) {
       this.#serializer = options.serializer;
     }
-
     if (options?.schemaFactory) {
       this.#schemaFactory = options.schemaFactory;
     }
-
     if (options?.logger) {
       this.#logger = options.logger;
     }
   }
 
-  createSchema<
-    TType extends string = string,
-    TAttributes extends AttributesSchema = AttributesSchema,
-    TRelationships extends DeferredRelationships = DeferredRelationships,
-  >(
-    type: TType,
-    attributesSchema: TAttributes,
-    options?: CreateSchemaOptions<TRelationships>,
-  ): ResourceDefinition<
-    TType,
-    TAttributes,
-    UndeferredRelationships<TRelationships>
-  > {
-    return this.#schemaFactory.createSchema(type, attributesSchema, options);
+  addDefinitions<TNewDefinitions extends Definitions>(
+    definitions: DefinitionCollection<TNewDefinitions>,
+  ): Builder<TDefinitions & TNewDefinitions> {
+    // this.#definitions = definitions;
+    return this as unknown as Builder<TDefinitions & TNewDefinitions>;
   }
 
-  async build(): Promise<void> {}
+  build(factories: {
+    [K in keyof TDefinitions]: IEndpointFactory<TDefinitions[K]>;
+  }): void {
+    for (const [type, definition] of Object.entries(this.#definitions)) {
+      this.#addResource(
+        definition,
+        factories[type].createEndpoints(definition, this.#serializer),
+        this.#endpointBuilder,
+      );
+    }
+  }
 
-  addResource<TDefinition extends ResourceDefinition>(
+  #addResource<TDefinition extends ResourceDefinition>(
     definition: TDefinition,
-    factory: IEndpointFactory<TDefinition>,
-    endpointBuilder: ServerBuilder,
+    endpoints: Endpoints<TDefinition>,
+    serverBuilder: ServerBuilder,
   ): this {
     const type = definition.type;
-    const endpoints = factory.createEndpoints(definition, this.#serializer);
 
-    if (endpoints.fetch?.collection) {
-      const endpoint = endpoints.fetch.collection;
-
-      endpointBuilder.addGet(
+    if (definition.capabilities & ResourceCapabilities.FetchCollection) {
+      serverBuilder.addGet(
         definition,
         () =>
           this.#schemaFactory.createEndpointSchema(definition, {
@@ -88,6 +95,11 @@ export class Builder {
           }),
         `/${type}`,
         async (params, respond) => {
+          const endpoint = endpoints.fetch?.collection;
+          if (!endpoint) {
+            throw new Error('fetch.collection endpoint is not defined');
+          }
+
           try {
             const body = await endpoint(params);
 
@@ -104,10 +116,8 @@ export class Builder {
       );
     }
 
-    if (endpoints.fetch?.self) {
-      const endpoint = endpoints.fetch.self;
-
-      endpointBuilder.addGet(
+    if (definition.capabilities & ResourceCapabilities.FetchSelf) {
+      serverBuilder.addGet(
         definition,
         () =>
           this.#schemaFactory.createEndpointSchema(definition, {
@@ -118,6 +128,11 @@ export class Builder {
           }),
         `/${type}/:id`,
         async (params, respond) => {
+          const endpoint = endpoints.fetch?.self;
+          if (!endpoint) {
+            throw new Error('fetch.self endpoint is not defined');
+          }
+
           try {
             const body = await endpoint(params);
 
@@ -134,8 +149,8 @@ export class Builder {
       );
     }
 
-    if (endpoints.create?.self) {
-      endpointBuilder.addPost(
+    if (definition.capabilities & ResourceCapabilities.Create) {
+      serverBuilder.addPost(
         definition,
         () =>
           this.#schemaFactory.createEndpointSchema(definition, {
@@ -151,8 +166,13 @@ export class Builder {
           }),
         `/${type}`,
         async (body, params, respond) => {
+          const endpoint = endpoints.create?.self;
+          if (!endpoint) {
+            throw new Error('create.self endpoint is not defined');
+          }
+
           try {
-            const data = await endpoints.create!.self!(
+            const data = await endpoint(
               this.#schemaFactory.createUpdateSchema(definition).parse(body),
               params,
             );
@@ -170,8 +190,8 @@ export class Builder {
       );
     }
 
-    if (endpoints.patch?.self) {
-      endpointBuilder.addPatch(
+    if (definition.capabilities & ResourceCapabilities.Update) {
+      serverBuilder.addPatch(
         definition,
         () =>
           this.#schemaFactory.createEndpointSchema(definition, {
@@ -186,8 +206,13 @@ export class Builder {
           }),
         `/${type}/:id`,
         async (body, params, respond) => {
+          const endpoint = endpoints.patch?.self;
+          if (!endpoint) {
+            throw new Error('create.self endpoint is not defined');
+          }
+
           try {
-            const data = await endpoints.patch!.self!(
+            const data = await endpoint(
               this.#schemaFactory.createUpdateSchema(definition).parse(body),
               params,
             );
@@ -208,8 +233,8 @@ export class Builder {
       );
     }
 
-    if (endpoints.delete?.self) {
-      endpointBuilder.addDelete(
+    if (definition.capabilities & ResourceCapabilities.Delete) {
+      serverBuilder.addDelete(
         definition,
         () =>
           this.#schemaFactory.createEndpointSchema(definition, {
@@ -220,8 +245,13 @@ export class Builder {
           }),
         `/${type}/:id`,
         async (body, params, respond) => {
+          const endpoint = endpoints.delete?.self;
+          if (!endpoint) {
+            throw new Error('delete.self endpoint is not defined');
+          }
+
           try {
-            const data = await endpoints.delete!.self!(params);
+            const data = await endpoint(params);
             if (!data) {
               return await respond({ status: 404 });
             }
@@ -250,7 +280,7 @@ export class Builder {
 
       visited.add(relationship);
 
-      endpointBuilder.addGet(
+      serverBuilder.addGet(
         relationship,
         () => this.#schemaFactory.createEndpointSchema(definition),
         `/${type}/:id/relationships/${key}`,
@@ -270,7 +300,7 @@ export class Builder {
         },
       );
 
-      endpointBuilder.addPost(
+      serverBuilder.addPost(
         relationship,
         () =>
           this.#schemaFactory.createEndpointSchema(definition, {
@@ -312,7 +342,7 @@ export class Builder {
         },
       );
 
-      endpointBuilder.addPatch(
+      serverBuilder.addPatch(
         relationship,
         () =>
           this.#schemaFactory.createEndpointSchema(definition, {
@@ -355,7 +385,7 @@ export class Builder {
       );
 
       // NOTE: this should be possible only if it is a one-to-many relationship
-      endpointBuilder.addDelete(
+      serverBuilder.addDelete(
         relationship,
         () =>
           this.#schemaFactory.createEndpointSchema(definition, {

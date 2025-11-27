@@ -30,6 +30,9 @@ type DeleteEndpoint<TDefinition extends ResourceDefinition> = {
   related?: RelatedEndpointsWithBody<TDefinition>;
 };
 
+export type MutateEndpointBody<TDefinition extends ResourceDefinition> =
+  z.infer<UpdateSchema<TDefinition>>;
+
 type MutateEndpoint<TDefinition extends ResourceDefinition> = {
   self?: (
     body: z.infer<UpdateSchema<TDefinition>>,

@@ -5,7 +5,7 @@ import {
   Serializer,
 } from 'agrajag';
 
-export class StubEndpointFactory<TDefinition extends ResourceDefinition>
+export class ReduxEndpointFactory<TDefinition extends ResourceDefinition>
   implements IEndpointFactory<TDefinition>
 {
   createEndpoints(
@@ -13,12 +13,6 @@ export class StubEndpointFactory<TDefinition extends ResourceDefinition>
     serializer: Serializer,
     options?: { createId?: () => string },
   ): Endpoints<TDefinition> {
-    return {
-      fetch: {
-        collection: async () => {
-          return [];
-        },
-      },
-    };
+    return undefined;
   }
 }
