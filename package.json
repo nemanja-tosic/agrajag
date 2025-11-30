@@ -5,7 +5,7 @@
     "codegen": "yarn workspaces foreach --worktree --topological --parallel --interlaced run codegen",
     "build": "yarn workspaces foreach --worktree --topological --parallel --interlaced run build",
     "build:ts": "cd $INIT_CWD && tsc -b tsconfig.json",
-    "publish": "yarn build && yarn workspaces foreach --all --no-private npm publish --tolerate-republish",
+    "publish": "yarn build && yarn workspaces foreach --all --no-private npm publish --tolerate-republish --access public",
     "test": "yarn workspaces foreach --worktree --topological run test",
     "test-e2e": "yarn workspaces foreach --worktree --topological run test-e2e"
   },
