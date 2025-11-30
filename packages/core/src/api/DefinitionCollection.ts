@@ -11,6 +11,18 @@ export class DefinitionCollection<TDefinitions extends Definitions = {}>
     return Object.values(this.#definitions)[Symbol.iterator]();
   }
 
+  addDefinitions<TNewDefinitions extends Definitions>(
+    definitions: DefinitionCollection<TNewDefinitions>,
+  ): DefinitionCollection<TDefinitions & TNewDefinitions> {
+    for (const definition of definitions) {
+      this.#definitions[definition.type] = definition;
+    }
+
+    return this as unknown as DefinitionCollection<
+      TDefinitions & TNewDefinitions
+    >;
+  }
+
   addDefinition<TDefinition extends ResourceDefinition>(
     definition: TDefinition,
   ): DefinitionCollection<

@@ -1,119 +1,55 @@
+import { Builder, DefinitionCollection } from 'agrajag';
+import { HonoServerBuilder } from './HonoServerBuilder.js';
 import { Hono } from 'hono';
-import { EndpointSchema } from '../endpoints/Endpoints.js';
-import { ResourceDefinition } from '../resources/ResourceDefinition.js';
-import {
-  ServerBuilder,
-  FetchDeleteHandler,
-  MutationHandler,
-  Response,
-} from './ServerBuilder.js';
+import { Definitions } from '../api/Definitions.js';
+import { IEndpointFactory } from '../endpoints/EndpointFactory.js';
+import { OpenApiEndpointBuilderDecorator } from './OpenApiEndpointBuilderDecorator.js';
+import { swaggerUI } from '@hono/swagger-ui';
 
-export class HonoBuilder extends ServerBuilder {
-  #hono = new Hono();
+type Factories<T extends Definitions> = {
+  [K in keyof T]: IEndpointFactory<T[K]>;
+};
 
-  addGet<
-    TPath extends string = string,
-    TDefinition extends ResourceDefinition = ResourceDefinition,
-  >(
-    schema: TDefinition,
-    createEndpointSchema: () => EndpointSchema,
-    path: TPath,
-    handler: FetchDeleteHandler<TPath, TDefinition>,
-  ): this {
-    this.#hono.get(path, async c => {
-      const { body, status, headers } = await new Promise<Response>(resolve =>
-        handler(this.#extractParams(c), async response => resolve(response)),
+export class HonoBuilder<
+  TDefinitions extends Definitions = {},
+> extends Builder<TDefinitions> {
+  readonly #hono: Hono;
+
+  constructor(hono: Hono = new Hono()) {
+    super();
+
+    this.#hono = hono;
+  }
+
+  addDefinitions<TNewDefinitions extends Definitions>(
+    definitions: DefinitionCollection<TNewDefinitions>,
+  ): HonoBuilder<TDefinitions & TNewDefinitions> {
+    this.definitions.addDefinitions(definitions);
+
+    return this as unknown as HonoBuilder<TDefinitions & TNewDefinitions>;
+  }
+
+  build(factories: Factories<TDefinitions>) {
+    const honoServerBuilder = new HonoServerBuilder(this.#hono);
+    const openApiDecorator = new OpenApiEndpointBuilderDecorator(
+      honoServerBuilder,
+    );
+
+    this.addEndpointBuilder(openApiDecorator);
+
+    for (const definition of this.definitions) {
+      const endpoints = factories[definition.type].createEndpoints(
+        definition as any,
+        this.serializer,
       );
 
-      return c.json(body, status, headers);
-    });
+      this.addResource(definition, endpoints as any);
+    }
 
-    return this;
-  }
+    const openapi = openApiDecorator.build();
+    this.#hono.get('/ui', swaggerUI({ url: '/', spec: openapi }));
+    this.#hono.get('/openapi.json', c => c.json(openapi));
 
-  addPost<TPath extends string = string>(
-    schema: ResourceDefinition,
-    createEndpointSchema: () => EndpointSchema,
-    path: TPath,
-    handler: MutationHandler<TPath>,
-  ): this {
-    this.#hono.post(path, async c => {
-      const { body, status, headers } = await new Promise<Response>(
-        async resolve =>
-          handler(await c.req.json(), this.#extractParams(c), async response =>
-            resolve(response),
-          ),
-      );
-
-      return c.json(body, status, headers);
-    });
-
-    return this;
-  }
-
-  addPatch<TPath extends string = string>(
-    schema: ResourceDefinition,
-    createEndpointSchema: () => EndpointSchema,
-    path: TPath,
-    handler: MutationHandler<TPath>,
-  ): this {
-    this.#hono.patch(path, async c => {
-      const { body, status, headers } = await new Promise<Response>(
-        async resolve =>
-          handler(await c.req.json(), this.#extractParams(c), async response =>
-            resolve(response),
-          ),
-      );
-
-      return c.json(body, status, headers);
-    });
-
-    return this;
-  }
-
-  addDelete<
-    TPath extends string = string,
-    TDefinition extends ResourceDefinition = ResourceDefinition,
-  >(
-    schema: TDefinition,
-    createEndpointSchema: () => EndpointSchema,
-    path: TPath,
-    handler: MutationHandler<TPath>,
-  ): this {
-    this.#hono.delete(path, async c => {
-      const { body, status, headers } = await new Promise<Response>(
-        async resolve =>
-          handler(
-            c.req.header('content-type') === 'application/json'
-              ? await c.req.json()
-              : undefined,
-            this.#extractParams(c),
-            async response => resolve(response),
-          ),
-      );
-
-      return c.json(body, status, headers);
-    });
-
-    return this;
-  }
-
-  #extractParams(c: any): any {
-    return {
-      ...c.req.param(),
-      include: c.req.query('include'),
-      fields: Object.fromEntries(
-        Object.entries(c.req.query())
-          .filter(([key]) => key.match(/fields\[(.*?)\]/g))
-          .map(([key, value]) => [key.match(/fields\[(.*?)\]/)![1], value]),
-      ),
-      sort: c.req.query('sort'),
-      filter: c.req.query('filter'),
-      user: c.req.user,
-    };
-  }
-
-  build(): Hono {
     return this.#hono;
   }
 }

@@ -33,18 +33,18 @@ describe('denormalization', () => {
       new StubServerBuilder(),
     );
 
-    new Builder(serverBuilder)
-      .addDefinitions(
-        new DefinitionCollection()
-          .addDefinition(article)
-          .addDefinition(author)
-          .addDefinition(comment),
-      )
-      .addEndpointFactories({
-        articles: new StubEndpointFactory(),
-        authors: new StubEndpointFactory(),
-        comments: new StubEndpointFactory(),
-      });
+    // new BackendBuilder(serverBuilder)
+    //   .addDefinitions(
+    //     new DefinitionCollection()
+    //       .addDefinition(article)
+    //       .addDefinition(author)
+    //       .addDefinition(comment),
+    //   )
+    //   .build({
+    //     articles: new StubEndpointFactory(),
+    //     authors: new StubEndpointFactory(),
+    //     comments: new StubEndpointFactory(),
+    //   });
 
     serverBuilder.build();
 

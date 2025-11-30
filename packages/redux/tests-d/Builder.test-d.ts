@@ -1,4 +1,4 @@
-import { expectAssignable, expectError } from 'tsd';
+import { expectAssignable } from 'tsd';
 import { createSchema, Denormalized, z, DefinitionCollection } from 'agrajag';
 import { ReduxBuilder } from '@agrajag/redux-adapter';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
@@ -17,20 +17,24 @@ const definitions = new DefinitionCollection()
   .addDefinition(user)
   .addDefinition(comment);
 
-const reduxApi = new ReduxBuilder(
-  definitions,
+export const reduxApi = new ReduxBuilder().addDefinitions(definitions).build(
   createApi({
     baseQuery: fetchBaseQuery({ baseUrl: '' }),
-    endpoints: builder => ({}),
+    endpoints: builder => ({
+      getPreExisting: builder.query({ query: () => '/pre-existing' }),
+    }),
   }),
-).build();
+);
 
 reduxApi.endpoints.getUsers;
 const { data: users } = reduxApi.useGetUsersQuery({ include: '' });
 expectAssignable<Denormalized<typeof user>[] | undefined>(users);
 
 reduxApi.endpoints.getUsersById;
-const { data: userById } = reduxApi.useGetUsersByIdQuery({ include: '' });
+const { data: userById } = reduxApi.useGetUsersByIdQuery({
+  id: '',
+  include: '',
+});
 expectAssignable<Denormalized<typeof user> | undefined>(userById);
 
 reduxApi.endpoints.postUsers;
@@ -48,6 +52,7 @@ trigger({
 reduxApi.endpoints.patchUsersById;
 const [update] = reduxApi.usePatchUsersByIdMutation();
 update({
+  id: '1234',
   body: {
     data: {
       id: '1234',
@@ -59,5 +64,4 @@ update({
 
 reduxApi.endpoints.deleteUsersById;
 const [deleteUser] = reduxApi.useDeleteUsersByIdMutation();
-deleteUser({});
-// expectError(deleteUser({ body: { id: 'afd' } }));
+deleteUser({ id: '12345' });

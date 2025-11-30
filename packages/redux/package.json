@@ -16,16 +16,38 @@
     "test": "tsd --files 'tests-d/**/*.test-d.ts'"
   },
   "dependencies": {
-    "@reduxjs/toolkit": "2.10.1",
-    "agrajag": "workspace:*"
+    "@reduxjs/toolkit": "2.11.0",
+    "agrajag": "workspace:*",
+    "change-case": "5.4.4",
+    "react-redux": "9.2.0"
   },
   "devDependencies": {
     "@agrajag/configs": "workspace:*",
+    "@types/chai": "5.2.2",
+    "@types/mocha": "10.0.10",
     "@types/node": "22.18.6",
+    "@types/react": "^19",
+    "@types/sinon": "^21",
+    "@types/sinon-chai": "^4",
+    "chai": "5.2.1",
+    "mocha": "11.7.1",
+    "react": "19.2.0",
+    "sinon": "21.0.0",
+    "sinon-chai": "4.0.1",
     "tsd": "0.33.0"
   },
   "peerDependencies": {
+    "@reduxjs/toolkit": ">=2.0.0",
     "agrajag": "*",
-    "ravendb": "*"
+    "react": ">=18.0.0",
+    "react-redux": ">=7.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@reduxjs/toolkit": {
+      "optional": true
+    },
+    "react-redux": {
+      "optional": true
+    }
   }
 }

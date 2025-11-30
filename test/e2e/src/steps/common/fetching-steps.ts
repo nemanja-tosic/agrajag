@@ -1,9 +1,8 @@
 import { After, Before, Given, Then, When } from '@cucumber/cucumber';
-import { z, Builder, ServerBuilder } from 'agrajag';
+import { z, createSchema } from 'agrajag';
 import { deepStrictEqual, strictEqual, notStrictEqual } from 'node:assert';
 import { DocumentStore, DeleteByQueryOperation } from 'ravendb';
 import { Resource, ResourceDefinition } from 'agrajag';
-import { RavendbCrudEndpointFactory } from '@agrajag/ravendb-adapter';
 
 type AuthorDefinition = ResourceDefinition<
   'authors',
@@ -29,7 +28,11 @@ type PhotoDefinition = ResourceDefinition<
 
 type ArticleDefinition = ResourceDefinition<
   'articles',
-  z.ZodObject<{ title: z.ZodString; body: z.ZodString; tags: z.ZodArray<z.ZodString> }>,
+  z.ZodObject<{
+    title: z.ZodString;
+    body: z.ZodString;
+    tags: z.ZodArray<z.ZodString>;
+  }>,
   { author: AuthorDefinition; comments: [CommentDefinition] }
 >;
 
@@ -41,8 +44,6 @@ type EmptyDefinition = ResourceDefinition<
 export interface World {
   documentStore: DocumentStore;
   response: Response;
-  serverBuilder: ServerBuilder;
-  builder: Builder;
   fetch: (path: string, options: RequestInit) => Response | Promise<Response>;
   schemas: {
     article: ArticleDefinition;
@@ -58,31 +59,26 @@ export interface World {
 }
 
 Before<World>(async function () {
-  const author = this.builder.createSchema(
+  const author = createSchema(
     'authors',
     z.object({ name: z.string(), category: z.string() }),
   );
 
-  const photographer = this.builder.createSchema(
+  const photographer = createSchema(
     'photographers',
     z.object({ name: z.string(), category: z.string() }),
   );
 
-  const photo = this.builder.createSchema(
-    'photos',
-    z.object({ name: z.string() }),
-    { relationships: { photographer } },
-  );
+  const photo = createSchema('photos', z.object({ name: z.string() }), {
+    relationships: { photographer },
+  });
 
-  const comment = this.builder.createSchema(
-    'comments',
-    z.object({ body: z.string() }),
-    { relationships: { author } },
-  );
+  const comment = createSchema('comments', z.object({ body: z.string() }), {
+    relationships: { author },
+  });
 
-  const article = this.builder.createSchema(
+  const article = createSchema(
     'articles',
-
     z.object({
       title: z.string(),
       body: z.string(),
@@ -91,7 +87,7 @@ Before<World>(async function () {
     { relationships: { author, comments: [comment] } },
   );
 
-  const empty = this.builder.createSchema(
+  const empty = createSchema(
     'empty',
     z.object({ name: z.string(), category: z.string() }),
   );
@@ -100,8 +96,6 @@ Before<World>(async function () {
 });
 
 Before<World>(async function () {
-  const { author, empty, article, comment, photo, photographer } = this.schemas;
-
   this.documentStore = new DocumentStore('http://localhost:8080', 'test-crud');
   this.documentStore.initialize();
 
@@ -109,42 +103,6 @@ Before<World>(async function () {
   await this.documentStore.operations
     .send(new DeleteByQueryOperation('from @all_docs'))
     .then(op => op.waitForCompletion());
-
-  this.builder.addResource(
-    article,
-    new RavendbCrudEndpointFactory(this.documentStore),
-    this.serverBuilder,
-  );
-
-  this.builder.addResource(
-    author,
-    new RavendbCrudEndpointFactory(this.documentStore),
-    this.serverBuilder,
-  );
-
-  this.builder.addResource(
-    photographer,
-    new RavendbCrudEndpointFactory(this.documentStore),
-    this.serverBuilder,
-  );
-
-  this.builder.addResource(
-    comment,
-    new RavendbCrudEndpointFactory(this.documentStore),
-    this.serverBuilder,
-  );
-
-  this.builder.addResource(
-    empty,
-    new RavendbCrudEndpointFactory(this.documentStore),
-    this.serverBuilder,
-  );
-
-  this.builder.addResource(
-    photo,
-    new RavendbCrudEndpointFactory(this.documentStore),
-    this.serverBuilder,
-  );
 
   await this.listen?.();
 });

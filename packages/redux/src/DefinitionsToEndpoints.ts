@@ -1,10 +1,9 @@
 import {
-  Api,
   Denormalized,
-  Endpoints,
   MutateEndpointBody,
   QueryParams,
   Definitions,
+  ResourceDefinition,
 } from 'agrajag';
 import {
   MutationDefinition,
@@ -12,89 +11,100 @@ import {
 } from '@reduxjs/toolkit/query/react';
 
 import { FetchBaseQuery } from './FetchBaseQuery.js';
+import { CamelCase } from './CamelCase.js';
 
 export type DefinitionsToEndpoints<
   TDefinitions extends Definitions,
   TagTypes extends string,
   ReducerPath extends string,
-  TApi extends Record<string, Endpoints<any>> = {
-    [K in keyof TDefinitions]: Endpoints<TDefinitions[K]>;
-  },
 > = {
-  [K in keyof TApi as Methods<TApi, K, 'get'>]: QueryManyEndpoint<
-    TApi[K],
+  [K in keyof TDefinitions as `get${Capitalize<CamelCase<string & K>>}`]: QueryManyEndpoint<
+    TDefinitions[K],
     TagTypes,
     ReducerPath
   >;
 } & {
-  [K in keyof TApi as Methods<TApi, K, 'get', 'byId'>]: QueryEndpoint<
-    TApi[K],
+  [K in keyof TDefinitions as `get${Capitalize<CamelCase<string & K>>}ById`]: QueryEndpoint<
+    TDefinitions[K],
     TagTypes,
     ReducerPath
   >;
 } & {
-  [K in keyof TApi as Methods<TApi, K, 'post'>]: MutationEndpoint<
-    TApi[K],
+  [K in keyof TDefinitions as `post${Capitalize<CamelCase<string & K>>}`]: PostEndpoint<
+    TDefinitions[K],
     TagTypes,
     ReducerPath
   >;
 } & {
-  [K in keyof TApi as Methods<TApi, K, 'patch', 'byId'>]: MutationEndpoint<
-    TApi[K],
+  [K in keyof TDefinitions as `patch${Capitalize<CamelCase<string & K>>}ById`]: PatchEndpoint<
+    TDefinitions[K],
     TagTypes,
     ReducerPath
   >;
 } & {
-  [K in keyof TApi as Methods<TApi, K, 'delete', 'byId'>]: MutationEndpoint<
-    TApi[K],
+  [K in keyof TDefinitions as `delete${Capitalize<CamelCase<string & K>>}ById`]: DeleteEndpoint<
     TagTypes,
-    ReducerPath,
-    never
+    ReducerPath
   >;
 };
 
 export type QueryManyEndpoint<
-  TEndpoints extends Endpoints<any>,
+  TDefinition extends ResourceDefinition,
   TagTypes extends string,
   ReducerPath extends string,
-  TId extends string = never,
 > = QueryDefinition<
-  QueryParams & TId extends never ? {} : { id: TId },
+  QueryParams,
   FetchBaseQuery,
   TagTypes,
-  TEndpoints extends Endpoints<infer T> ? Denormalized<T>[] | undefined : never,
+  Denormalized<TDefinition>[],
   ReducerPath
 >;
 
 export type QueryEndpoint<
-  TEndpoints extends Endpoints<any>,
+  TDefinition extends ResourceDefinition,
   TagTypes extends string,
   ReducerPath extends string,
-  TId extends string = never,
 > = QueryDefinition<
-  QueryParams & TId extends never ? {} : { id: TId },
+  QueryParams & { id: string },
   FetchBaseQuery,
   TagTypes,
-  TEndpoints extends Endpoints<infer T> ? Denormalized<T> : never,
+  Denormalized<TDefinition>,
   ReducerPath
 >;
 
-export type MutationEndpoint<
-  TEndpoints extends Endpoints<any>,
+export type PostEndpoint<
+  TDefinition extends ResourceDefinition,
   TagTypes extends string,
   ReducerPath extends string,
-  TBody = TEndpoints extends Endpoints<infer T> ? MutateEndpointBody<T> : never,
+  TBody = MutateEndpointBody<TDefinition>,
 > = MutationDefinition<
-  QueryParams & TBody extends never ? {} : { body: TBody },
+  QueryParams & { id?: string; body: TBody },
   FetchBaseQuery,
   TagTypes,
-  TEndpoints extends Endpoints<infer T> ? Denormalized<T> : never,
+  TBody,
   ReducerPath
 >;
 
-export type Methods<
-  TApi extends Api,
-  TKey extends keyof TApi,
-  TMethods extends string,
-  TSuffix extends string = '',
-> = `${TMethods}${Capitalize<string & TKey>}${Capitalize<TSuffix>}`;
+export type PatchEndpoint<
+  TDefinition extends ResourceDefinition,
+  TagTypes extends string,
+  ReducerPath extends string,
+  TBody = MutateEndpointBody<TDefinition>,
+> = MutationDefinition<
+  QueryParams & { id: string; body: TBody },
+  FetchBaseQuery,
+  TagTypes,
+  TBody,
+  ReducerPath
+>;
+
+export type DeleteEndpoint<
+  TagTypes extends string,
+  ReducerPath extends string,
+> = MutationDefinition<
+  QueryParams & { id: string },
+  FetchBaseQuery,
+  TagTypes,
+  {},
+  ReducerPath
+>;

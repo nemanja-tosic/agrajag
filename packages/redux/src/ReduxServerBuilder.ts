@@ -1,85 +1,38 @@
 import {
-  QueryParams,
-  ResourceCapabilities,
-  ResourceDefinition,
-  Definitions,
-  DefinitionCollection,
-  ServerBuilder,
   EndpointSchema,
-  MutationHandler,
   FetchDeleteHandler,
+  JsonApiDeserializer,
+  MutationHandler,
+  QueryParams,
+  Resource,
+  ResourceDefinition,
+  ServerBuilder,
 } from 'agrajag';
-import {
-  Api,
-  coreModuleName,
-  CreateApiOptions,
-  EndpointDefinitions,
-  fetchBaseQuery,
-  reactHooksModuleName,
-} from '@reduxjs/toolkit/query/react';
-import { DefinitionsToEndpoints } from './DefinitionsToEndpoints.js';
-import { FetchBaseQuery } from './FetchBaseQuery.js';
 import { BaseApi } from './ReduxBuilder.js';
-
-// export type CreateReduxApiOptions<
-//   ReducerPath extends string = 'api',
-//   TagTypes extends string = never,
-// > = Omit<
-//   CreateApiOptions<
-//     ReturnType<typeof fetchBaseQuery>,
-//     EndpointDefinitions,
-//     ReducerPath,
-//     TagTypes
-//   >,
-//   'baseQuery' | 'endpoints'
-// >;
-//
-// export type BaseApi<
-//   ReducerPath extends string = 'api',
-//   TagTypes extends string = never,
-// > = Api<FetchBaseQuery, {}, ReducerPath, TagTypes>;
+import { camelCase } from 'change-case';
+import { BaseQueryMeta } from '@reduxjs/toolkit/query';
+import { EndpointDefinition } from '@reduxjs/toolkit/query/react';
+import { FetchBaseQuery } from './FetchBaseQuery.js';
 
 export class ReduxServerBuilder<
-  TDefinitions extends Definitions,
-  ReducerPath extends string = 'api',
-  TagTypes extends string = never,
+  ReducerPath extends string,
+  TagTypes extends string,
+  Endpoints extends ReduxEndpoints<ReducerPath, TagTypes>,
 > extends ServerBuilder {
-  // readonly #definitions: DefinitionCollection<TDefinitions>;
-  readonly #baseApi: BaseApi<ReducerPath, TagTypes>;
+  readonly #baseApi: BaseApi<ReducerPath, TagTypes, Endpoints>;
+  readonly #deserializer = new JsonApiDeserializer();
 
-  constructor(
-    // definitionCollection: DefinitionCollection<TDefinitions>,
-    api: BaseApi<ReducerPath, TagTypes>,
-  ) {
+  constructor(api: BaseApi<ReducerPath, TagTypes, Endpoints>) {
     super();
 
-    // this.#definitions = definitionCollection;
     this.#baseApi = api;
   }
 
-  // addDefinition<TDefinition extends ResourceDefinition>(
-  //   definition: TDefinition,
-  // ): this {
-  //   if (definition.capabilities & ResourceCapabilities.FetchSelf) {
-  //     this.#addQuery(definition, `/${definition.type}/id`);
-  //   }
-  //   if (definition.capabilities & ResourceCapabilities.FetchCollection) {
-  //     this.#addQuery(definition, `/${definition.type}`);
-  //   }
-  //
-  //   return this;
-  // }
-  //
-  // #addQuery(definition: ResourceDefinition, url: string) {
-  //   this.#baseApi.injectEndpoints({
-  //     endpoints: builder => ({
-  //       [this.#toEndpointName('get', definition)]: builder.query<
-  //         any,
-  //         QueryParams
-  //       >({ query: params => ({ url, params }) }),
-  //     }),
-  //   });
-  // }
+  #addTagType(path: string): any {
+    const tagType = path.split('/')[1];
+    this.#baseApi.enhanceEndpoints({ addTagTypes: [tagType] });
+    return tagType;
+  }
 
   addGet<TPath extends string, TDefinition extends ResourceDefinition>(
     definition: TDefinition,
@@ -89,12 +42,43 @@ export class ReduxServerBuilder<
   ): void {
     this.#baseApi.injectEndpoints({
       endpoints: builder => ({
-        [this.#toEndpointName('get', definition)]: builder.query<
+        [this.#mapParts('get', path)]: builder.query<
           unknown,
-          QueryParams
-        >({ query: params => ({ url: path, params }) }),
+          QueryParams & { id?: string },
+          Resource<TDefinition> | Resource<TDefinition>[]
+        >({
+          query: ({ id, ...params }) => {
+            return {
+              url: this.#getPath(path, id),
+              params,
+            };
+          },
+          providesTags: [this.#addTagType(path)],
+          transformResponse: response => {
+            try {
+              return this.#deserializer.deserialize(
+                definition,
+                response as any,
+              );
+            } catch (error) {
+              console.error(error);
+            }
+          },
+        }),
       }),
     });
+  }
+
+  #getPath(path: string, id?: string): string {
+    if (!path.includes(':id')) {
+      return path;
+    }
+
+    if (!id) {
+      throw new Error(`Missing id for path: ${path}`);
+    }
+
+    return path.replace(':id', encodeURIComponent(id));
   }
 
   addDelete<TPath extends string>(
@@ -105,10 +89,12 @@ export class ReduxServerBuilder<
   ): void {
     this.#baseApi.injectEndpoints({
       endpoints: builder => ({
-        [this.#toEndpointName('get', definition)]: builder.query<
-          any,
+        [this.#mapParts('delete', path)]: builder.mutation<
+          unknown,
           QueryParams
-        >({ query: params => ({ url: path, params }) }),
+        >({
+          query: params => ({ url: path, params, method: 'DELETE' }),
+        }),
       }),
     });
   }
@@ -118,44 +104,68 @@ export class ReduxServerBuilder<
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: MutationHandler<TPath>,
-  ): void {}
+  ): void {
+    this.#baseApi.injectEndpoints({
+      endpoints: builder => ({
+        [this.#mapParts('patch', path)]: builder.mutation<
+          unknown,
+          QueryParams & { id: string; body: unknown }
+        >({
+          query: ({ id, body, ...params }) => ({
+            url: this.#getPath(path, id),
+            params,
+            body,
+            method: 'PATCH',
+          }),
+          invalidatesTags: [this.#addTagType(path)],
+        }),
+      }),
+    });
+  }
 
   addPost<TPath extends string>(
     definition: ResourceDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: MutationHandler<TPath>,
-  ): void {}
-
-  // build(): Api<
-  //   FetchBaseQuery,
-  //   DefinitionsToEndpoints<TDefinitions, TagTypes, ReducerPath>,
-  //   ReducerPath,
-  //   TagTypes,
-  //   typeof reactHooksModuleName | typeof coreModuleName
-  // > {
-  //   for (const definition of this.#definitions) {
-  //     this.addDefinition(definition);
-  //   }
-  //
-  //   return this.#baseApi as any;
-  // }
-  //
-  #toEndpointName(method: string, definition: ResourceDefinition) {
-    return `${method}${definition.type.charAt(0).toUpperCase() + definition.type.slice(1)}`;
+  ): void {
+    this.#baseApi.injectEndpoints({
+      endpoints: builder => ({
+        [this.#mapParts('post', path)]: builder.mutation<
+          unknown,
+          QueryParams & { body: unknown }
+        >({
+          query: ({ body, ...params }) => ({
+            url: path,
+            params,
+            body,
+            method: 'POST',
+          }),
+          invalidatesTags: [this.#addTagType(path)],
+        }),
+      }),
+    });
   }
 
-  build(): Api<
-    FetchBaseQuery,
-    DefinitionsToEndpoints<TDefinitions, TagTypes, ReducerPath>,
-    ReducerPath,
-    TagTypes,
-    typeof reactHooksModuleName | typeof coreModuleName
-  > {
-    // for (const definition of this.#definitions) {
-    //   this.addDefinition(definition);
-    // }
-
-    return this.#baseApi as any;
+  #mapParts(method: string, path: string): string {
+    return camelCase(
+      [method]
+        .concat(
+          path
+            .split('/')
+            // skip the first slash
+            .slice(1)
+            .map(part => part.replace(':', 'by-')),
+        )
+        .join('-'),
+    );
   }
 }
+
+export type ReduxEndpoints<
+  ReducerPath extends string,
+  TagTypes extends string,
+> = Record<
+  string,
+  EndpointDefinition<any, FetchBaseQuery, TagTypes, any, ReducerPath>
+>;

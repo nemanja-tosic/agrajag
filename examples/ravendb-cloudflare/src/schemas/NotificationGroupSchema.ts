@@ -1,4 +1,4 @@
-import { z, createSchema } from '../builder.js';
+import { z, createSchema } from 'agrajag';
 
 export const AuthorSchema = createSchema(
   'authors',

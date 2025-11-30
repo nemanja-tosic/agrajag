@@ -1,15 +1,8 @@
-import { builder, honoBuilder } from './builder.js';
-import {
-  ArticleSchema,
-  AuthorSchema,
-  CommentSchema,
-} from './schemas/NotificationGroupSchema.js';
-import {
-  CloudflareDocumentStore,
-  RavendbCrudEndpointFactory,
-} from '@agrajag/ravendb-adapter';
+import { ArticleSchema, AuthorSchema, CommentSchema, } from './schemas/NotificationGroupSchema.js';
+import { CloudflareDocumentStore, RavendbCrudEndpointFactory, } from '@agrajag/ravendb-adapter';
 import { ExportedHandler } from '@cloudflare/workers-types';
 import { Hono } from 'hono';
+import { DefinitionCollection, HonoBuilder } from 'agrajag';
 
 export interface Env {
   DB_URLS: string;
@@ -33,26 +26,16 @@ function createHono(env: Env): Hono {
     JSON.parse(env.DB_URLS),
     env.DB_NAME,
   );
-
-  builder.addResource(
-    AuthorSchema,
-    new RavendbCrudEndpointFactory(documentStore),
-    honoBuilder,
-  );
-
-  builder.addResource(
-    CommentSchema,
-    new RavendbCrudEndpointFactory(documentStore),
-    honoBuilder,
-  );
-
-  builder.addResource(
-    ArticleSchema,
-    new RavendbCrudEndpointFactory(documentStore),
-    honoBuilder,
-  );
-
   documentStore.initialize();
 
-  return honoBuilder.build();
+  const definitions = new DefinitionCollection()
+    .addDefinition(AuthorSchema)
+    .addDefinition(CommentSchema)
+    .addDefinition(ArticleSchema);
+
+  return new HonoBuilder().addDefinitions(definitions).build({
+    authors: new RavendbCrudEndpointFactory(documentStore),
+    comments: new RavendbCrudEndpointFactory(documentStore),
+    articles: new RavendbCrudEndpointFactory(documentStore),
+  });
 }

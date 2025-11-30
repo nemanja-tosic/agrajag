@@ -36,9 +36,13 @@ export type RelationshipsSchema<
 
 export type UpdateSchema<TDefinition extends ResourceDefinition> = ZodObject<{
   data: ZodObject<{
-    id: TDefinition['schema']['shape']['id'];
+    id: ZodOptional<TDefinition['schema']['shape']['id']>;
     type: TDefinition['schema']['shape']['type'];
-    attributes: ZodOptional<TDefinition['schema']['shape']['attributes']>;
+    attributes: ZodObject<{
+      [K in keyof TDefinition['schema']['shape']['attributes']['shape']]: ZodOptional<
+        TDefinition['schema']['shape']['attributes']['shape'][K]
+      >;
+    }>;
     relationships: ZodOptional<
       ZodObject<{
         [K in keyof TDefinition['schema']['shape']['relationships']['schema']['shape']]: ZodOptional<

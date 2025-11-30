@@ -7,7 +7,6 @@ import {
 import { ZodSchemaFactory } from './schema/ZodSchemaFactory.js';
 import { SchemaFactory } from './schema/SchemaFactory.js';
 import { Response, ServerBuilder } from './server/ServerBuilder.js';
-import { IEndpointFactory } from './endpoints/EndpointFactory.js';
 import { Definitions } from './api/Definitions.js';
 import { DefinitionCollection } from './api/DefinitionCollection.js';
 import { Endpoints } from './endpoints/Endpoints.js';
@@ -28,25 +27,22 @@ export type UndeferredRelationships<
     : never;
 };
 
-export class Builder<TDefinitions extends Definitions = {}> {
-  readonly #serializer: Serializer = new JsonApiSerializer();
+export abstract class Builder<TDefinitions extends Definitions = {}> {
+  protected readonly serializer: Serializer = new JsonApiSerializer();
+
+  protected definitions = new DefinitionCollection<TDefinitions>();
+  protected endpointBuilder: ServerBuilder | undefined = undefined;
+
   readonly #schemaFactory: SchemaFactory = new ZodSchemaFactory();
   readonly #logger: Logger = console;
-  readonly #definitions = new DefinitionCollection<TDefinitions>();
-  readonly #endpointBuilder: ServerBuilder;
 
-  constructor(
-    endpointBuilder: ServerBuilder,
-    options?: {
-      serializer?: Serializer;
-      schemaFactory?: SchemaFactory;
-      logger?: Logger;
-    },
-  ) {
-    this.#endpointBuilder = endpointBuilder;
-
+  constructor(options?: {
+    serializer?: Serializer;
+    schemaFactory?: SchemaFactory;
+    logger?: Logger;
+  }) {
     if (options?.serializer) {
-      this.#serializer = options.serializer;
+      this.serializer = options.serializer;
     }
     if (options?.schemaFactory) {
       this.#schemaFactory = options.schemaFactory;
@@ -56,30 +52,20 @@ export class Builder<TDefinitions extends Definitions = {}> {
     }
   }
 
-  addDefinitions<TNewDefinitions extends Definitions>(
-    definitions: DefinitionCollection<TNewDefinitions>,
-  ): Builder<TDefinitions & TNewDefinitions> {
-    // this.#definitions = definitions;
-    return this as unknown as Builder<TDefinitions & TNewDefinitions>;
+  addEndpointBuilder(endpointBuilder: ServerBuilder): this {
+    this.endpointBuilder = endpointBuilder;
+    return this;
   }
 
-  build(factories: {
-    [K in keyof TDefinitions]: IEndpointFactory<TDefinitions[K]>;
-  }): void {
-    for (const [type, definition] of Object.entries(this.#definitions)) {
-      this.#addResource(
-        definition,
-        factories[type].createEndpoints(definition, this.#serializer),
-        this.#endpointBuilder,
-      );
-    }
-  }
-
-  #addResource<TDefinition extends ResourceDefinition>(
+  protected addResource<TDefinition extends ResourceDefinition>(
     definition: TDefinition,
     endpoints: Endpoints<TDefinition>,
-    serverBuilder: ServerBuilder,
   ): this {
+    const serverBuilder = this.endpointBuilder;
+    if (!serverBuilder) {
+      throw new Error('endpointBuilder is not defined');
+    }
+
     const type = definition.type;
 
     if (definition.capabilities & ResourceCapabilities.FetchCollection) {
@@ -331,7 +317,7 @@ export class Builder<TDefinitions extends Definitions = {}> {
             }
 
             await respond({
-              body: this.#serializer.serialize(relationship, data.data, params),
+              body: this.serializer.serialize(relationship, data.data, params),
               status: 200,
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
@@ -373,7 +359,7 @@ export class Builder<TDefinitions extends Definitions = {}> {
             }
 
             await respond({
-              body: this.#serializer.serialize(relationship, data.data, params),
+              body: this.serializer.serialize(relationship, data.data, params),
               status: 200,
               headers: { 'Content-Type': 'application/vnd.api+json' },
             });
