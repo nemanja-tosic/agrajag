@@ -118,6 +118,16 @@ export class ReduxServerBuilder<
             method: 'PATCH',
           }),
           invalidatesTags: [this.#addTagType(path)],
+          transformResponse: response => {
+            try {
+              return this.#deserializer.deserialize(
+                definition,
+                response as any,
+              );
+            } catch (error) {
+              console.error(error);
+            }
+          },
         }),
       }),
     });
@@ -142,6 +152,16 @@ export class ReduxServerBuilder<
             method: 'POST',
           }),
           invalidatesTags: [this.#addTagType(path)],
+          transformResponse: response => {
+            try {
+              return this.#deserializer.deserialize(
+                definition,
+                response as any,
+              );
+            } catch (error) {
+              console.error(error);
+            }
+          },
         }),
       }),
     });

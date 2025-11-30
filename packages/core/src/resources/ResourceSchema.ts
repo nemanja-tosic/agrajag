@@ -8,9 +8,15 @@ import {
   ZodOptional,
   ZodRawShape,
   ZodString,
+  ZodType,
+  ZodTypeAny,
 } from 'zod';
 import { ResourceDefinition } from './ResourceDefinition.js';
-import { ResourceLinkageSchema } from './ResourceLinkageSchema.js';
+import {
+  ResourceLinkageSchema,
+  ToManyLinkageSchema,
+  ToOneLinkageSchema,
+} from './ResourceLinkageSchema.js';
 
 export type ResourceSchema<
   TType extends string = string,
@@ -34,21 +40,32 @@ export type RelationshipsSchema<
   }>
 >;
 
-export type UpdateSchema<TDefinition extends ResourceDefinition> = ZodObject<{
+type GetAttributesShape<TDefinition extends ResourceDefinition> =
+  TDefinition extends ResourceDefinition<any, infer TAttrs, any>
+    ? TAttrs extends AttributesSchema<infer TShape>
+      ? TShape
+      : never
+    : never;
+
+type GetRelationshipsShape<TDefinition extends ResourceDefinition> =
+  TDefinition['schema']['shape']['relationships']['schema']['shape'];
+
+export type UpdateSchema<
+  TDefinition extends ResourceDefinition,
+  TAttributes extends ZodRawShape = GetAttributesShape<TDefinition>,
+  TRelationships extends ZodRawShape = GetRelationshipsShape<TDefinition>,
+> = ZodObject<{
   data: ZodObject<{
     id: ZodOptional<TDefinition['schema']['shape']['id']>;
     type: TDefinition['schema']['shape']['type'];
     attributes: ZodObject<{
-      [K in keyof TDefinition['schema']['shape']['attributes']['shape']]: ZodOptional<
-        TDefinition['schema']['shape']['attributes']['shape'][K]
-      >;
+      [K in keyof TAttributes]: ZodOptional<TAttributes[K]>;
     }>;
     relationships: ZodOptional<
       ZodObject<{
-        [K in keyof TDefinition['schema']['shape']['relationships']['schema']['shape']]: ZodOptional<
-          ZodObject<{
-            data: ZodObject<{ id: ZodString; type: ZodString }> | ZodNull;
-          }>
+        [K in keyof TRelationships]: ZodOptional<
+          // TODO: based on definition
+          ToOneLinkageSchema | ToManyLinkageSchema
         >;
       }>
     >;

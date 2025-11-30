@@ -11,15 +11,15 @@ import { getApi } from '../support/getApi.js';
 import { createDenormalized } from '../support/createDenormalized.js';
 
 describe('ReduxBuilder automated refetching', () => {
-  it('should add implement automated fetches for POST /type', async () => {
+  it('should implement automated fetches for POST /type', async () => {
     const { api, store, stubFetchFn } = getApi();
 
     stubFetchFn
-      .withArgs(match({ url: 'http://localhost:3000/users?', method: 'GET' }))
+      .withArgs(match({ url: 'http://localhost:3000/users?include=comments', method: 'GET' }))
       .onFirstCall()
       .resolves(createResponse(user, []))
-      // .onSecondCall()
-      // .resolves(createResponse(user, [{ id: 'users/1', fullName: 'Test' }]));
+      .onSecondCall()
+      .resolves(createResponse(user, [{ id: 'users/1', fullName: 'Test', comments: [] }]));
 
     stubFetchFn
       .withArgs(match({ url: 'http://localhost:3000/users?', method: 'POST' }))
@@ -38,22 +38,23 @@ describe('ReduxBuilder automated refetching', () => {
 
     const secondGet = await store.dispatch(api.endpoints.getUsers.initiate({}));
 
-    // expect(secondGet.data).to.deep.equal(
-    //   createDenormalized(user, [{ id: 'users/1', fullName: 'Test' }]),
-    // );
+    expect(secondGet.data).to.deep.equal(
+      createDenormalized(user, [
+        { id: 'users/1', fullName: 'Test', comments: [] },
+      ]),
+    );
   });
 
-  it('should add implement automated fetches for PATCH /type/:id', async () => {
+  it('should implement automated fetches for PATCH /type/:id', async () => {
     const { api, store, stubFetchFn } = getApi();
 
-    stubFetchFn
-      .withArgs(
-        match({ url: `http://localhost:3000/users/users%2F1?`, method: 'GET' }),
-      )
-      // .onFirstCall()
-      // .resolves(createResponse(user, { id: 'users/1', fullName: 'Tes' }))
-      // .onSecondCall()
-      // .resolves(createResponse(user, { id: 'users/1', fullName: 'Test' }));
+    stubFetchFn.withArgs(
+      match({ url: `http://localhost:3000/users/users%2F1?`, method: 'GET' }),
+    );
+    // .onFirstCall()
+    // .resolves(createResponse(user, { id: 'users/1', fullName: 'Tes' }))
+    // .onSecondCall()
+    // .resolves(createResponse(user, { id: 'users/1', fullName: 'Test' }));
 
     stubFetchFn
       .withArgs(

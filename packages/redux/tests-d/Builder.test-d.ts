@@ -39,19 +39,21 @@ expectAssignable<Denormalized<typeof user> | undefined>(userById);
 
 reduxApi.endpoints.postUsers;
 const [trigger] = reduxApi.usePostUsersMutation();
-trigger({
+const postResult = await trigger({
   body: {
     data: {
       id: '1234',
       type: 'users',
       attributes: { name: 'test', age: '12' },
+      relationships: { comments: { data: [] } },
     },
   },
 });
+expectAssignable<Denormalized<typeof user> | undefined>(postResult.data);
 
 reduxApi.endpoints.patchUsersById;
 const [update] = reduxApi.usePatchUsersByIdMutation();
-update({
+const patchResult = await update({
   id: '1234',
   body: {
     data: {
@@ -61,6 +63,7 @@ update({
     },
   },
 });
+expectAssignable<Denormalized<typeof user> | undefined>(patchResult.data);
 
 reduxApi.endpoints.deleteUsersById;
 const [deleteUser] = reduxApi.useDeleteUsersByIdMutation();

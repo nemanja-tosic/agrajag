@@ -81,7 +81,7 @@ export type PostEndpoint<
   QueryParams & { id?: string; body: TBody },
   FetchBaseQuery,
   TagTypes,
-  TBody,
+  Denormalized<TDefinition>,
   ReducerPath
 >;
 
@@ -94,7 +94,7 @@ export type PatchEndpoint<
   QueryParams & { id: string; body: TBody },
   FetchBaseQuery,
   TagTypes,
-  TBody,
+  Denormalized<TDefinition>,
   ReducerPath
 >;
 
