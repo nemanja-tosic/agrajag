@@ -90,7 +90,7 @@ export type Normalized<TSchema extends ResourceDefinition> = Flavor<
 
 export type Denormalized<TSchema extends ResourceDefinition> = Flavor<
   z.infer<IdPlusAttributes<TSchema>> & {
-    [K in keyof TSchema['relationships']]: TSchema['relationships'][K] extends ResourceDefinition
+    [K in keyof TSchema['relationships']]?: TSchema['relationships'][K] extends ResourceDefinition
       ? Denormalized<TSchema['relationships'][K]>
       : TSchema['relationships'][K] extends ResourceDefinition[]
         ? Denormalized<TSchema['relationships'][K][number]>[]

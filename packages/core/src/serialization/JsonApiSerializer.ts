@@ -59,21 +59,21 @@ export class JsonApiSerializer implements Serializer {
         ...(definition.attributes as string[]).filter(
           key => fields?.includes(key) ?? true,
         ),
-        ...Object.keys(relationships).filter(key => isInIncludes(key)),
+        ...Object.keys(relationships),
       ],
-      // keep attribute keys as is
       keyForAttribute: attribute => attribute,
       ...Object.fromEntries(
         Object.entries(relationships)
-          .filter(([key]) => isInIncludes(key))
           .map(
             ([key, value]) => [key, this.#unwrapRelationship(value)] as const,
           )
           .map(([key, relationship]) => [
             key,
-            this.#createOptions(relationship, params, [...path, key], {
-              relationshipKey: key,
-            }),
+            isInIncludes(key)
+              ? this.#createOptions(relationship, params, [...path, key], {
+                  relationshipKey: key,
+                })
+              : { ref: 'id' },
           ]),
       ),
     };

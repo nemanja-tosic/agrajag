@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { match } from 'sinon';
-import { user } from '../support/schema.js';
+import { comments, user } from '../support/schema.js';
 import {
   createPatchRequest,
   createPostRequest,
@@ -15,11 +15,11 @@ describe('ReduxBuilder automated refetching', () => {
     const { api, store, stubFetchFn } = getApi();
 
     stubFetchFn
-      .withArgs(match({ url: 'http://localhost:3000/users?include=comments', method: 'GET' }))
+      .withArgs(match({ url: 'http://localhost:3000/users?', method: 'GET' }))
       .onFirstCall()
       .resolves(createResponse(user, []))
       .onSecondCall()
-      .resolves(createResponse(user, [{ id: 'users/1', fullName: 'Test', comments: [] }]));
+      .resolves(createResponse(user, [{ id: 'users/1', fullName: 'Test' }]));
 
     stubFetchFn
       .withArgs(match({ url: 'http://localhost:3000/users?', method: 'POST' }))
@@ -39,8 +39,76 @@ describe('ReduxBuilder automated refetching', () => {
     const secondGet = await store.dispatch(api.endpoints.getUsers.initiate({}));
 
     expect(secondGet.data).to.deep.equal(
+      createDenormalized(user, [{ id: 'users/1', fullName: 'Test' }]),
+    );
+  });
+
+  it('should refetch related entities for POST /type', async () => {
+    const { api, store, stubFetchFn } = getApi();
+
+    stubFetchFn
+      .withArgs(
+        match({
+          url: 'http://localhost:3000/users?include=comments',
+          method: 'GET',
+        }),
+      )
+      .onFirstCall()
+      .resolves(
+        createResponse(
+          user,
+          [{ id: 'users/1', fullName: 'Test', comments: [] }],
+          { include: 'comments' },
+        ),
+      )
+      .onSecondCall()
+      .resolves(
+        createResponse(
+          user,
+          [
+            {
+              id: 'users/1',
+              fullName: 'Test',
+              comments: [{ id: 'comments/1', text: 'test' }],
+            },
+          ],
+          { include: 'comments' },
+        ),
+      );
+
+    stubFetchFn
+      .withArgs(
+        match({ url: 'http://localhost:3000/comments?', method: 'POST' }),
+      )
+      .resolves(createEmptyResponse());
+
+    await store.dispatch(
+      api.endpoints.getUsers.initiate({ include: 'comments' }),
+    );
+
+    await store.dispatch(
+      api.endpoints.postComments.initiate({
+        body: {
+          data: {
+            type: 'comments',
+            attributes: { text: 'test' },
+            relationships: { user: { data: { type: 'users', id: 'users/1' } } },
+          },
+        },
+      }),
+    );
+
+    const secondGet = await store.dispatch(
+      api.endpoints.getUsers.initiate({ include: 'comments' }),
+    );
+
+    expect(secondGet.data).to.deep.equal(
       createDenormalized(user, [
-        { id: 'users/1', fullName: 'Test', comments: [] },
+        {
+          id: 'users/1',
+          fullName: 'Test',
+          comments: [{ id: 'comments/1', text: 'test' }],
+        },
       ]),
     );
   });
@@ -48,13 +116,14 @@ describe('ReduxBuilder automated refetching', () => {
   it('should implement automated fetches for PATCH /type/:id', async () => {
     const { api, store, stubFetchFn } = getApi();
 
-    stubFetchFn.withArgs(
-      match({ url: `http://localhost:3000/users/users%2F1?`, method: 'GET' }),
-    );
-    // .onFirstCall()
-    // .resolves(createResponse(user, { id: 'users/1', fullName: 'Tes' }))
-    // .onSecondCall()
-    // .resolves(createResponse(user, { id: 'users/1', fullName: 'Test' }));
+    stubFetchFn
+      .withArgs(
+        match({ url: `http://localhost:3000/users/users%2F1?`, method: 'GET' }),
+      )
+      .onFirstCall()
+      .resolves(createResponse(user, { id: 'users/1', fullName: 'Tes' }))
+      .onSecondCall()
+      .resolves(createResponse(user, { id: 'users/1', fullName: 'Test' }));
 
     stubFetchFn
       .withArgs(
@@ -88,5 +157,95 @@ describe('ReduxBuilder automated refetching', () => {
     // expect(secondGet.data).to.deep.equal(
     //   createDenormalized(user, { id: 'users/1', fullName: 'Test' }),
     // );
+  });
+
+  it.only('should refetch related entities for PATCH /type/:id', async () => {
+    const { api, store, stubFetchFn } = getApi();
+
+    stubFetchFn
+      .withArgs(
+        match({
+          url: 'http://localhost:3000/users?include=comments',
+          method: 'GET',
+        }),
+      )
+      .onFirstCall()
+      .resolves(
+        createResponse(
+          user,
+          [
+            {
+              id: 'users/1',
+              fullName: 'Test',
+              comments: [{ id: 'comments/1', text: 'tes' }],
+            },
+          ],
+          { include: 'comments' },
+        ),
+      )
+      .onSecondCall()
+      .resolves(
+        createResponse(
+          user,
+          [
+            {
+              id: 'users/1',
+              fullName: 'Test',
+              comments: [{ id: 'comments/1', text: 'test' }],
+            },
+          ],
+          { include: 'comments' },
+        ),
+      );
+
+    stubFetchFn
+      .withArgs(
+        match({
+          url: 'http://localhost:3000/comments/comments%2F1?',
+          method: 'PATCH',
+        }),
+      )
+      .resolves(
+        createResponse(
+          comments,
+          {
+            id: 'comments/1',
+            text: 'test',
+            user: { id: 'users/1', fullName: 'Lorem Ipsum' },
+          },
+          {},
+        ),
+      );
+
+    await store.dispatch(
+      api.endpoints.getUsers.initiate({ include: 'comments' }),
+    );
+
+    await store.dispatch(
+      api.endpoints.patchCommentsById.initiate({
+        id: 'comments/1',
+        body: {
+          data: {
+            id: 'comments/1',
+            type: 'comments',
+            attributes: { text: 'test' },
+          },
+        },
+      }),
+    );
+
+    const secondGet = await store.dispatch(
+      api.endpoints.getUsers.initiate({ include: 'comments' }),
+    );
+
+    expect(secondGet.data).to.deep.equal(
+      createDenormalized(user, [
+        {
+          id: 'users/1',
+          fullName: 'Test',
+          comments: [{ id: 'comments/1', text: 'test' }],
+        },
+      ]),
+    );
   });
 });

@@ -1,4 +1,6 @@
 import { DefinitionCollection } from 'agrajag';
-import { user } from './schema.js';
+import { user, comments } from './schema.js';
 
-export const definitions = new DefinitionCollection().addDefinition(user);
+export const definitions = new DefinitionCollection()
+  .addDefinition(user)
+  .addDefinition(comments);

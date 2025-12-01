@@ -8,9 +8,13 @@ export type ToOneLinkageSchema = ZodObject<{
   data: ResourceIdentifierSchema | ZodLiteral<null>;
 }>;
 
+export type ToOneLinkage = z.infer<ToOneLinkageSchema>;
+
 export type ToManyLinkageSchema = ZodObject<{
   data: ZodArray<ResourceIdentifierSchema>;
 }>;
+
+export type ToManyLinkage = z.infer<ToManyLinkageSchema>;
 
 export type ResourceIdentifier = {
   _flavor: 'ResourceIdentifier';

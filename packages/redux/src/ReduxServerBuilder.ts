@@ -1,4 +1,5 @@
 import {
+  Denormalized,
   EndpointSchema,
   FetchDeleteHandler,
   JsonApiDeserializer,
@@ -6,11 +7,11 @@ import {
   QueryParams,
   Resource,
   ResourceDefinition,
+  ResourceIdentifier,
   ServerBuilder,
 } from 'agrajag';
 import { BaseApi } from './ReduxBuilder.js';
 import { camelCase } from 'change-case';
-import { BaseQueryMeta } from '@reduxjs/toolkit/query';
 import { EndpointDefinition } from '@reduxjs/toolkit/query/react';
 import { FetchBaseQuery } from './FetchBaseQuery.js';
 
@@ -53,7 +54,12 @@ export class ReduxServerBuilder<
               params,
             };
           },
-          providesTags: [this.#addTagType(path)],
+          providesTags: (_, __, args) =>
+            [this.#addTagType(path)].flatMap(type => [
+              type,
+              // TODO: add test case
+              // ...(args.id ? [{ type, id: args.id }] : []),
+            ]),
           transformResponse: response => {
             try {
               return this.#deserializer.deserialize(
@@ -108,8 +114,8 @@ export class ReduxServerBuilder<
     this.#baseApi.injectEndpoints({
       endpoints: builder => ({
         [this.#mapParts('patch', path)]: builder.mutation<
-          unknown,
-          QueryParams & { id: string; body: unknown }
+          Denormalized<ResourceDefinition> | undefined,
+          QueryParams & { id: string; body: { data: Resource } }
         >({
           query: ({ id, body, ...params }) => ({
             url: this.#getPath(path, id),
@@ -117,13 +123,42 @@ export class ReduxServerBuilder<
             body,
             method: 'PATCH',
           }),
-          invalidatesTags: [this.#addTagType(path)],
-          transformResponse: response => {
+          invalidatesTags: (response, __, args) => {
+            const affected = Object.values(args.body.data.relationships ?? {})
+              .flatMap(res => res.data)
+              .filter((res): res is ResourceIdentifier => res !== null);
+
+            return [
+              this.#addTagType(path),
+              ...affected.flatMap(r => [r.type, { type: r.type, id: r.id }]),
+              ...Object.entries(definition.relationships).flatMap(
+                ([key, rel]) => {
+                  if (response === undefined || !(key in response)) {
+                    return;
+                  }
+
+                  if (Array.isArray(rel)) {
+                    return [
+                      rel[0].type,
+                      { type: rel[0].type, id: (response[key] as any).id },
+                    ];
+                  } else {
+                    return [
+                      rel.type,
+                      { type: key, id: (response[key] as any).id },
+                    ];
+                  }
+                },
+              ),
+            ];
+          },
+          transformResponse: (response: Resource) => {
+            if (!response) {
+              return response;
+            }
+
             try {
-              return this.#deserializer.deserialize(
-                definition,
-                response as any,
-              );
+              return this.#deserializer.deserialize(definition, response);
             } catch (error) {
               console.error(error);
             }
@@ -143,7 +178,7 @@ export class ReduxServerBuilder<
       endpoints: builder => ({
         [this.#mapParts('post', path)]: builder.mutation<
           unknown,
-          QueryParams & { body: unknown }
+          QueryParams & { body: { data: Resource } }
         >({
           query: ({ body, ...params }) => ({
             url: path,
@@ -151,15 +186,26 @@ export class ReduxServerBuilder<
             body,
             method: 'POST',
           }),
-          invalidatesTags: [this.#addTagType(path)],
-          transformResponse: response => {
+          invalidatesTags: (_, __, args) => {
+            const affected = Object.values(args.body.data.relationships ?? {})
+              .flatMap(res => res.data)
+              .filter((res): res is ResourceIdentifier => res !== null);
+
+            return [
+              this.#addTagType(path),
+              ...affected.flatMap(r => [r.type, { type: r.type, id: r.id }]),
+            ];
+          },
+          transformResponse: (response: Resource) => {
+            if (!response) {
+              return response;
+            }
+
             try {
-              return this.#deserializer.deserialize(
-                definition,
-                response as any,
-              );
+              return this.#deserializer.deserialize(definition, response);
             } catch (error) {
               console.error(error);
+              return response;
             }
           },
         }),
