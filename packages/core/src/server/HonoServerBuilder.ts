@@ -37,11 +37,14 @@ export class HonoServerBuilder extends ServerBuilder {
     return this;
   }
 
-  addPost<TPath extends string = string>(
-    schema: ResourceDefinition,
+  addPost<
+    TPath extends string = string,
+    TDefinition extends ResourceDefinition = ResourceDefinition,
+  >(
+    schema: TDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
-    handler: MutationHandler<TPath>,
+    handler: MutationHandler<TPath, TDefinition>,
   ): this {
     this.#hono.post(path, async c => {
       const { body, status, headers } = await new Promise<Response>(
@@ -57,11 +60,14 @@ export class HonoServerBuilder extends ServerBuilder {
     return this;
   }
 
-  addPatch<TPath extends string = string>(
-    schema: ResourceDefinition,
+  addPatch<
+    TPath extends string = string,
+    TDefinition extends ResourceDefinition = ResourceDefinition,
+  >(
+    schema: TDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
-    handler: MutationHandler<TPath>,
+    handler: MutationHandler<TPath, TDefinition>,
   ): this {
     this.#hono.patch(path, async c => {
       const { body, status, headers } = await new Promise<Response>(
@@ -84,7 +90,7 @@ export class HonoServerBuilder extends ServerBuilder {
     schema: TDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
-    handler: MutationHandler<TPath>,
+    handler: MutationHandler<TPath, TDefinition>,
   ): this {
     this.#hono.delete(path, async c => {
       const { body, status, headers } = await new Promise<Response>(

@@ -12,8 +12,14 @@ Symbol.asyncDispose ??= Symbol('Symbol.asyncDispose');
 export interface Resolver<
   TDefinition extends ResourceDefinition = ResourceDefinition,
 > extends AsyncDisposable {
-  byId(id: string): Promise<Stored<TDefinition> | undefined>;
-  byId(ids: string[]): Promise<Stored<TDefinition>[]>;
+  byId(
+    id: string,
+    params: QueryParams<TDefinition>,
+  ): Promise<Stored<TDefinition> | undefined>;
+  byId(
+    ids: string[],
+    params: QueryParams<TDefinition>,
+  ): Promise<Stored<TDefinition>[]>;
 
   byType(
     type: string,
@@ -23,10 +29,12 @@ export interface Resolver<
   relationshipByKey(
     id: string,
     key: string & keyof TDefinition['relationships'],
+    params: QueryParams<TDefinition>,
   ): Promise<undefined | ResourceIdentifier | ResourceIdentifier[]>;
 
   post(
     entity: Normalized<TDefinition>,
+    params: QueryParams<TDefinition>,
   ): Promise<Stored<TDefinition> | undefined>;
 
   postRelationship(
@@ -37,6 +45,7 @@ export interface Resolver<
 
   patch(
     entity: Normalized<TDefinition>,
+    params: QueryParams<TDefinition>,
   ): Promise<Stored<TDefinition> | undefined>;
 
   patchRelationship(
@@ -45,7 +54,10 @@ export interface Resolver<
     params: QueryParams<TDefinition>,
   ): Promise<Stored<TDefinition> | undefined>;
 
-  delete(entity: Stored<TDefinition>): Promise<void>;
+  delete(
+    entity: Stored<TDefinition>,
+    params: QueryParams<TDefinition>,
+  ): Promise<void>;
 
   deleteRelationship(
     entityId: string,

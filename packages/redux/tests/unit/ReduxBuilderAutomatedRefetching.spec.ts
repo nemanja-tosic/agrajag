@@ -6,12 +6,11 @@ import {
   createPostRequest,
 } from '../support/createMutationRequest.js';
 import { createResponse } from '../support/createResponse.js';
-import { createEmptyResponse } from '../support/createEmptyResponse.js';
 import { getApi } from '../support/getApi.js';
 import { createDenormalized } from '../support/createDenormalized.js';
 
 describe('ReduxBuilder automated refetching', () => {
-  it('should implement automated fetches for POST /type', async () => {
+  it('should implement automated fetches for POST /type for collections', async () => {
     const { api, store, stubFetchFn } = getApi();
 
     stubFetchFn
@@ -23,7 +22,13 @@ describe('ReduxBuilder automated refetching', () => {
 
     stubFetchFn
       .withArgs(match({ url: 'http://localhost:3000/users?', method: 'POST' }))
-      .resolves(createEmptyResponse());
+      .resolves(
+        createResponse(comments, {
+          id: 'comments/1',
+          text: 'test',
+          user: { id: 'users/1', fullName: 'Lorem Ipsum' },
+        }),
+      );
 
     await store.dispatch(api.endpoints.getUsers.initiate({}));
 
@@ -80,7 +85,13 @@ describe('ReduxBuilder automated refetching', () => {
       .withArgs(
         match({ url: 'http://localhost:3000/comments?', method: 'POST' }),
       )
-      .resolves(createEmptyResponse());
+      .resolves(
+        createResponse(comments, {
+          id: 'comments/1',
+          text: 'test',
+          user: { id: 'users/1', fullName: 'Lorem Ipsum' },
+        }),
+      );
 
     await store.dispatch(
       api.endpoints.getUsers.initiate({ include: 'comments' }),
@@ -92,7 +103,6 @@ describe('ReduxBuilder automated refetching', () => {
           data: {
             type: 'comments',
             attributes: { text: 'test' },
-            relationships: { user: { data: { type: 'users', id: 'users/1' } } },
           },
         },
       }),
@@ -132,7 +142,9 @@ describe('ReduxBuilder automated refetching', () => {
           method: 'PATCH',
         }),
       )
-      .resolves(createEmptyResponse());
+      .resolves(
+        createResponse(user, { id: 'users/1', fullName: 'Test', comments: [] }),
+      );
 
     await store.dispatch(
       api.endpoints.getUsersById.initiate({ id: 'users/1' }),
@@ -159,7 +171,7 @@ describe('ReduxBuilder automated refetching', () => {
     // );
   });
 
-  it.only('should refetch related entities for PATCH /type/:id', async () => {
+  it('should refetch related entities for PATCH /type/:id', async () => {
     const { api, store, stubFetchFn } = getApi();
 
     stubFetchFn

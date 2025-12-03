@@ -37,10 +37,14 @@ export abstract class BaseEndpointFactory<
       Array.isArray(entity)
         ? await Promise.all(
             entity.map(entity =>
-              this.#denormalize(definition, entity, external.byId),
+              this.#denormalize(definition, entity, key =>
+                external.byId(key, {}),
+              ),
             ),
           )
-        : await this.#denormalize(definition, entity, external.byId),
+        : await this.#denormalize(definition, entity, key =>
+            external.byId(key, {}),
+          ),
       params,
     );
   }
@@ -60,7 +64,7 @@ export abstract class BaseEndpointFactory<
           self: async params => {
             await using external = this.createExternal(definition);
 
-            const entity = await external.byId(params.id);
+            const entity = await external.byId(params.id, params);
             if (!entity) {
               return undefined;
             }
@@ -123,6 +127,7 @@ export abstract class BaseEndpointFactory<
                 const relationship = await external.relationshipByKey(
                   params.id,
                   key,
+                  params,
                 );
                 if (!relationship) {
                   return { data: null };
@@ -175,7 +180,7 @@ export abstract class BaseEndpointFactory<
               ),
             };
 
-            const data = await external.post(entity);
+            const data = await external.post(entity, params);
             await external.saveUow?.();
             if (!data) {
               return;
@@ -217,12 +222,12 @@ export abstract class BaseEndpointFactory<
           self: async params => {
             await using external = this.createExternal(definition);
 
-            const entity = await external.byId(params.id);
+            const entity = await external.byId(params.id, params);
             if (!entity) {
               return undefined;
             }
 
-            await external.delete(entity);
+            await external.delete(entity, params);
             await external.saveUow?.();
 
             return this.#serialize(
@@ -278,7 +283,7 @@ export abstract class BaseEndpointFactory<
               ),
             };
 
-            const data = await external.patch(entity);
+            const data = await external.patch(entity, params);
             await external.saveUow?.();
             if (!data) {
               return;

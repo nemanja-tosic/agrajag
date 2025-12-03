@@ -22,10 +22,7 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
     this.builder = builder;
   }
 
-  addGet<
-    TPath extends string = string,
-    TDefinition extends ResourceDefinition = ResourceDefinition,
-  >(
+  addGet<TPath extends string, TDefinition extends ResourceDefinition>(
     definition: TDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
@@ -54,11 +51,11 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
     this.builder.addGet(definition, createEndpointSchema, path, handler);
   }
 
-  addPost<TPath extends string = string>(
-    definition: ResourceDefinition,
+  addPost<TPath extends string, TDefinition extends ResourceDefinition>(
+    definition: TDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
-    handler: MutationHandler<TPath>,
+    handler: MutationHandler<TPath, TDefinition>,
   ): void {
     this.#addPath(path, () => {
       const endpointSchema = createEndpointSchema();
@@ -88,11 +85,11 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
     this.builder.addPost(definition, createEndpointSchema, path, handler);
   }
 
-  addPatch<TPath extends string = string>(
-    definition: ResourceDefinition,
+  addPatch<TPath extends string, TDefinition extends ResourceDefinition>(
+    definition: TDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
-    handler: MutationHandler<TPath>,
+    handler: MutationHandler<TPath, TDefinition>,
   ): void {
     this.#addPath(path, () => {
       const endpointSchema = createEndpointSchema();
@@ -122,14 +119,11 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
     this.builder.addPatch(definition, createEndpointSchema, path, handler);
   }
 
-  addDelete<
-    TPath extends string = string,
-    TDefinition extends ResourceDefinition = ResourceDefinition,
-  >(
+  addDelete<TPath extends string, TDefinition extends ResourceDefinition>(
     definition: TDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
-    handler: MutationHandler<TPath>,
+    handler: MutationHandler<TPath, TDefinition>,
   ): void {
     this.#addPath(path, () => {
       const endpointSchema = createEndpointSchema();

@@ -6,35 +6,41 @@ import { Resource } from '../resources/Resource.js';
 import { ErrorObject } from '../resources/Error.js';
 
 export abstract class ServerBuilder {
-  abstract addGet<
-    TPath extends string = string,
-    TDefinition extends ResourceDefinition = ResourceDefinition,
-  >(
+  abstract addGet<TPath extends string, TDefinition extends ResourceDefinition>(
     definition: TDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: FetchDeleteHandler<TPath, TDefinition>,
   ): void;
 
-  abstract addPost<TPath extends string = string>(
-    definition: ResourceDefinition,
+  abstract addPost<
+    TPath extends string,
+    TDefinition extends ResourceDefinition,
+  >(
+    definition: TDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
-    handler: MutationHandler<TPath>,
+    handler: MutationHandler<TPath, TDefinition>,
   ): void;
 
-  abstract addPatch<TPath extends string = string>(
-    definition: ResourceDefinition,
+  abstract addPatch<
+    TPath extends string,
+    TDefinition extends ResourceDefinition,
+  >(
+    definition: TDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
-    handler: MutationHandler<TPath>,
+    handler: MutationHandler<TPath, TDefinition>,
   ): void;
 
-  abstract addDelete<TPath extends string = string>(
-    definition: ResourceDefinition,
+  abstract addDelete<
+    TPath extends string,
+    TDefinition extends ResourceDefinition,
+  >(
+    definition: TDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
-    handler: MutationHandler<TPath>,
+    handler: MutationHandler<TPath, TDefinition>,
   ): void;
 }
 
@@ -55,9 +61,12 @@ export interface Response {
 
 export type RespondFunction = (response: Response) => Promise<void>;
 
-export type MutationHandler<TPath extends string> = (
+export type MutationHandler<
+  TPath extends string,
+  TDefinition extends ResourceDefinition,
+> = (
   body: unknown,
-  params: Params<TPath>,
+  params: Params<TPath, TDefinition>,
   respond: RespondFunction,
 ) => Promise<void>;
 

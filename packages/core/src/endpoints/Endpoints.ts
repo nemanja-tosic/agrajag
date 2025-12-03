@@ -36,7 +36,7 @@ export type MutateEndpointBody<TDefinition extends ResourceDefinition> =
 type MutateEndpoint<TDefinition extends ResourceDefinition> = {
   self?: (
     body: z.infer<UpdateSchema<TDefinition>>,
-    params: Params,
+    params: Params<string, TDefinition>,
   ) => Promise<Resource<TDefinition> | undefined>;
   related?: RelatedEndpointsWithBody<TDefinition>;
 };
@@ -45,7 +45,7 @@ export type RelatedEndpointsWithoutBody<
   TDefinition extends ResourceDefinition,
 > = {
   [K in keyof TDefinition['relationships']]: (
-    params: { id: string } & QueryParams,
+    params: { id: string } & QueryParams<TDefinition>,
   ) => Promise<ResourceLinkage>;
 };
 

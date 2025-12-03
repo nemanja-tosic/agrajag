@@ -1,5 +1,7 @@
 import {
+  DefinitionCollection,
   Denormalized,
+  Deserializer,
   EndpointSchema,
   FetchDeleteHandler,
   JsonApiDeserializer,
@@ -7,12 +9,14 @@ import {
   QueryParams,
   Resource,
   ResourceDefinition,
-  ResourceIdentifier,
   ServerBuilder,
 } from 'agrajag';
 import { BaseApi } from './ReduxBuilder.js';
 import { camelCase } from 'change-case';
-import { EndpointDefinition } from '@reduxjs/toolkit/query/react';
+import {
+  EndpointDefinition,
+  TagDescription,
+} from '@reduxjs/toolkit/query/react';
 import { FetchBaseQuery } from './FetchBaseQuery.js';
 
 export class ReduxServerBuilder<
@@ -21,18 +25,19 @@ export class ReduxServerBuilder<
   Endpoints extends ReduxEndpoints<ReducerPath, TagTypes>,
 > extends ServerBuilder {
   readonly #baseApi: BaseApi<ReducerPath, TagTypes, Endpoints>;
-  readonly #deserializer = new JsonApiDeserializer();
+  readonly #deserializer: Deserializer = new JsonApiDeserializer();
 
-  constructor(api: BaseApi<ReducerPath, TagTypes, Endpoints>) {
+  constructor(
+    api: BaseApi<ReducerPath, TagTypes, Endpoints>,
+    definitions: DefinitionCollection,
+  ) {
     super();
 
     this.#baseApi = api;
-  }
 
-  #addTagType(path: string): any {
-    const tagType = path.split('/')[1];
-    this.#baseApi.enhanceEndpoints({ addTagTypes: [tagType] });
-    return tagType;
+    this.#baseApi.enhanceEndpoints({
+      addTagTypes: [...definitions].map(d => d.type),
+    });
   }
 
   addGet<TPath extends string, TDefinition extends ResourceDefinition>(
@@ -44,32 +49,18 @@ export class ReduxServerBuilder<
     this.#baseApi.injectEndpoints({
       endpoints: builder => ({
         [this.#mapParts('get', path)]: builder.query<
-          unknown,
+          Denormalized<TDefinition>[] | Denormalized<TDefinition> | undefined,
           QueryParams & { id?: string },
           Resource<TDefinition> | Resource<TDefinition>[]
         >({
-          query: ({ id, ...params }) => {
-            return {
-              url: this.#getPath(path, id),
-              params,
-            };
-          },
-          providesTags: (_, __, args) =>
-            [this.#addTagType(path)].flatMap(type => [
-              type,
-              // TODO: add test case
-              // ...(args.id ? [{ type, id: args.id }] : []),
-            ]),
-          transformResponse: response => {
-            try {
-              return this.#deserializer.deserialize(
-                definition,
-                response as any,
-              );
-            } catch (error) {
-              console.error(error);
-            }
-          },
+          query: ({ id, ...params }) => ({
+            url: this.#getPath(path, id),
+            params,
+          }),
+          providesTags: response =>
+            this.#providesTags(definition, path, response),
+          transformResponse: response =>
+            this.#transformResponse(definition, response),
         }),
       }),
     });
@@ -87,11 +78,11 @@ export class ReduxServerBuilder<
     return path.replace(':id', encodeURIComponent(id));
   }
 
-  addDelete<TPath extends string>(
-    definition: ResourceDefinition,
+  addDelete<TPath extends string, TDefinition extends ResourceDefinition>(
+    definition: TDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
-    handler: MutationHandler<TPath>,
+    handler: MutationHandler<TPath, TDefinition>,
   ): void {
     this.#baseApi.injectEndpoints({
       endpoints: builder => ({
@@ -105,17 +96,17 @@ export class ReduxServerBuilder<
     });
   }
 
-  addPatch<TPath extends string>(
-    definition: ResourceDefinition,
+  addPatch<TPath extends string, TDefinition extends ResourceDefinition>(
+    definition: TDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
-    handler: MutationHandler<TPath>,
+    handler: MutationHandler<TPath, TDefinition>,
   ): void {
     this.#baseApi.injectEndpoints({
       endpoints: builder => ({
         [this.#mapParts('patch', path)]: builder.mutation<
-          Denormalized<ResourceDefinition> | undefined,
-          QueryParams & { id: string; body: { data: Resource } }
+          Denormalized<TDefinition> | undefined,
+          QueryParams & { id: string; body: { data: Resource<TDefinition> } }
         >({
           query: ({ id, body, ...params }) => ({
             url: this.#getPath(path, id),
@@ -123,62 +114,26 @@ export class ReduxServerBuilder<
             body,
             method: 'PATCH',
           }),
-          invalidatesTags: (response, __, args) => {
-            const affected = Object.values(args.body.data.relationships ?? {})
-              .flatMap(res => res.data)
-              .filter((res): res is ResourceIdentifier => res !== null);
-
-            return [
-              this.#addTagType(path),
-              ...affected.flatMap(r => [r.type, { type: r.type, id: r.id }]),
-              ...Object.entries(definition.relationships).flatMap(
-                ([key, rel]) => {
-                  if (response === undefined || !(key in response)) {
-                    return;
-                  }
-
-                  if (Array.isArray(rel)) {
-                    return [
-                      rel[0].type,
-                      { type: rel[0].type, id: (response[key] as any).id },
-                    ];
-                  } else {
-                    return [
-                      rel.type,
-                      { type: key, id: (response[key] as any).id },
-                    ];
-                  }
-                },
-              ),
-            ];
-          },
-          transformResponse: (response: Resource) => {
-            if (!response) {
-              return response;
-            }
-
-            try {
-              return this.#deserializer.deserialize(definition, response);
-            } catch (error) {
-              console.error(error);
-            }
-          },
+          invalidatesTags: response =>
+            this.#invalidateTags(definition, path, response),
+          transformResponse: (response: Resource<TDefinition>) =>
+            this.#transformResponse(definition, response),
         }),
       }),
     });
   }
 
-  addPost<TPath extends string>(
-    definition: ResourceDefinition,
+  addPost<TPath extends string, TDefinition extends ResourceDefinition>(
+    definition: TDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
-    handler: MutationHandler<TPath>,
+    handler: MutationHandler<TPath, TDefinition>,
   ): void {
     this.#baseApi.injectEndpoints({
       endpoints: builder => ({
         [this.#mapParts('post', path)]: builder.mutation<
-          unknown,
-          QueryParams & { body: { data: Resource } }
+          Denormalized<TDefinition> | undefined,
+          QueryParams & { body: { data: Resource<TDefinition> } }
         >({
           query: ({ body, ...params }) => ({
             url: path,
@@ -186,28 +141,10 @@ export class ReduxServerBuilder<
             body,
             method: 'POST',
           }),
-          invalidatesTags: (_, __, args) => {
-            const affected = Object.values(args.body.data.relationships ?? {})
-              .flatMap(res => res.data)
-              .filter((res): res is ResourceIdentifier => res !== null);
-
-            return [
-              this.#addTagType(path),
-              ...affected.flatMap(r => [r.type, { type: r.type, id: r.id }]),
-            ];
-          },
-          transformResponse: (response: Resource) => {
-            if (!response) {
-              return response;
-            }
-
-            try {
-              return this.#deserializer.deserialize(definition, response);
-            } catch (error) {
-              console.error(error);
-              return response;
-            }
-          },
+          invalidatesTags: response =>
+            this.#invalidateTags(definition, path, response),
+          transformResponse: (response: Resource<TDefinition>) =>
+            this.#transformResponse(definition, response),
         }),
       }),
     });
@@ -225,6 +162,53 @@ export class ReduxServerBuilder<
         )
         .join('-'),
     );
+  }
+
+  async #transformResponse<TDefinition extends ResourceDefinition>(
+    definition: TDefinition,
+    response: Resource<TDefinition> | Resource<TDefinition>[] | undefined,
+  ): Promise<Denormalized<TDefinition> | undefined> {
+    if (!response) {
+      return response;
+    }
+
+    try {
+      return this.#deserializer.deserialize(definition, response as any);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  #invalidateTags(
+    definition: ResourceDefinition,
+    path: string,
+    response: Denormalized<ResourceDefinition> | undefined,
+  ): TagDescription<TagTypes>[] {
+    return [
+      definition.type,
+      ...Object.entries(definition.relationships).flatMap(([key, rel]) => {
+        if (response === undefined || !(key in response)) {
+          return;
+        }
+
+        if (Array.isArray(rel)) {
+          return [rel[0].type, { type: rel[0].type, id: response[key].id }];
+        } else {
+          return [rel.type, { type: rel.type, id: response[key].id }];
+        }
+      }),
+    ] as TagTypes[];
+  }
+
+  #providesTags(
+    definition: ResourceDefinition,
+    path: string,
+    response:
+      | Denormalized<ResourceDefinition>
+      | Denormalized<ResourceDefinition>[]
+      | undefined,
+  ): TagDescription<TagTypes>[] {
+    return [definition.type] as TagTypes[];
   }
 }
 

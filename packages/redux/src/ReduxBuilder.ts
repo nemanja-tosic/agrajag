@@ -63,7 +63,7 @@ export class ReduxBuilder<
       typeof reactHooksModuleName | typeof coreModuleName
     >,
   ): BuiltApi<TDefinitions, ReducerPath, TagTypes, Endpoints> {
-    this.addEndpointBuilder(new ReduxServerBuilder(api));
+    this.addEndpointBuilder(new ReduxServerBuilder(api, this.definitions));
 
     for (const definition of this.definitions) {
       this.addResource(definition, {});
