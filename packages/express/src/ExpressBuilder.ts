@@ -41,11 +41,11 @@ export class ExpressBuilder extends ServerBuilder {
     return this;
   }
 
-  addPost<TPath extends string = string>(
-    schema: ResourceDefinition,
+  addPost<TPath extends string, TDefinition extends ResourceDefinition>(
+    schema: TDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
-    handler: MutationHandler<TPath>,
+    handler: MutationHandler<TPath, TDefinition>,
   ): this {
     this.#express.post(path, async (req, res) => {
       const { body, status, headers } = await new Promise<Response>(
@@ -65,11 +65,11 @@ export class ExpressBuilder extends ServerBuilder {
     return this;
   }
 
-  addPatch<TPath extends string = string>(
-    schema: ResourceDefinition,
+  addPatch<TPath extends string, TDefinition extends ResourceDefinition>(
+    schema: TDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
-    handler: MutationHandler<TPath>,
+    handler: MutationHandler<TPath, TDefinition>,
   ): this {
     this.#express.patch(path, async (req, res) => {
       const { body, status, headers } = await new Promise<Response>(
@@ -96,7 +96,7 @@ export class ExpressBuilder extends ServerBuilder {
     schema: TDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
-    handler: MutationHandler<TPath>,
+    handler: MutationHandler<TPath, TDefinition>,
   ): this {
     this.#express.delete(path, async (req, res) => {
       const { body, status, headers } = await new Promise<Response>(
