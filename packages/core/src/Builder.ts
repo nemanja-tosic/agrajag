@@ -272,7 +272,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
         `/${type}/:id/relationships/${key}`,
         async (params, respond) => {
           try {
-            const data = await endpoints.fetch?.related?.[key](params);
+            const data = await endpoints.fetch?.related?.[key](params as any);
 
             await respond({
               body: data,
@@ -309,7 +309,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
             //fixme: data is not denormalized
             const data = (await endpoints.create?.related?.[key](
               body as any,
-              params,
+              params as any,
             )) as any;
 
             if (!data) {
@@ -351,7 +351,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
             //fixme: data is not denormalized
             const data = (await endpoints.patch?.related?.[key](
               body as any,
-              params,
+              params as any,
             )) as any;
 
             if (!data) {
@@ -393,7 +393,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
           try {
             const data = await endpoints.delete?.related?.[key](
               body as any,
-              params,
+              params as any,
             );
 
             await respond({

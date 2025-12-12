@@ -7,6 +7,7 @@ import {
   MutationHandler,
   Response,
 } from './ServerBuilder.js';
+import * as qs from 'qs';
 
 export class HonoServerBuilder extends ServerBuilder {
   #hono = new Hono();
@@ -113,14 +114,7 @@ export class HonoServerBuilder extends ServerBuilder {
   #extractParams(c: any): any {
     return {
       ...c.req.param(),
-      include: c.req.query('include'),
-      fields: Object.fromEntries(
-        Object.entries(c.req.query())
-          .filter(([key]) => key.match(/fields\[(.*?)\]/g))
-          .map(([key, value]) => [key.match(/fields\[(.*?)\]/)![1], value]),
-      ),
-      sort: c.req.query('sort'),
-      filter: c.req.query('filter'),
+      ...qs.parse(c.req.query()),
       user: c.req.user,
     };
   }

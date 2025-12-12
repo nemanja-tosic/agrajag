@@ -43,6 +43,7 @@ export type DefinitionsToEndpoints<
   >;
 } & {
   [K in keyof TDefinitions as `delete${Capitalize<CamelCase<string & K>>}ById`]: DeleteEndpoint<
+    TDefinitions[K],
     TagTypes,
     ReducerPath
   >;
@@ -53,7 +54,7 @@ export type QueryManyEndpoint<
   TagTypes extends string,
   ReducerPath extends string,
 > = QueryDefinition<
-  QueryParams,
+  QueryParams<TDefinition>,
   FetchBaseQuery,
   TagTypes,
   Denormalized<TDefinition>[],
@@ -65,7 +66,7 @@ export type QueryEndpoint<
   TagTypes extends string,
   ReducerPath extends string,
 > = QueryDefinition<
-  QueryParams & { id: string },
+  QueryParams<TDefinition> & { id: string },
   FetchBaseQuery,
   TagTypes,
   Denormalized<TDefinition>,
@@ -78,7 +79,7 @@ export type PostEndpoint<
   ReducerPath extends string,
   TBody = MutateEndpointBody<TDefinition>,
 > = MutationDefinition<
-  QueryParams & { id?: string; body: TBody },
+  QueryParams<TDefinition> & { id?: string; body: TBody },
   FetchBaseQuery,
   TagTypes,
   Denormalized<TDefinition>,
@@ -91,7 +92,7 @@ export type PatchEndpoint<
   ReducerPath extends string,
   TBody = MutateEndpointBody<TDefinition>,
 > = MutationDefinition<
-  QueryParams & { id: string; body: TBody },
+  QueryParams<TDefinition> & { id: string; body: TBody },
   FetchBaseQuery,
   TagTypes,
   Denormalized<TDefinition>,
@@ -99,10 +100,11 @@ export type PatchEndpoint<
 >;
 
 export type DeleteEndpoint<
+  TDefinition extends ResourceDefinition,
   TagTypes extends string,
   ReducerPath extends string,
 > = MutationDefinition<
-  QueryParams & { id: string },
+  QueryParams<TDefinition> & { id: string },
   FetchBaseQuery,
   TagTypes,
   {},

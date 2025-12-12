@@ -9,7 +9,7 @@ export class JsonApiSerializer implements Serializer {
   serialize<TDefinition extends ResourceDefinition>(
     definition: TDefinition,
     data: Denormalized<TDefinition> | Denormalized<TDefinition>[],
-    params: QueryParams,
+    params: QueryParams<TDefinition>,
   ): Resource<TDefinition> {
     const serialized = this.#createSerializer(definition, params).serialize(
       data,
@@ -28,37 +28,40 @@ export class JsonApiSerializer implements Serializer {
     return serialized;
   }
 
-  #createSerializer(
-    definition: ResourceDefinition,
-    params: QueryParams,
+  #createSerializer<TDefinition extends ResourceDefinition>(
+    definition: TDefinition,
+    params: QueryParams<TDefinition>,
   ): jsonapiSerializer.Serializer {
     const type = definition.type;
 
-    const options = this.#createOptions(definition, params, []);
+    const options = this.#createOptions(definition, params, [type]);
 
     return new jsonapiSerializer.Serializer(type, options);
   }
 
-  #createOptions(
-    definition: ResourceDefinition,
-    params: QueryParams,
+  #createOptions<TDefinition extends ResourceDefinition>(
+    definition: TDefinition,
+    params: QueryParams<TDefinition>,
     path: string[],
     options?: { relationshipKey?: string },
   ): SerializerOptions {
     const type = definition.type;
     const relationships = definition.relationships;
-    const fields = params?.fields?.[type]?.split(',');
 
     const isInIncludes = (key: string) =>
-      params?.include?.split(',').includes([...path, key].join('.')) ?? false;
+      params?.include?.split(',').includes([...path.slice(1), key].join('.')) ??
+      false;
+
+    const isInFields = (key: string) =>
+      params?.fields?.[
+        path.join('.') as keyof NonNullable<typeof params.fields>
+      ]?.includes(key) ?? true;
 
     return {
       ref: 'id',
       included: options?.relationshipKey !== undefined,
       attributes: [
-        ...(definition.attributes as string[]).filter(
-          key => fields?.includes(key) ?? true,
-        ),
+        ...(definition.attributes as string[]).filter(isInFields),
         ...Object.keys(relationships),
       ],
       keyForAttribute: attribute => attribute,
@@ -70,9 +73,12 @@ export class JsonApiSerializer implements Serializer {
           .map(([key, relationship]) => [
             key,
             isInIncludes(key)
-              ? this.#createOptions(relationship, params, [...path, key], {
-                  relationshipKey: key,
-                })
+              ? this.#createOptions(
+                  relationship,
+                  params as any,
+                  [...path, key],
+                  { relationshipKey: key },
+                )
               : { ref: 'id' },
           ]),
       ),
