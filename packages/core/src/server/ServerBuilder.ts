@@ -44,7 +44,7 @@ export abstract class ServerBuilder {
   ): void;
 }
 
-export type StatusCode = 200 | 201 | 204 | 400 | 401 | 403 | 404 | 500;
+export type StatusCode = 200 | 201 | 202 | 204 | 400 | 401 | 403 | 404 | 500;
 
 // FIXME: the response contains a top level object (data, errors or meta).
 //  Things work right now, but the types are incorrect.

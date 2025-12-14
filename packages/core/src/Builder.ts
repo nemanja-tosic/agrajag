@@ -162,6 +162,9 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
               this.#schemaFactory.createUpdateSchema(definition).parse(body),
               params,
             );
+            if (!data) {
+              return await respond({ status: 202 });
+            }
 
             await respond({
               body: data,
@@ -203,7 +206,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
               params,
             );
             if (!data) {
-              return await respond({ status: 404 });
+              return await respond({ status: 202 });
             }
 
             await respond({
@@ -239,7 +242,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
           try {
             const data = await endpoint(params);
             if (!data) {
-              return await respond({ status: 404 });
+              return await respond({ status: 202 });
             }
 
             await respond({
@@ -313,7 +316,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
             )) as any;
 
             if (!data) {
-              return await respond({ status: 404 });
+              return await respond({ status: 202 });
             }
 
             await respond({
@@ -355,7 +358,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
             )) as any;
 
             if (!data) {
-              return await respond({ status: 404 });
+              return await respond({ status: 202 });
             }
 
             await respond({
