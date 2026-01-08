@@ -61,7 +61,7 @@ describe('JsonApiSerializer', () => {
     const userResource = createUser();
 
     const serialized = serializer.serialize(userSchema, userResource, {
-      include: 'articles',
+      include: ['articles'],
     });
 
     expect(serialized).to.deep.equal({
@@ -90,11 +90,11 @@ describe('JsonApiSerializer', () => {
     });
   });
 
-  it.only('should return sparse fieldsets', () => {
+  it('should return sparse fieldsets', () => {
     const userResource = createUser();
 
     const serialized = serializer.serialize(userSchema, userResource, {
-      include: 'articles',
+      include: ['articles'],
       fields: {
         user: ['name', 'age'],
         'user.articles': ['text'],

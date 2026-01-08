@@ -4,7 +4,7 @@ export type QueryParams<
   TDefinition extends ResourceDefinition = ResourceDefinition,
 > = {
   // TODO: should be based on TDefinition
-  include?: string;
+  include?: string[];
   fields?: Prettify<Partial<Fields<TDefinition, TDefinition['type']>>>;
   sort?: TDefinition['attributes'];
   filter?: string;
@@ -38,12 +38,21 @@ type RelationshipKeys<T extends ResourceDefinition> = Extract<
   string
 >;
 
-type UnwrapRelationship<T extends ResourceDefinition | ResourceDefinition[]> =
-  T extends ResourceDefinition
-    ? T
-    : T extends ResourceDefinition[]
-      ? T[number]
-      : never;
+export type UnwrapRelationship<
+  T extends ResourceDefinition | ResourceDefinition[],
+> = T extends ResourceDefinition
+  ? T
+  : T extends ResourceDefinition[]
+    ? T[number]
+    : never;
+
+export function unwrapRelationship<
+  T extends ResourceDefinition | ResourceDefinition[],
+>(relationship: T): UnwrapRelationship<T> {
+  return Array.isArray(relationship)
+    ? (relationship[0] as UnwrapRelationship<T>)
+    : (relationship as UnwrapRelationship<T>);
+}
 
 type Prev<N extends number> = N extends 5
   ? 4

@@ -27,13 +27,13 @@ export const reduxApi = new ReduxBuilder().addDefinitions(definitions).build(
 );
 
 reduxApi.endpoints.getUsers;
-const { data: users } = reduxApi.useGetUsersQuery({ include: '' });
+const { data: users } = reduxApi.useGetUsersQuery({ include: [''] });
 expectAssignable<Denormalized<typeof user>[] | undefined>(users);
 
 reduxApi.endpoints.getUsersById;
 const { data: userById } = reduxApi.useGetUsersByIdQuery({
   id: '',
-  include: '',
+  include: [''],
 });
 expectAssignable<Denormalized<typeof user> | undefined>(userById);
 

@@ -49,8 +49,7 @@ export class JsonApiSerializer implements Serializer {
     const relationships = definition.relationships;
 
     const isInIncludes = (key: string) =>
-      params?.include?.split(',').includes([...path.slice(1), key].join('.')) ??
-      false;
+      params?.include?.includes([...path.slice(1), key].join('.')) ?? false;
 
     const isInFields = (key: string) =>
       params?.fields?.[

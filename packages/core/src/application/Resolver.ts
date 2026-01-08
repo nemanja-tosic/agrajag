@@ -16,13 +16,14 @@ export interface Resolver<
     id: string,
     params: QueryParams<TDefinition>,
   ): Promise<Stored<TDefinition> | undefined>;
-  byId(
+
+  byIds(
     ids: string[],
     params: QueryParams<TDefinition>,
   ): Promise<Stored<TDefinition>[]>;
 
   byType(
-    type: string,
+    type: TDefinition['type'],
     params: QueryParams<TDefinition>,
   ): Promise<Stored<TDefinition>[]> | undefined;
 

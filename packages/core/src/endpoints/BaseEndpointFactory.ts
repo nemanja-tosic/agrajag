@@ -38,12 +38,12 @@ export abstract class BaseEndpointFactory<
         ? await Promise.all(
             entity.map(entity =>
               this.#denormalize(definition, entity, key =>
-                external.byId(key, {}),
+                external.byIds(key, {}),
               ),
             ),
           )
         : await this.#denormalize(definition, entity, key =>
-            external.byId(key, {}),
+            external.byIds(key, {}),
           ),
       params,
     );

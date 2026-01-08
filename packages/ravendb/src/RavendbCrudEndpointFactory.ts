@@ -18,21 +18,29 @@ export class RavendbCrudEndpointFactory<
     const session = this.documentStore.openSession();
 
     return {
-      byId: async idOrIds => {
+      byId: async id => {
         const query = session.advanced
-          .rawQuery<Normalized<TDefinition> | Normalized<TDefinition>[]>(
+          .rawQuery<Normalized<TDefinition>>(
             `
               from @all_docs where ID() in ($id)
             `,
           )
           .waitForNonStaleResults()
-          .addParameter('id', idOrIds);
+          .addParameter('id', id);
 
-        if (Array.isArray(idOrIds)) {
-          return query.all() as any;
-        } else {
-          return query.singleOrNull().then(r => r ?? undefined);
-        }
+        return query.singleOrNull().then(r => r ?? undefined);
+      },
+      byIds: async ids => {
+        const query = session.advanced
+          .rawQuery<Normalized<TDefinition>>(
+            `
+              from @all_docs where ID() in ($id)
+            `,
+          )
+          .waitForNonStaleResults()
+          .addParameter('id', ids);
+
+        return query.all();
       },
       byType: (type, { sort } = {}) => {
         const query = session.query<Normalized<TDefinition>>({
