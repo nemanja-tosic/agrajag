@@ -7,21 +7,23 @@ import {
   MultipleResourceDocument,
 } from '../resources/Resource.js';
 import { Denormalized } from '../endpoints/Endpoints.js';
+import { QueryParams } from '../endpoints/QueryParams.js';
 
-export class JsonApiDeserializer<TDefinition extends ResourceDefinition>
-  implements Deserializer
-{
+export class JsonApiDeserializer implements Deserializer {
   deserialize<TDefinition extends ResourceDefinition>(
     schema: TDefinition,
     document: SingleResourceDocument<TDefinition>,
+    params: QueryParams<TDefinition>,
   ): Promise<Denormalized<TDefinition>>;
   deserialize<TDefinition extends ResourceDefinition>(
     schema: TDefinition,
     document: MultipleResourceDocument<TDefinition>,
+    params: QueryParams<TDefinition>,
   ): Promise<Denormalized<TDefinition>[]>;
   async deserialize<TDefinition extends ResourceDefinition>(
     schema: TDefinition,
     { data, included = [] }: Document<TDefinition>,
+    params: QueryParams<TDefinition>,
   ): Promise<Denormalized<TDefinition> | Denormalized<TDefinition>[]> {
     const cache = new Map<string, any>();
 
@@ -33,22 +35,25 @@ export class JsonApiDeserializer<TDefinition extends ResourceDefinition>
 
     return Array.isArray(data)
       ? data.map(resource =>
-          this.#deserializeResource(resource, includedMap, cache),
+          this.#deserializeResource(resource, includedMap, cache, params),
         )
-      : this.#deserializeResource(data, includedMap, cache);
+      : this.#deserializeResource(data, includedMap, cache, params);
   }
 
   #deserializeResource<TDefinition extends ResourceDefinition>(
     resource: Resource<TDefinition>,
     includes: Map<string, Resource>,
     cache: Map<string, Denormalized<ResourceDefinition>>,
+    params: QueryParams<TDefinition>,
+    path: string[] = [],
   ): Denormalized<TDefinition> {
     const key = `${resource.type}:${resource.id}`;
 
-    const cached = cache.get(key);
-    if (cached) {
-      return cached as Denormalized<TDefinition>;
-    }
+    // FIXME: preserve identity map. Perhaps use a proxy?
+    // const cached = cache.get(key);
+    // if (cached) {
+    //   return cached as Denormalized<TDefinition>;
+    // }
 
     const obj: any = { id: resource.id, ...resource.attributes };
 
@@ -61,22 +66,38 @@ export class JsonApiDeserializer<TDefinition extends ResourceDefinition>
           continue;
         }
 
+        const relPath = path.concat(relName);
+
         if (Array.isArray(rel.data)) {
           obj[relName] = rel.data.map(ref => {
             const refKey = `${ref.type}:${ref.id}`;
             const includedResource = includes.get(refKey);
 
-            return includedResource
-              ? this.#deserializeResource(includedResource, includes, cache)
+            return includedResource &&
+              params.include?.includes(relPath.join('.'))
+              ? this.#deserializeResource(
+                  includedResource,
+                  includes,
+                  cache,
+                  params,
+                  relPath,
+                )
               : { id: ref.id };
           });
         } else {
           const refKey = `${rel.data.type}:${rel.data.id}`;
           const includedResource = includes.get(refKey);
 
-          obj[relName] = includedResource
-            ? this.#deserializeResource(includedResource, includes, cache)
-            : { id: rel.data.id };
+          obj[relName] =
+            includedResource && params.include?.includes(relPath.join('.'))
+              ? this.#deserializeResource(
+                  includedResource,
+                  includes,
+                  cache,
+                  params,
+                  relPath,
+                )
+              : { id: rel.data.id };
         }
       }
     }

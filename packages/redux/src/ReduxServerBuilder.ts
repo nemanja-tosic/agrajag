@@ -2,17 +2,19 @@ import {
   DefinitionCollection,
   Denormalized,
   Deserializer,
+  Document,
   EndpointSchema,
   FetchDeleteHandler,
   JsonApiDeserializer,
+  MultipleResourceDocument,
   MutationHandler,
   QueryParams,
   Resource,
   ResourceDefinition,
   ServerBuilder,
-  Document,
   SingleResourceDocument,
-  MultipleResourceDocument,
+  unwrapRelationship,
+  walkResourceTree,
 } from 'agrajag';
 import { BaseApi } from './ReduxBuilder.js';
 import { camelCase } from 'change-case';
@@ -53,7 +55,7 @@ export class ReduxServerBuilder<
       endpoints: builder => ({
         [this.#mapParts('get', path)]: builder.query<
           Denormalized<TDefinition>[] | Denormalized<TDefinition> | undefined,
-          QueryParams & { id?: string },
+          QueryParams<TDefinition> & { id?: string },
           Document<TDefinition>
         >({
           query: ({ id, ...params }) => ({
@@ -62,8 +64,8 @@ export class ReduxServerBuilder<
           }),
           providesTags: response =>
             this.#providesTags(definition, path, response),
-          transformResponse: response =>
-            this.#transformResponse(definition, response),
+          transformResponse: (response, _, arg) =>
+            this.#transformResponse(definition, response, arg),
         }),
       }),
     });
@@ -109,7 +111,10 @@ export class ReduxServerBuilder<
       endpoints: builder => ({
         [this.#mapParts('patch', path)]: builder.mutation<
           Denormalized<TDefinition> | undefined,
-          QueryParams & { id: string; body: { data: Resource<TDefinition> } },
+          QueryParams<TDefinition> & {
+            id: string;
+            body: { data: Resource<TDefinition> };
+          },
           SingleResourceDocument<TDefinition>
         >({
           query: ({ id, body, ...params }) => ({
@@ -120,8 +125,8 @@ export class ReduxServerBuilder<
           }),
           invalidatesTags: response =>
             this.#invalidateTags(definition, path, response),
-          transformResponse: response =>
-            this.#transformResponse(definition, response),
+          transformResponse: (response, _, arg) =>
+            this.#transformResponse(definition, response, arg),
         }),
       }),
     });
@@ -137,7 +142,7 @@ export class ReduxServerBuilder<
       endpoints: builder => ({
         [this.#mapParts('post', path)]: builder.mutation<
           Denormalized<TDefinition> | undefined,
-          QueryParams & { body: { data: Resource<TDefinition> } },
+          QueryParams<TDefinition> & { body: { data: Resource<TDefinition> } },
           SingleResourceDocument<TDefinition>
         >({
           query: ({ body, ...params }) => ({
@@ -148,8 +153,8 @@ export class ReduxServerBuilder<
           }),
           invalidatesTags: response =>
             this.#invalidateTags(definition, path, response),
-          transformResponse: response =>
-            this.#transformResponse(definition, response),
+          transformResponse: (response, _, arg) =>
+            this.#transformResponse(definition, response, arg),
         }),
       }),
     });
@@ -172,20 +177,24 @@ export class ReduxServerBuilder<
   async #transformResponse<TDefinition extends ResourceDefinition>(
     definition: TDefinition,
     response: SingleResourceDocument<TDefinition> | undefined,
+    params: QueryParams<TDefinition>,
   ): Promise<Denormalized<TDefinition> | undefined>;
   async #transformResponse<TDefinition extends ResourceDefinition>(
     definition: TDefinition,
     response: MultipleResourceDocument<TDefinition> | undefined,
+    params: QueryParams<TDefinition>,
   ): Promise<Denormalized<TDefinition>[] | undefined>;
   async #transformResponse<TDefinition extends ResourceDefinition>(
     definition: TDefinition,
     response: Document<TDefinition> | undefined,
+    params: QueryParams<TDefinition>,
   ): Promise<
     Denormalized<TDefinition> | Denormalized<TDefinition>[] | undefined
   >;
   async #transformResponse<TDefinition extends ResourceDefinition>(
     definition: TDefinition,
     response: Document<TDefinition> | undefined,
+    params: QueryParams<TDefinition>,
   ): Promise<
     Denormalized<TDefinition> | Denormalized<TDefinition>[] | undefined
   > {
@@ -194,7 +203,7 @@ export class ReduxServerBuilder<
     }
 
     try {
-      return this.#deserializer.deserialize(definition, response);
+      return this.#deserializer.deserialize(definition, response, params);
     } catch (error) {
       console.error(error);
     }
@@ -221,6 +230,8 @@ export class ReduxServerBuilder<
     ] as TagTypes[];
   }
 
+  // TODO: we should invalidate tags based on id
+  // TODO: we should invalidate tags based on include relationships
   #providesTags(
     definition: ResourceDefinition,
     path: string,
@@ -229,7 +240,10 @@ export class ReduxServerBuilder<
       | Denormalized<ResourceDefinition>[]
       | undefined,
   ): TagDescription<TagTypes>[] {
-    return [definition.type] as TagTypes[];
+    return [...walkResourceTree(definition)].reduce(
+      (acc, [, def]) => [...acc, unwrapRelationship(def).type] as TagTypes[],
+      [] as TagTypes[],
+    );
   }
 }
 

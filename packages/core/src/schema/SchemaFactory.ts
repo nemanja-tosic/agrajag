@@ -5,6 +5,7 @@ import {
   UpdateSchema,
 } from '../resources/ResourceSchema.js';
 import {
+  AllCapabilitiesType,
   ResourceCapabilities,
   ResourceDefinition,
 } from '../resources/ResourceDefinition.js';
@@ -15,9 +16,12 @@ import {
 } from '../resources/ResourceLinkageSchema.js';
 import { DeferredRelationships, UndeferredRelationships } from '../Builder.js';
 
-export interface CreateSchemaOptions<TRelationships> {
+export interface CreateSchemaOptions<
+  TRelationships,
+  TCapabilities extends ResourceCapabilities = AllCapabilitiesType,
+> {
   relationships?: TRelationships;
-  capabilities?: ResourceCapabilities;
+  capabilities?: TCapabilities;
 }
 
 export interface SchemaFactory {

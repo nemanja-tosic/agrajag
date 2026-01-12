@@ -11,6 +11,7 @@ export * from './resources/Resource.js';
 export * from './resources/ResourceSchema.js';
 export * from './resources/ResourceDefinition.js';
 export * from './resources/ResourceLinkageSchema.js';
+export * from './resources/walkResourceTree.js';
 export * from './endpoints/BaseEndpointFactory.js';
 export * from './endpoints/Endpoints.js';
 export * from './endpoints/EndpointFactory.js';

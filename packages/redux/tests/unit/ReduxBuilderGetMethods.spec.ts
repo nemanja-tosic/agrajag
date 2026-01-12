@@ -20,12 +20,12 @@ describe('ReduxBuilder GET methods', () => {
         createResponse(
           user,
           [{ id: 'users/1', fullName: 'Test', comments: [] }],
-          { include: 'comments' },
+          { include: ['comments'] },
         ),
       );
 
     const result = await store.dispatch(
-      api.endpoints.getUsers.initiate({ include: 'comments' }),
+      api.endpoints.getUsers.initiate({ include: ['comments'] }),
     );
 
     expect(result.data).to.eql([
@@ -51,14 +51,14 @@ describe('ReduxBuilder GET methods', () => {
         createResponse(
           user,
           { id: 'users/1', fullName: 'Test', comments: [] },
-          { include: 'comments' },
+          { include: ['comments'] },
         ),
       );
 
     const result = await store.dispatch(
       api.endpoints.getUsersById.initiate({
         id: 'users/1',
-        include: 'comments',
+        include: ['comments'],
       }),
     );
 

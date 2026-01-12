@@ -6,6 +6,8 @@ import {
 } from '../resources/ResourceSchema.js';
 import {
   AllCapabilities,
+  AllCapabilitiesType,
+  ResourceCapabilities,
   ResourceDefinition,
 } from '../resources/ResourceDefinition.js';
 import { z, ZodType, ZodTypeAny } from 'zod';
@@ -27,14 +29,16 @@ export class ZodSchemaFactory implements SchemaFactory {
     TType extends string = string,
     TAttributes extends AttributesSchema = AttributesSchema,
     TRelationships extends DeferredRelationships = DeferredRelationships,
+    TCapabilities extends ResourceCapabilities = AllCapabilitiesType,
   >(
     type: TType,
     attributesSchema: TAttributes,
-    options?: CreateSchemaOptions<TRelationships>,
+    options?: CreateSchemaOptions<TRelationships, TCapabilities>,
   ): ResourceDefinition<
     TType,
     TAttributes,
-    UndeferredRelationships<TRelationships>
+    UndeferredRelationships<TRelationships>,
+    TCapabilities
   > {
     const relationships = options?.relationships as
       | Record<string, () => ResourceDefinition | [ResourceDefinition]>
@@ -48,7 +52,7 @@ export class ZodSchemaFactory implements SchemaFactory {
         attributes: attributesSchema,
         relationships: this.#createRelationshipsSchema(relationships ?? {}),
       }) as any,
-      capabilities: options?.capabilities ?? AllCapabilities,
+      capabilities: options?.capabilities ?? (AllCapabilities as TCapabilities),
       attributes: Object.keys(attributesSchema.shape),
       get relationships() {
         if (!relationships) {

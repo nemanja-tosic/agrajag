@@ -32,7 +32,7 @@ expectAssignable<{
   id: string;
   name: string;
   age: string;
-  posts: string[];
+  posts: { id: string }[];
 }>(normalizedUser);
 
 declare const denormalizedPost: DenormalizedPost;
@@ -46,7 +46,7 @@ declare const normalizedPost: NormalizedPost;
 expectAssignable<{
   id: string;
   text: string;
-  author: string;
+  author: { id: string };
 }>(normalizedPost);
 
 declare const storedUser: Stored<typeof user>;

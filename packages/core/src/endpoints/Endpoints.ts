@@ -60,13 +60,17 @@ export type Stored<TSchema extends ResourceDefinition> = Flavor<
   z.infer<IdPlusAttributes<TSchema>> & {
     [K in keyof TSchema['relationships']]: TSchema['relationships'][K] extends ResourceDefinition
       ?
-          | z.infer<TSchema['relationships'][K]['schema']['shape']['id']>
+          | {
+              id: z.infer<TSchema['relationships'][K]['schema']['shape']['id']>;
+            }
           | Stored<TSchema['relationships'][K]>
       : TSchema['relationships'][K] extends ResourceDefinition[]
         ?
-            | z.infer<
-                TSchema['relationships'][K][number]['schema']['shape']['id']
-              >[]
+            | {
+                id: z.infer<
+                  TSchema['relationships'][K][number]['schema']['shape']['id']
+                >[];
+              }
             | Stored<TSchema['relationships'][K][number]>[]
         : {};
   },
@@ -78,11 +82,13 @@ type Flavor<T, F> = T & { _flavor?: F };
 export type Normalized<TSchema extends ResourceDefinition> = Flavor<
   z.infer<IdPlusAttributes<TSchema>> & {
     [K in keyof TSchema['relationships']]: TSchema['relationships'][K] extends ResourceDefinition
-      ? z.infer<TSchema['relationships'][K]['schema']['shape']['id']>
+      ? { id: z.infer<TSchema['relationships'][K]['schema']['shape']['id']> }
       : TSchema['relationships'][K] extends ResourceDefinition[]
-        ? z.infer<
-            TSchema['relationships'][K][number]['schema']['shape']['id']
-          >[]
+        ? {
+            id: z.infer<
+              TSchema['relationships'][K][number]['schema']['shape']['id']
+            >;
+          }[]
         : {};
   },
   'Normalized'

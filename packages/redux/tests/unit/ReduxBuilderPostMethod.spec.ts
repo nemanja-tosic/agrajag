@@ -20,13 +20,13 @@ describe('ReduxBuilder POST method', () => {
         createResponse(
           user,
           [{ id: 'users/1', fullName: 'Test', comments: [] }],
-          { include: 'comments' },
+          { include: ['comments'] },
         ),
       );
 
     const result = await store.dispatch(
       api.endpoints.postUsers.initiate({
-        include: 'comments',
+        include: ['comments'],
         body: {
           data: {
             type: 'users',

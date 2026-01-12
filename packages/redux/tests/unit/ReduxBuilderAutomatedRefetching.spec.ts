@@ -63,7 +63,7 @@ describe('ReduxBuilder automated refetching', () => {
         createResponse(
           user,
           [{ id: 'users/1', fullName: 'Test', comments: [] }],
-          { include: 'comments' },
+          { include: ['comments'] },
         ),
       )
       .onSecondCall()
@@ -77,7 +77,7 @@ describe('ReduxBuilder automated refetching', () => {
               comments: [{ id: 'comments/1', text: 'test' }],
             },
           ],
-          { include: 'comments' },
+          { include: ['comments'] },
         ),
       );
 
@@ -94,7 +94,7 @@ describe('ReduxBuilder automated refetching', () => {
       );
 
     await store.dispatch(
-      api.endpoints.getUsers.initiate({ include: 'comments' }),
+      api.endpoints.getUsers.initiate({ include: ['comments'] }),
     );
 
     await store.dispatch(
@@ -109,7 +109,7 @@ describe('ReduxBuilder automated refetching', () => {
     );
 
     const secondGet = await store.dispatch(
-      api.endpoints.getUsers.initiate({ include: 'comments' }),
+      api.endpoints.getUsers.initiate({ include: ['comments'] }),
     );
 
     expect(secondGet.data).to.deep.equal(
@@ -192,7 +192,7 @@ describe('ReduxBuilder automated refetching', () => {
               comments: [{ id: 'comments/1', text: 'tes' }],
             },
           ],
-          { include: 'comments' },
+          { include: ['comments'] },
         ),
       )
       .onSecondCall()
@@ -206,7 +206,7 @@ describe('ReduxBuilder automated refetching', () => {
               comments: [{ id: 'comments/1', text: 'test' }],
             },
           ],
-          { include: 'comments' },
+          { include: ['comments'] },
         ),
       );
 
@@ -230,7 +230,7 @@ describe('ReduxBuilder automated refetching', () => {
       );
 
     await store.dispatch(
-      api.endpoints.getUsers.initiate({ include: 'comments' }),
+      api.endpoints.getUsers.initiate({ include: ['comments'] }),
     );
 
     await store.dispatch(
@@ -247,7 +247,67 @@ describe('ReduxBuilder automated refetching', () => {
     );
 
     const secondGet = await store.dispatch(
-      api.endpoints.getUsers.initiate({ include: 'comments' }),
+      api.endpoints.getUsers.initiate({ include: ['comments'] }),
+    );
+
+    expect(secondGet.data).to.deep.equal(
+      createDenormalized(user, [
+        {
+          id: 'users/1',
+          fullName: 'Test',
+          comments: [{ id: 'comments/1', text: 'test' }],
+        },
+      ]),
+    );
+  });
+
+  it('should invalidate dependencies', async () => {
+    const { api, store, stubFetchFn } = getApi();
+
+    stubFetchFn
+      .withArgs(
+        match({
+          url: 'http://localhost:3000/users?include=comments',
+          method: 'GET',
+        }),
+      )
+      .onFirstCall()
+      .resolves(
+        createResponse(
+          user,
+          [
+            {
+              id: 'users/1',
+              fullName: 'Test',
+              comments: [{ id: 'comments/1', text: 'tes' }],
+            },
+          ],
+          { include: ['comments'] },
+        ),
+      )
+      .onSecondCall()
+      .resolves(
+        createResponse(
+          user,
+          [
+            {
+              id: 'users/1',
+              fullName: 'Test',
+              comments: [{ id: 'comments/1', text: 'test' }],
+            },
+          ],
+          { include: ['comments'] },
+        ),
+      );
+
+    await store.dispatch(
+      api.endpoints.getUsers.initiate({ include: ['comments'] }),
+    );
+
+    store.dispatch(api.util.invalidateTags([{ type: 'comments' } as any]));
+
+    const secondGet = await store.dispatch(
+      api.endpoints.getUsers.initiate({ include: ['comments'] }),
     );
 
     expect(secondGet.data).to.deep.equal(

@@ -12,7 +12,6 @@ export type ResourceRelationships = Record<
 >;
 
 export enum ResourceCapabilities {
-  None = 0,
   FetchSelf = 1 << 0,
   FetchCollection = 1 << 1,
   Create = 1 << 2,
@@ -20,22 +19,35 @@ export enum ResourceCapabilities {
   Delete = 1 << 4,
 }
 
-export const AllCapabilities: ResourceCapabilities =
+export type AllCapabilitiesType =
+  | ResourceCapabilities.FetchSelf
+  | ResourceCapabilities.FetchCollection
+  | ResourceCapabilities.Create
+  | ResourceCapabilities.Update
+  | ResourceCapabilities.Delete;
+
+export const AllCapabilities: AllCapabilitiesType =
   ResourceCapabilities.FetchSelf |
   ResourceCapabilities.FetchCollection |
   ResourceCapabilities.Create |
   ResourceCapabilities.Update |
   ResourceCapabilities.Delete;
 
+export type HasCapability<
+  TCaps extends ResourceCapabilities,
+  C extends ResourceCapabilities
+> = C extends TCaps ? true : TCaps extends C ? true : false;
+
 export interface ResourceDefinition<
   TType extends string = string,
   TAttributes extends AttributesSchema = AttributesSchema,
   TRelationships extends ResourceRelationships = ResourceRelationships,
+  TCapabilities extends ResourceCapabilities = AllCapabilitiesType,
 > {
   type: TType;
   attributes: (string & keyof TAttributes['shape'])[];
   relationships: TRelationships;
-  capabilities: ResourceCapabilities;
+  capabilities: TCapabilities;
   schema: ResourceSchema<
     TType,
     TAttributes,

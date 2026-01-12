@@ -20,14 +20,14 @@ describe('ReduxBuilder PATCH method', () => {
         createResponse(
           user,
           [{ id: 'users/1', fullName: 'Test', comments: [] }],
-          { include: 'comments' },
+          { include: ['comments'] },
         ),
       );
 
     const result = await store.dispatch(
       api.endpoints.patchUsersById.initiate({
         id: 'users/1',
-        include: 'comments',
+        include: ['comments'],
         body: {
           data: {
             type: 'users',

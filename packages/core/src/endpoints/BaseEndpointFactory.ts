@@ -174,8 +174,8 @@ export abstract class BaseEndpointFactory<
                 Object.entries(body.data.relationships ?? {}).map(
                   ([key, value]) =>
                     Array.isArray(value!.data)
-                      ? [key, value!.data.map(d => d.id)]
-                      : [key, value!.data?.id],
+                      ? [key, value!.data.map(d => ({ id: d.id }))]
+                      : [key, { id: value!.data?.id }],
                 ),
               ),
             };
@@ -277,8 +277,8 @@ export abstract class BaseEndpointFactory<
                 Object.entries(body.data.relationships ?? {}).map(
                   ([key, value]) =>
                     Array.isArray(value!.data)
-                      ? [key, value!.data.map(d => d.id)]
-                      : [key, value!.data?.id],
+                      ? [key, value!.data.map(d => ({ id: d.id }))]
+                      : [key, { id: value!.data?.id }],
                 ),
               ),
             };

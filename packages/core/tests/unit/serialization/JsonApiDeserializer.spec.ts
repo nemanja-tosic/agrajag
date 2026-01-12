@@ -28,7 +28,11 @@ describe('JsonApiDeserializer', () => {
       },
     };
 
-    const result = await deserializer.deserialize(userSchema, jsonApiData as any);
+    const result = await deserializer.deserialize(
+      userSchema,
+      jsonApiData as any,
+      {},
+    );
 
     expect(result).to.deep.equal({
       id: 'user1',
@@ -59,7 +63,11 @@ describe('JsonApiDeserializer', () => {
       ],
     };
 
-    const result = await deserializer.deserialize(userSchema, jsonApiData as any);
+    const result = await deserializer.deserialize(
+      userSchema,
+      jsonApiData as any,
+      {},
+    );
 
     expect(result).to.deep.equal([
       {
@@ -102,7 +110,11 @@ describe('JsonApiDeserializer', () => {
       ],
     };
 
-    const result = await deserializer.deserialize(userSchema, jsonApiData as any);
+    const result = await deserializer.deserialize(
+      userSchema,
+      jsonApiData as any,
+      { include: ['articles'] },
+    );
 
     expect(result).to.deep.equal({
       id: 'user1',
@@ -150,7 +162,11 @@ describe('JsonApiDeserializer', () => {
       ],
     };
 
-    const result = await deserializer.deserialize(userSchema, jsonApiData as any);
+    const result = await deserializer.deserialize(
+      userSchema,
+      jsonApiData as any,
+      { include: ['articles', 'articles.author'] },
+    );
 
     // Verify circular reference is maintained
     expect(result.id).to.equal('user1');
@@ -160,7 +176,10 @@ describe('JsonApiDeserializer', () => {
     expect(result.articles?.[0].text).to.equal('Hello World');
 
     // Check that the circular reference points back to the same object
-    expect(result.articles?.[0].author).to.equal(result);
+    // expect(result.articles?.[0].author).to.equal(result);
+
+    // Stop here as articles.author.articles is not in the include list
+    expect(result.articles?.[0].author?.articles).to.eql([{ id: 'article1' }]);
   });
 
   it('should handle multiple circular relationships', async () => {
@@ -211,11 +230,25 @@ describe('JsonApiDeserializer', () => {
       ],
     };
 
-    const result = await deserializer.deserialize(userSchema, jsonApiData as any);
+    const result = await deserializer.deserialize(
+      userSchema,
+      jsonApiData as any,
+      { include: ['articles', 'articles.author'] },
+    );
 
     expect(result.articles).to.have.lengthOf(2);
-    expect(result.articles?.[0].author).to.equal(result);
-    expect(result.articles?.[1].author).to.equal(result);
+    expect(result.articles?.[0].author).to.eql({
+      id: 'user1',
+      name: 'John Doe',
+      age: 30,
+      articles: [{ id: 'article1' }, { id: 'article2' }],
+    });
+    expect(result.articles?.[1].author).to.eql({
+      id: 'user1',
+      name: 'John Doe',
+      age: 30,
+      articles: [{ id: 'article1' }, { id: 'article2' }],
+    });
   });
 
   it('should handle missing included resources as references', async () => {
@@ -236,7 +269,11 @@ describe('JsonApiDeserializer', () => {
       // No included section
     };
 
-    const result = await deserializer.deserialize(userSchema, jsonApiData as any);
+    const result = await deserializer.deserialize(
+      userSchema,
+      jsonApiData as any,
+      {},
+    );
 
     expect(result).to.deep.equal({
       id: 'user1',
@@ -263,7 +300,11 @@ describe('JsonApiDeserializer', () => {
       },
     };
 
-    const result = await deserializer.deserialize(articleSchema, jsonApiData as any);
+    const result = await deserializer.deserialize(
+      articleSchema,
+      jsonApiData as any,
+      {},
+    );
 
     expect(result).to.deep.equal({
       id: 'article1',
