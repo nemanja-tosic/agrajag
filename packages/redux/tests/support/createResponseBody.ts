@@ -10,5 +10,11 @@ export function createResponseBody<TDefinition extends ResourceDefinition>(
   data: Denormalized<TDefinition> | Denormalized<TDefinition>[],
   params: QueryParams = {},
 ) {
-  return new JsonApiSerializer().serialize(definition, data, params);
+  const serializer = new JsonApiSerializer();
+
+  if (Array.isArray(data)) {
+    return serializer.serialize(definition, data, params);
+  }
+
+  return serializer.serialize(definition, data, params);
 }
