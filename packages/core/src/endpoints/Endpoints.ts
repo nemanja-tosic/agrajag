@@ -4,7 +4,7 @@ import { z, ZodObject, ZodOptional, ZodRecord, ZodString } from 'zod';
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import { QueryParams } from './QueryParams.js';
 import { ResourceLinkage } from '../resources/ResourceLinkageSchema.js';
-import { Resource } from '../resources/Resource.js';
+import { Document } from '../resources/Resource.js';
 
 export type Endpoints<TDefinition extends ResourceDefinition> = {
   fetch?: FetchEndpoint<TDefinition>;
@@ -16,17 +16,17 @@ export type Endpoints<TDefinition extends ResourceDefinition> = {
 type FetchEndpoint<TDefinition extends ResourceDefinition> = {
   self?: (
     params: { id: string } & QueryParams<TDefinition>,
-  ) => Promise<Resource<TDefinition> | undefined>;
+  ) => Promise<Document<TDefinition> | undefined>;
   collection?: (
     params: QueryParams<TDefinition>,
-  ) => Promise<Resource<TDefinition>[] | undefined>;
+  ) => Promise<Document<TDefinition>[] | undefined>;
   related?: RelatedEndpointsWithoutBody<TDefinition>;
 };
 
 type DeleteEndpoint<TDefinition extends ResourceDefinition> = {
   self: (
     params: { id: string } & QueryParams<TDefinition>,
-  ) => Promise<Resource<TDefinition> | undefined>;
+  ) => Promise<Document<TDefinition> | undefined>;
   related?: RelatedEndpointsWithBody<TDefinition>;
 };
 
@@ -37,7 +37,7 @@ type MutateEndpoint<TDefinition extends ResourceDefinition> = {
   self?: (
     body: z.infer<UpdateSchema<TDefinition>>,
     params: Params<string, TDefinition>,
-  ) => Promise<Resource<TDefinition> | undefined>;
+  ) => Promise<Document<TDefinition> | undefined>;
   related?: RelatedEndpointsWithBody<TDefinition>;
 };
 
@@ -74,26 +74,12 @@ export type Stored<TSchema extends ResourceDefinition> = Flavor<
             | Stored<TSchema['relationships'][K][number]>[]
         : {};
   },
-  'Normalized' | 'Denormalized'
+  'Denormalized'
 >;
 
 type Flavor<T, F> = T & { _flavor?: F };
 
-export type Normalized<TSchema extends ResourceDefinition> = Flavor<
-  z.infer<IdPlusAttributes<TSchema>> & {
-    [K in keyof TSchema['relationships']]: TSchema['relationships'][K] extends ResourceDefinition
-      ? { id: z.infer<TSchema['relationships'][K]['schema']['shape']['id']> }
-      : TSchema['relationships'][K] extends ResourceDefinition[]
-        ? {
-            id: z.infer<
-              TSchema['relationships'][K][number]['schema']['shape']['id']
-            >;
-          }[]
-        : {};
-  },
-  'Normalized'
->;
-
+// TODO: This should be renamed to something like Normalized, meaning standardized
 export type Denormalized<TSchema extends ResourceDefinition> = Flavor<
   z.infer<IdPlusAttributes<TSchema>> & {
     [K in keyof TSchema['relationships']]?: TSchema['relationships'][K] extends ResourceDefinition

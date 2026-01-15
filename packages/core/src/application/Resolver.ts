@@ -1,5 +1,5 @@
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
-import { Normalized, Stored } from '../endpoints/Endpoints.js';
+import { Denormalized, Stored } from '../endpoints/Endpoints.js';
 import {
   ResourceIdentifier,
   ResourceLinkage,
@@ -34,7 +34,7 @@ export interface Resolver<
   ): Promise<undefined | ResourceIdentifier | ResourceIdentifier[]>;
 
   post(
-    entity: Normalized<TDefinition>,
+    entity: Denormalized<TDefinition>,
     params: QueryParams<TDefinition>,
   ): Promise<Stored<TDefinition> | undefined>;
 
@@ -45,7 +45,7 @@ export interface Resolver<
   ): Promise<Stored<TDefinition> | undefined>;
 
   patch(
-    entity: Normalized<TDefinition>,
+    entity: Denormalized<TDefinition>,
     params: QueryParams<TDefinition>,
   ): Promise<Stored<TDefinition> | undefined>;
 

@@ -1,5 +1,5 @@
 import { expectAssignable } from 'tsd';
-import { Denormalized, Normalized, z, createSchema, Stored } from 'agrajag';
+import { Denormalized, z, createSchema, Stored } from 'agrajag';
 
 const user = createSchema(
   'users',
@@ -8,7 +8,7 @@ const user = createSchema(
 );
 
 type DenormalizedUser = Denormalized<typeof user>;
-type NormalizedUser = Normalized<typeof user>;
+type StoredUser = Stored<typeof user>;
 
 const post = createSchema('posts', z.object({ text: z.string() }), {
   relationships: { author: () => user, comments: () => [comment] },
@@ -17,7 +17,7 @@ const post = createSchema('posts', z.object({ text: z.string() }), {
 const comment = createSchema('posts', z.object({ text: z.string() }));
 
 type DenormalizedPost = Denormalized<typeof post>;
-type NormalizedPost = Normalized<typeof post>;
+type StoredPost = Stored<typeof post>;
 
 declare const denormalizedUser: DenormalizedUser;
 expectAssignable<{
@@ -27,13 +27,7 @@ expectAssignable<{
   posts?: DenormalizedPost[];
 }>(denormalizedUser);
 
-declare const normalizedUser: NormalizedUser;
-expectAssignable<{
-  id: string;
-  name: string;
-  age: string;
-  posts: { id: string }[];
-}>(normalizedUser);
+// expectAssignable<StoredUser>(denormalizedUser);
 
 declare const denormalizedPost: DenormalizedPost;
 expectAssignable<{
@@ -42,13 +36,6 @@ expectAssignable<{
   author?: DenormalizedUser;
 }>(denormalizedPost);
 
-declare const normalizedPost: NormalizedPost;
-expectAssignable<{
-  id: string;
-  text: string;
-  author: { id: string };
-}>(normalizedPost);
-
 declare const storedUser: Stored<typeof user>;
 expectAssignable<Stored<typeof post>>({
   id: '1',
@@ -56,3 +43,5 @@ expectAssignable<Stored<typeof post>>({
   comments: [],
   author: storedUser,
 });
+
+// expectAssignable<StoredPost>(denormalizedPost);

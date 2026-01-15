@@ -3,14 +3,28 @@ import { Serializer } from './Serializer.js';
 import { QueryParams } from '../endpoints/QueryParams.js';
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import { Denormalized } from '../endpoints/Endpoints.js';
-import { Resource } from '../resources/Resource.js';
+import {
+  Document,
+  MultipleResourceDocument,
+  SingleResourceDocument,
+} from '../resources/Resource.js';
 
 export class JsonApiSerializer implements Serializer {
   serialize<TDefinition extends ResourceDefinition>(
     definition: TDefinition,
+    data: Denormalized<TDefinition>,
+    params: QueryParams<TDefinition>,
+  ): SingleResourceDocument<TDefinition>;
+  serialize<TDefinition extends ResourceDefinition>(
+    definition: TDefinition,
+    data: Denormalized<TDefinition>[],
+    params: QueryParams<TDefinition>,
+  ): MultipleResourceDocument<TDefinition>;
+  serialize<TDefinition extends ResourceDefinition>(
+    definition: TDefinition,
     data: Denormalized<TDefinition> | Denormalized<TDefinition>[],
     params: QueryParams<TDefinition>,
-  ): Resource<TDefinition> {
+  ): Document<TDefinition> {
     const serialized = this.#createSerializer(definition, params).serialize(
       data,
     );

@@ -1,6 +1,6 @@
 import {
   BaseEndpointFactory,
-  Normalized,
+  Denormalized,
   Resolver,
   ResourceDefinition,
   ResourceIdentifier,
@@ -20,7 +20,7 @@ export class RavendbCrudEndpointFactory<
     return {
       byId: async id => {
         const query = session.advanced
-          .rawQuery<Normalized<TDefinition>>(
+          .rawQuery<Denormalized<TDefinition>>(
             `
               from @all_docs where ID() in ($id)
             `,
@@ -32,7 +32,7 @@ export class RavendbCrudEndpointFactory<
       },
       byIds: async ids => {
         const query = session.advanced
-          .rawQuery<Normalized<TDefinition>>(
+          .rawQuery<Denormalized<TDefinition>>(
             `
               from @all_docs where ID() in ($id)
             `,
@@ -43,7 +43,7 @@ export class RavendbCrudEndpointFactory<
         return query.all();
       },
       byType: (type, { sort } = {}) => {
-        const query = session.query<Normalized<TDefinition>>({
+        const query = session.query<Denormalized<TDefinition>>({
           collection: type,
         });
 

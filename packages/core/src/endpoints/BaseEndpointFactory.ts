@@ -5,7 +5,6 @@ import {
 import {
   Denormalized,
   Endpoints,
-  Normalized,
   RelatedEndpointsWithBody,
   RelatedEndpointsWithoutBody,
   Stored,
@@ -13,7 +12,7 @@ import {
 import { Resolver } from '../application/Resolver.js';
 import { Serializer } from '../serialization/Serializer.js';
 import { QueryParams } from './QueryParams.js';
-import { Resource } from '../resources/Resource.js';
+import { Document } from '../resources/Resource.js';
 import { ResourceLinkage } from '../resources/ResourceLinkageSchema.js';
 import { IEndpointFactory } from './EndpointFactory.js';
 
@@ -25,26 +24,32 @@ export abstract class BaseEndpointFactory<
     definition: TDefinition,
   ): Resolver<TDefinition>;
 
-  async #serialize(
-    definition: ResourceDefinition,
-    external: Resolver,
+  async #serialize<TDefinition extends ResourceDefinition>(
+    definition: TDefinition,
+    external: Resolver<TDefinition>,
     serializer: Serializer,
-    entity: Stored<ResourceDefinition> | Stored<ResourceDefinition>[],
-    params: QueryParams,
-  ): Promise<Resource> {
+    entity: Stored<TDefinition> | Stored<TDefinition>[],
+    params: QueryParams<TDefinition>,
+  ): Promise<Document<TDefinition>> {
+    if (Array.isArray(entity)) {
+      return serializer.serialize(
+        definition,
+        await Promise.all(
+          entity.map(entity =>
+            this.#denormalize(definition, entity, key =>
+              external.byIds(key, {}),
+            ),
+          ),
+        ),
+        params,
+      );
+    }
+
     return serializer.serialize(
       definition,
-      Array.isArray(entity)
-        ? await Promise.all(
-            entity.map(entity =>
-              this.#denormalize(definition, entity, key =>
-                external.byIds(key, {}),
-              ),
-            ),
-          )
-        : await this.#denormalize(definition, entity, key =>
-            external.byIds(key, {}),
-          ),
+      await this.#denormalize(definition, entity, key =>
+        external.byIds(key, {}),
+      ),
       params,
     );
   }
@@ -166,8 +171,7 @@ export abstract class BaseEndpointFactory<
 
             await using external = this.createExternal(definition);
 
-            // TODO: introduce a createNormalized factory
-            const entity: Normalized<TDefinition> = {
+            const entity: Denormalized<TDefinition> = {
               id: body.data.id,
               ...body.data.attributes,
               ...Object.fromEntries(
