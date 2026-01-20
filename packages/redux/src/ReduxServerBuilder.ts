@@ -92,10 +92,23 @@ export class ReduxServerBuilder<
     this.#baseApi.injectEndpoints({
       endpoints: builder => ({
         [this.#mapParts('delete', path)]: builder.mutation<
-          unknown,
-          QueryParams
+          Denormalized<TDefinition> | undefined,
+          QueryParams<TDefinition> & {
+            id: string;
+            body: { data: Resource<TDefinition> };
+          },
+          SingleResourceDocument<TDefinition>
         >({
-          query: params => ({ url: path, params, method: 'DELETE' }),
+          query: ({ id, body, ...params }) => ({
+            url: this.#getPath(path, id),
+            params,
+            body,
+            method: 'DELETE',
+          }),
+          invalidatesTags: response =>
+            this.#invalidateTags(definition, path, response),
+          transformResponse: (response, _, arg) =>
+            this.#transformResponse(definition, response, arg),
         }),
       }),
     });
