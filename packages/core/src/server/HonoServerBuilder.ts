@@ -112,10 +112,13 @@ export class HonoServerBuilder extends ServerBuilder {
   }
 
   #extractParams(c: any): any {
+    const { filter, ...query } = c.req.query();
+
     return {
       ...c.req.param(),
-      ...qs.parse(c.req.query(), { comma: true }),
-      user: c.get('user')
+      ...qs.parse(query, { comma: true }),
+      filter,
+      user: c.get('user'),
     };
   }
 

@@ -2,11 +2,16 @@ import { Definitions, DefinitionCollection, Builder } from 'agrajag';
 import {
   Api,
   coreModuleName,
+  createApi,
+  CreateApiOptions,
+  fetchBaseQuery,
+  FetchBaseQueryArgs,
   reactHooksModuleName,
 } from '@reduxjs/toolkit/query/react';
 import { DefinitionsToEndpoints } from './DefinitionsToEndpoints.js';
 import { FetchBaseQuery } from './FetchBaseQuery.js';
 import { ReduxServerBuilder, ReduxEndpoints } from './ReduxServerBuilder.js';
+import qs from 'qs';
 
 export type BaseApi<
   ReducerPath extends string,
@@ -54,15 +59,24 @@ export class ReduxBuilder<
     ReducerPath extends string,
     TagTypes extends string,
     Endpoints extends ReduxEndpoints<ReducerPath, TagTypes>,
-  >(
-    api: Api<
-      FetchBaseQuery,
-      Endpoints,
-      ReducerPath,
-      TagTypes,
-      typeof reactHooksModuleName | typeof coreModuleName
-    >,
-  ): BuiltApi<TDefinitions, ReducerPath, TagTypes, Endpoints> {
+  >({
+    baseQueryArgs,
+    ...options
+  }: BuildConfig<ReducerPath, TagTypes, Endpoints>): BuiltApi<
+    TDefinitions,
+    ReducerPath,
+    TagTypes,
+    Endpoints
+  > {
+    const api = createApi({
+      baseQuery: fetchBaseQuery({
+        ...baseQueryArgs,
+        paramsSerializer: params =>
+          qs.stringify(params, { commaRoundTrip: true }),
+      }),
+      ...options,
+    });
+
     this.addEndpointBuilder(new ReduxServerBuilder(api, this.definitions));
 
     for (const definition of this.definitions) {
@@ -72,3 +86,12 @@ export class ReduxBuilder<
     return api as any;
   }
 }
+
+export type BuildConfig<
+  ReducerPath extends string,
+  TagTypes extends string,
+  Endpoints extends ReduxEndpoints<ReducerPath, TagTypes>,
+> = Omit<
+  CreateApiOptions<FetchBaseQuery, Endpoints, ReducerPath, TagTypes>,
+  'baseQuery'
+> & { baseQueryArgs: FetchBaseQueryArgs };

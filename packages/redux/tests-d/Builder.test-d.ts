@@ -1,7 +1,6 @@
 import { expectAssignable } from 'tsd';
 import { createSchema, Denormalized, z, DefinitionCollection } from 'agrajag';
 import { ReduxBuilder } from '@agrajag/redux-adapter';
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 const user = createSchema(
   'users',
@@ -17,14 +16,12 @@ const definitions = new DefinitionCollection()
   .addDefinition(user)
   .addDefinition(comment);
 
-export const reduxApi = new ReduxBuilder().addDefinitions(definitions).build(
-  createApi({
-    baseQuery: fetchBaseQuery({ baseUrl: '' }),
-    endpoints: builder => ({
-      getPreExisting: builder.query({ query: () => '/pre-existing' }),
-    }),
+export const reduxApi = new ReduxBuilder().addDefinitions(definitions).build({
+  baseQueryArgs: { baseUrl: '' },
+  endpoints: builder => ({
+    getPreExisting: builder.query({ query: () => '/pre-existing' }),
   }),
-);
+});
 
 reduxApi.endpoints.getUsers;
 const { data: users } = reduxApi.useGetUsersQuery({ include: [''] });
