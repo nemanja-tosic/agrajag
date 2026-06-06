@@ -4,6 +4,7 @@ import {
   ResourceCapabilities,
   ResourceDefinition,
 } from './resources/ResourceDefinition.js';
+import { ResolverQueryParams, User } from './application/Resolver.js';
 import { ZodSchemaFactory } from './schema/ZodSchemaFactory.js';
 import { SchemaFactory } from './schema/SchemaFactory.js';
 import { Response, ServerBuilder } from './server/ServerBuilder.js';
@@ -13,6 +14,26 @@ import { Endpoints } from './endpoints/Endpoints.js';
 
 export interface Logger {
   error: (error: Error) => void | Promise<void>;
+}
+
+/**
+ * Wraps every resolver invocation. Lets a consumer run the resolver inside its
+ * own context — e.g. a per-request database transaction — so that when the
+ * resolver throws, the consumer's wrapper (and its transaction) sees the error
+ * and can roll back *before* the Builder catches it and renders the error
+ * response. `params` is the resolver's query params (carrying the request user
+ * etc.). Defaults to a passthrough that just runs the resolver.
+ */
+export type ResolverInvoke = <T>(
+  run: () => Promise<T>,
+  params: ResolverQueryParams<ResourceDefinition, User>,
+) => Promise<T>;
+
+export interface BuilderOptions {
+  serializer?: Serializer;
+  schemaFactory?: SchemaFactory;
+  logger?: Logger;
+  invoke?: ResolverInvoke;
 }
 
 export type DeferredRelationships = unknown;
@@ -35,12 +56,9 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
 
   readonly #schemaFactory: SchemaFactory = new ZodSchemaFactory();
   readonly #logger: Logger = console;
+  readonly #invoke: ResolverInvoke = run => run();
 
-  constructor(options?: {
-    serializer?: Serializer;
-    schemaFactory?: SchemaFactory;
-    logger?: Logger;
-  }) {
+  constructor(options?: BuilderOptions) {
     if (options?.serializer) {
       this.serializer = options.serializer;
     }
@@ -49,6 +67,9 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
     }
     if (options?.logger) {
       this.#logger = options.logger;
+    }
+    if (options?.invoke) {
+      this.#invoke = options.invoke;
     }
   }
 
@@ -87,7 +108,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
           }
 
           try {
-            const body = await endpoint(params);
+            const body = await this.#invoke(() => endpoint(params), params);
 
             await respond({
               body: body,
@@ -120,7 +141,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
           }
 
           try {
-            const body = await endpoint(params);
+            const body = await this.#invoke(() => endpoint(params), params);
 
             await respond({
               body,
@@ -158,8 +179,12 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
           }
 
           try {
-            const data = await endpoint(
-              this.#schemaFactory.createUpdateSchema(definition).parse(body),
+            const data = await this.#invoke(
+              () =>
+                endpoint(
+                  this.#schemaFactory.createUpdateSchema(definition).parse(body),
+                  params,
+                ),
               params,
             );
             if (!data) {
@@ -201,8 +226,12 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
           }
 
           try {
-            const data = await endpoint(
-              this.#schemaFactory.createUpdateSchema(definition).parse(body),
+            const data = await this.#invoke(
+              () =>
+                endpoint(
+                  this.#schemaFactory.createUpdateSchema(definition).parse(body),
+                  params,
+                ),
               params,
             );
             if (!data) {
@@ -240,7 +269,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
           }
 
           try {
-            const data = await endpoint(params);
+            const data = await this.#invoke(() => endpoint(params), params);
             if (!data) {
               return await respond({ status: 202 });
             }
@@ -275,7 +304,10 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
         `/${type}/:id/relationships/${key}`,
         async (params, respond) => {
           try {
-            const data = await endpoints.fetch?.related?.[key](params as any);
+            const data = await this.#invoke(
+              async () => endpoints.fetch?.related?.[key](params as any),
+              params,
+            );
 
             await respond({
               body: data,
@@ -310,9 +342,10 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
         async (body, params, respond) => {
           try {
             //fixme: data is not denormalized
-            const data = (await endpoints.create?.related?.[key](
-              body as any,
-              params as any,
+            const data = (await this.#invoke(
+              async () =>
+                endpoints.create?.related?.[key](body as any, params as any),
+              params,
             )) as any;
 
             if (!data) {
@@ -352,9 +385,10 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
         async (body, params, respond) => {
           try {
             //fixme: data is not denormalized
-            const data = (await endpoints.patch?.related?.[key](
-              body as any,
-              params as any,
+            const data = (await this.#invoke(
+              async () =>
+                endpoints.patch?.related?.[key](body as any, params as any),
+              params,
             )) as any;
 
             if (!data) {
@@ -394,9 +428,10 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
         `/${type}/:id/relationships/${key}`,
         async (body, params, respond) => {
           try {
-            const data = await endpoints.delete?.related?.[key](
-              body as any,
-              params as any,
+            const data = await this.#invoke(
+              async () =>
+                endpoints.delete?.related?.[key](body as any, params as any),
+              params,
             );
 
             await respond({

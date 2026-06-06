@@ -9,7 +9,19 @@ import { QueryParams } from '../endpoints/QueryParams.js';
 // @ts-ignore
 Symbol.asyncDispose ??= Symbol('Symbol.asyncDispose');
 
-export type User = Record<string, unknown>;
+/**
+ * The authenticated principal attached to a request's resolver params.
+ *
+ * An `interface` (not a `type` alias) with an open index signature so it stays
+ * record-compatible *and* consumers can expand it via declaration merging:
+ *
+ *   declare module 'agrajag' {
+ *     interface User { tenantId?: string }
+ *   }
+ */
+export interface User {
+  [key: string]: unknown;
+}
 
 export type ResolverQueryParams<
   TDefinition extends ResourceDefinition,

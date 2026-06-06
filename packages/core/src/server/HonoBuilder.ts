@@ -1,4 +1,4 @@
-import { Builder, DefinitionCollection } from 'agrajag';
+import { Builder, BuilderOptions, DefinitionCollection } from 'agrajag';
 import { HonoServerBuilder } from './HonoServerBuilder.js';
 import { Hono } from 'hono';
 import { Definitions } from '../api/Definitions.js';
@@ -15,10 +15,13 @@ export class HonoBuilder<
 > extends Builder<TDefinitions> {
   readonly #hono: Hono;
 
-  constructor(hono: Hono = new Hono()) {
-    super();
+  constructor(honoOrOptions: Hono | (BuilderOptions & { hono?: Hono }) = {}) {
+    const options =
+      honoOrOptions instanceof Hono ? { hono: honoOrOptions } : honoOrOptions;
 
-    this.#hono = hono;
+    super(options);
+
+    this.#hono = options.hono ?? new Hono();
   }
 
   addDefinitions<TNewDefinitions extends Definitions>(
