@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.yarn/versions/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+
+      - run: corepack enable
+
+      - run: yarn install --immutable
+
+      - name: Apply deferred versions
+        run: yarn version apply --all
+
+      - run: yarn build
+
+      - run: yarn test
+
+      - name: Publish to npm
+        run: yarn workspaces foreach --all --no-private npm publish --tolerate-republish --access public
+
+      - name: Commit applied versions
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: release [skip ci]"
+            git push origin HEAD:main
+          else
+            echo "No version changes to commit."
+          fi
