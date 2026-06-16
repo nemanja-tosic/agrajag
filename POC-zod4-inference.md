@@ -100,19 +100,26 @@ Went past the POC: did the real dep bump and finished `packages/core`.
 **`packages/core`: 0 type errors, `yarn build` clean, `mocha` 13 passing, `tsd`
 passing** (incl. the proof + the existing `Endpoints.test-d.ts`).
 
-### Adapters (redux, ravendb) — remaining, separate from #4619
+### Adapters — DONE. Whole repo now at 0.
 
-The wide-variance fix cleared the bulk. What's left is adapter-specific:
+The wide-variance fix cleared the bulk; the rest were small adapter-specific items:
 
-- **ravendb `RavendbCrudEndpointFactory`** — resolver return-type contract:
-  resolvers return `Denormalized | Stored` where the endpoint type wants `Stored`
-  (these two are now genuinely distinct: `Denormalized` has optional relationship
-  keys, `Stored` required). zod 3's looser infer masked this; needs the resolver
-  signatures reconciled.
-- **redux `ReduxServerBuilder`** — two `.id` accesses on a `{}`/possibly-undefined
-  union member; small.
-- **test-support** — `TS6305`/`TS2307` are build-order artifacts in the workspace
-  `foreach`, not real type errors.
+- **ravendb `RavendbCrudEndpointFactory`** — its RavenDB queries were typed
+  `Denormalized<TDefinition>`, but the `Resolver` contract (and a raw stored doc
+  with relationship *refs*) is `Stored<TDefinition>`. Switched the 3 query
+  generics `Denormalized → Stored`. zod 3's loose infer had made them
+  interchangeable; they're now correctly distinct.
+- **redux `ReduxServerBuilder`** — two `.id` reads on a related-entity value that,
+  for the wide default `Denormalized<ResourceDefinition>`, types as `{}`; cast to
+  `{ id: string }` at that internal access.
+- The earlier `TS6305`/`TS2307`/`TS7006` were workspace build-order artifacts; they
+  resolve once deps build in topo order (the real `yarn build` does).
 
 express/fastify adapters have no direct zod usage and were unaffected.
+
+## Final state
+
+`yarn build`: **0 errors across all packages.** `yarn test`: core **mocha 13
+passing** + **tsd passing**, redux **tsd passing** (ravendb/express/fastify have
+no test scripts). The whole repo is migrated to zod 4.1.13 + zod-openapi 6.0.0.
 
