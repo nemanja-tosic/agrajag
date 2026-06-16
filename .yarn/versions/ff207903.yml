@@ -1,8 +1,0 @@
-releases:
-  "@agrajag/redux-adapter": patch
-  agrajag: patch
-
-declined:
-  - "@agrajag/express-adapter"
-  - "@agrajag/fastify-adapter"
-  - "@agrajag/ravendb-adapter"
