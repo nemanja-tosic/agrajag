@@ -13,7 +13,7 @@
     "@agrajag/express-adapter": "workspace:*",
     "@agrajag/ravendb-adapter": "workspace:*",
     "agrajag": "workspace:*",
-    "ramda": "0.30.0",
+    "ramda": "0.32.0",
     "ravendb": "file:../../ravendb-6.0.0.tgz",
     "uuid": "9.0.1"
   },
@@ -21,7 +21,7 @@
     "@agrajag/configs": "workspace:*",
     "@cucumber/cucumber": "10.8.0",
     "@types/node": "22.18.6",
-    "@types/ramda": "0.30.0",
+    "@types/ramda": "0.31.1",
     "@types/uuid": "9.0.8"
   }
 }
