@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Hono, Context } from 'hono';
 import { EndpointSchema } from '../endpoints/Endpoints.js';
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import {
@@ -32,7 +32,7 @@ export class HonoServerBuilder extends ServerBuilder {
         handler(this.#extractParams(c), async response => resolve(response)),
       );
 
-      return c.json(body, status, headers);
+      return this.#respond(c, { body, status, headers });
     });
 
     return this;
@@ -57,7 +57,7 @@ export class HonoServerBuilder extends ServerBuilder {
         ),
       );
 
-      return c.json(body, status, headers);
+      return this.#respond(c, { body, status, headers });
     });
 
     return this;
@@ -82,7 +82,7 @@ export class HonoServerBuilder extends ServerBuilder {
         ),
       );
 
-      return c.json(body, status, headers);
+      return this.#respond(c, { body, status, headers });
     });
 
     return this;
@@ -111,10 +111,21 @@ export class HonoServerBuilder extends ServerBuilder {
         ),
       );
 
-      return c.json(body, status, headers);
+      return this.#respond(c, { body, status, headers });
     });
 
     return this;
+  }
+
+  // A 204 (No Content) response must not carry a body, so it cannot go
+  // through `c.json` (which only accepts contentful status codes). Route it
+  // to `c.body(null, ...)` instead.
+  #respond(c: Context, { body, status, headers }: Response): globalThis.Response {
+    if (status === 204) {
+      return c.body(null, status, headers);
+    }
+
+    return c.json(body, status, headers);
   }
 
   // Parsing must happen OUTSIDE the `new Promise(async resolve => ...)`
