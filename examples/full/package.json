@@ -11,10 +11,10 @@
     "@agrajag/ravendb-adapter": "workspace:*",
     "@agrajag/redux-adapter": "workspace:*",
     "@hono/node-server": "1.19.6",
-    "@hono/swagger-ui": "0.5.2",
-    "@reduxjs/toolkit": "2.11.0",
+    "@hono/swagger-ui": "0.6.1",
+    "@reduxjs/toolkit": "2.12.0",
     "agrajag": "workspace:*",
-    "hono": "4.6.5",
+    "hono": "4.12.25",
     "ramda": "0.30.0",
     "ravendb": "file:../../ravendb-6.0.0.tgz",
     "uuid": "9.0.1"
@@ -22,7 +22,7 @@
   "devDependencies": {
     "@agrajag/configs": "workspace:*",
     "@cucumber/cucumber": "10.8.0",
-    "@rtk-query/codegen-openapi": "2.1.0",
+    "@rtk-query/codegen-openapi": "2.2.0",
     "@types/node": "22.18.6",
     "@types/ramda": "0.30.0",
     "@types/uuid": "9.0.8"
