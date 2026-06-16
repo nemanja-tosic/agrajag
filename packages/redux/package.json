@@ -1,6 +1,6 @@
 {
   "name": "@agrajag/redux-adapter",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "type": "module",
   "types": "./dist/src/index.d.ts",
   "exports": {
