@@ -1,0 +1,6 @@
+releases:
+  agrajag: minor
+  "@agrajag/ravendb-adapter": patch
+  "@agrajag/redux-adapter": patch
+  "@agrajag/express-adapter": patch
+  "@agrajag/fastify-adapter": patch
