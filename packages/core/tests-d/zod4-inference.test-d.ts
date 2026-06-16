@@ -1,4 +1,4 @@
-// POC proof: under zod 4, the rewritten output inference (map-the-shape) makes
+// Under zod 4, the rewritten output inference (map-the-shape) makes
 // Stored/Denormalized resolve to the CONCRETE attribute fields, not the #4619
 // `{}` collapse. Each @ts-expect-error below is load-bearing: if inference had
 // collapsed to `{}` (or `any`), the "missing required field" error would NOT
