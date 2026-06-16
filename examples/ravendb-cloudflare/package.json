@@ -10,7 +10,7 @@
     "@hono/swagger-ui": "0.5.2",
     "@reduxjs/toolkit": "2.11.0",
     "agrajag": "workspace:*",
-    "hono": "4.6.5",
+    "hono": "4.12.21",
     "ramda": "0.30.0",
     "ravendb": "file:../../ravendb-6.0.0.tgz",
     "uuid": "9.0.1"
