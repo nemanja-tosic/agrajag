@@ -182,7 +182,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
             const data = await this.#invoke(
               () =>
                 endpoint(
-                  this.#schemaFactory.createUpdateSchema(definition).parse(body),
+                  this.#schemaFactory.createUpdateSchema(definition).parse(body) as Parameters<typeof endpoint>[0],
                   params,
                 ),
               params,
@@ -229,7 +229,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
             const data = await this.#invoke(
               () =>
                 endpoint(
-                  this.#schemaFactory.createUpdateSchema(definition).parse(body),
+                  this.#schemaFactory.createUpdateSchema(definition).parse(body) as Parameters<typeof endpoint>[0],
                   params,
                 ),
               params,

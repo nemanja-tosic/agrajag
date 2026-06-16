@@ -77,5 +77,42 @@ per-leaf mapping to the few remaining `z.infer<composed>` sites, port the runtim
 `_def`/`ZodLazy` access to `_zod.def`, and resolve zod-openapi.
 
 _POC artifacts: `packages/core/tsconfig.poc.json`,
-`packages/core/tests-d/poc-zod4-inference.test-d.ts`, and the edits above. Branch
-not pushed — for review._
+`packages/core/tests-d/poc-zod4-inference.test-d.ts`, and the edits above._
+
+---
+
+## Update — `core` fully migrated to zod 4 (0 errors, tests green)
+
+Went past the POC: did the real dep bump and finished `packages/core`.
+
+- **Deps:** `zod` `3.25.76 → 4.1.13`, `zod-openapi` `2.19.0 → 6.0.0`; imports back on
+  `'zod'` (dropped the `/v4` bridge); peer `zod ^4.0.0`.
+- **Inference:** kept the map-the-shape rewrite; hoisted `id: string` out of the
+  mapped type (a conditional key-remap defers under a fully-generic `TDefinition`,
+  which hid `id` in adapter generic contexts); and made `InferShape` yield a
+  permissive `Record<string, unknown>` for the WIDE default shape
+  (`string extends keyof S`) so specific `…<TDefinition>` stays assignable to the
+  wide `…<ResourceDefinition>` adapters pass around.
+- **zod-openapi 6 / zod 4 API:** `ZodLazy.schema → .unwrap()`; `.deepPartial()`
+  (removed in v4) → `.partial()`; dropped `extendZodWithOpenApi`; `.openapi({…})`
+  → zod 4 native `.meta({…})` (and `{ref}` → `{id}`).
+
+**`packages/core`: 0 type errors, `yarn build` clean, `mocha` 13 passing, `tsd`
+passing** (incl. the proof + the existing `Endpoints.test-d.ts`).
+
+### Adapters (redux, ravendb) — remaining, separate from #4619
+
+The wide-variance fix cleared the bulk. What's left is adapter-specific:
+
+- **ravendb `RavendbCrudEndpointFactory`** — resolver return-type contract:
+  resolvers return `Denormalized | Stored` where the endpoint type wants `Stored`
+  (these two are now genuinely distinct: `Denormalized` has optional relationship
+  keys, `Stored` required). zod 3's looser infer masked this; needs the resolver
+  signatures reconciled.
+- **redux `ReduxServerBuilder`** — two `.id` accesses on a `{}`/possibly-undefined
+  union member; small.
+- **test-support** — `TS6305`/`TS2307` are build-order artifacts in the workspace
+  `foreach`, not real type errors.
+
+express/fastify adapters have no direct zod usage and were unaffected.
+

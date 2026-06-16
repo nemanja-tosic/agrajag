@@ -344,7 +344,7 @@ export abstract class BaseEndpointFactory<
                 return [key, undefined];
               }
 
-              return [key, await relationship(relationshipId)];
+              return [key, await relationship(relationshipId as string[])];
             }),
         ),
       ),

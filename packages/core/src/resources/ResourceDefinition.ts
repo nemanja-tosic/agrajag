@@ -1,4 +1,4 @@
-import { ZodLazy, ZodObject } from 'zod/v4';
+import { ZodLazy, ZodObject } from 'zod';
 
 import { AttributesSchema, ResourceSchema } from './ResourceSchema.js';
 import {

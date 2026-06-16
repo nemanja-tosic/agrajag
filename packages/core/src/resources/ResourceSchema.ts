@@ -10,7 +10,7 @@ import {
   ZodString,
   ZodType,
   ZodTypeAny,
-} from 'zod/v4';
+} from 'zod';
 import { ResourceDefinition } from './ResourceDefinition.js';
 import {
   ResourceLinkageSchema,

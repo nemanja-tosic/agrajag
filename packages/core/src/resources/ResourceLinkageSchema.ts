@@ -1,4 +1,4 @@
-import { z, ZodArray, ZodLiteral, ZodObject, ZodString } from 'zod/v4';
+import { z, ZodArray, ZodLiteral, ZodObject, ZodString } from 'zod';
 
 export type ResourceLinkage = z.infer<ResourceLinkageSchema>;
 

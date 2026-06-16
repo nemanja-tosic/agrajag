@@ -10,10 +10,9 @@ import {
   ResourceCapabilities,
   ResourceDefinition,
 } from '../resources/ResourceDefinition.js';
-import { z, ZodType, ZodTypeAny } from 'zod/v4';
+import { z, ZodType, ZodTypeAny } from 'zod';
 import { CreateSchemaOptions, SchemaFactory } from './SchemaFactory.js';
 import { EndpointSchema } from '../endpoints/Endpoints.js';
-import { extendZodWithOpenApi } from 'zod-openapi';
 import {
   ToManyLinkageSchema,
   ToOneLinkageSchema,
@@ -21,9 +20,6 @@ import {
 import { DeferredRelationships, UndeferredRelationships } from '../Builder.js';
 
 export class ZodSchemaFactory implements SchemaFactory {
-  static {
-    extendZodWithOpenApi(z);
-  }
 
   createSchema<
     TType extends string = string,
@@ -112,7 +108,7 @@ export class ZodSchemaFactory implements SchemaFactory {
     const querySchema = z.object({
       [`fields[${definition.type}]`]: z.string().optional(),
       ...Object.fromEntries(
-        Object.entries(definition.schema.shape.relationships.schema.shape).map(
+        Object.entries(definition.schema.shape.relationships.unwrap().shape).map(
           ([key]) => [`fields[${key}]`, z.string().optional()],
         ),
       ),
@@ -126,19 +122,19 @@ export class ZodSchemaFactory implements SchemaFactory {
           ...(options?.noId
             ? {}
             : {
-                id: z.string().openapi({ param: { name: 'id', in: 'path' } }),
+                id: z.string().meta({ param: { name: 'id', in: 'path' } }),
               }),
         }),
         query: z.object({
           include: z
             .string()
             .optional()
-            .openapi({ param: { name: 'include', in: 'query' } }),
+            .meta({ param: { name: 'include', in: 'query' } }),
           ...querySchema.shape,
           sort: z
             .string()
             .optional()
-            .openapi({ param: { name: 'sort', in: 'query' } }),
+            .meta({ param: { name: 'sort', in: 'query' } }),
           filter: z.string().optional(),
         }),
       }),
@@ -157,7 +153,7 @@ export class ZodSchemaFactory implements SchemaFactory {
   ): SinglePrimaryType<TDefinition> {
     let attributes = definition.schema.shape.attributes;
     if (options?.partialAttributes) {
-      attributes = attributes.deepPartial();
+      attributes = attributes.partial();
     }
 
     const id = options?.optionalId ? z.string().optional() : z.string();
@@ -168,7 +164,7 @@ export class ZodSchemaFactory implements SchemaFactory {
         type: definition.schema.shape.type,
         attributes,
         relationships: z
-          .lazy(() => definition.schema.shape.relationships.schema.partial())
+          .lazy(() => definition.schema.shape.relationships.unwrap().partial())
           .optional(),
       }),
       ...(options?.withDenormalize
@@ -195,7 +191,7 @@ export class ZodSchemaFactory implements SchemaFactory {
           type: definition.schema.shape.type,
           attributes: definition.schema.shape.attributes,
           relationships: z
-            .lazy(() => definition.schema.shape.relationships.schema.partial())
+            .lazy(() => definition.schema.shape.relationships.unwrap().partial())
             .optional(),
         }),
       ),
@@ -236,12 +232,12 @@ export class ZodSchemaFactory implements SchemaFactory {
       data: z.object({
         id: definition.schema.shape.id.optional(),
         type: definition.schema.shape.type,
-        attributes: definition.schema.shape.attributes.deepPartial().optional(),
+        attributes: definition.schema.shape.attributes.partial().optional(),
         relationships: z
           .object(
             Object.fromEntries(
               Object.keys(
-                definition.schema.shape.relationships.schema.shape,
+                definition.schema.shape.relationships.unwrap().shape,
               ).map(key => [
                 key,
                 // FIXME
@@ -284,7 +280,7 @@ export function createDenormalized<TSchema extends ResourceDefinition>(
         ),
       }),
     )
-    .openapi({ ref: schema.type });
+    .meta({ id: schema.type });
 
   visited.set(schema, type);
 

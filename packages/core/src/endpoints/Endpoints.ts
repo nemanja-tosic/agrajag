@@ -1,6 +1,6 @@
 import { UpdateSchema } from '../resources/ResourceSchema.js';
 import { Params } from './Params.js';
-import { z, ZodObject, ZodOptional, ZodRecord, ZodString, ZodType } from 'zod/v4';
+import { z, ZodObject, ZodOptional, ZodRecord, ZodString, ZodType } from 'zod';
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import { QueryParams } from './QueryParams.js';
 import { ResourceLinkage } from '../resources/ResourceLinkageSchema.js';
@@ -80,15 +80,25 @@ export type RelatedEndpointsWithBody<TDefinition extends ResourceDefinition> = {
 // schemas → optional keys) without ever composing a generic object.
 type IsOptionalSchema<T> = T extends ZodOptional<ZodType> ? true : false;
 type Out<T> = T extends ZodType ? z.infer<T> : never;
-type InferShape<S> = {
-  [K in keyof S as IsOptionalSchema<S[K]> extends true ? never : K]: Out<S[K]>;
-} & {
-  [K in keyof S as IsOptionalSchema<S[K]> extends true ? K : never]?: Out<S[K]>;
-};
-// id + attributes output, mapped directly off the definition's shape.
-type IdPlusAttributesOutput<TSchema extends ResourceDefinition> = InferShape<
-  { id: TSchema['schema']['shape']['id'] } & TSchema['schema']['shape']['attributes']['shape']
->;
+// `string extends keyof S` is true only for the WIDE default shape (ZodRawShape's
+// string index signature, i.e. an unparameterised ResourceDefinition). There we
+// yield a permissive supertype so specific `…<TDefinition>` stays assignable to
+// the wide `…<ResourceDefinition>` the adapters use as a parameter type. For a
+// concrete shape we map per-leaf with precise optional keys.
+type InferShape<S> = string extends keyof S
+  ? Record<string, unknown>
+  : {
+      [K in keyof S as IsOptionalSchema<S[K]> extends true ? never : K]: Out<S[K]>;
+    } & {
+      [K in keyof S as IsOptionalSchema<S[K]> extends true ? K : never]?: Out<S[K]>;
+    };
+// id + attributes output, mapped directly off the definition's shape. `id` is
+// hoisted out of the mapped type (always a ZodString → string): a conditional
+// key-remap defers under a fully-generic TDefinition, so leaving id inside made
+// `Stored<TDefinition>['id']` appear absent in adapter generic contexts.
+type IdPlusAttributesOutput<TSchema extends ResourceDefinition> = {
+  id: string;
+} & InferShape<TSchema['schema']['shape']['attributes']['shape']>;
 
 export type Stored<TSchema extends ResourceDefinition> = Flavor<
   IdPlusAttributesOutput<TSchema> & {
