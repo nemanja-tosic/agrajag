@@ -47,8 +47,13 @@ type GetAttributesShape<TDefinition extends ResourceDefinition> =
       : never
     : never;
 
-type GetRelationshipsShape<TDefinition extends ResourceDefinition> =
-  TDefinition['schema']['shape']['relationships']['schema']['shape'];
+// zod 4 removed ZodLazy['schema'], so the old walk
+// (...['relationships']['schema']['shape']) no longer resolves. The relationship
+// NAMES are all UpdateSchema needs (values are replaced by ToOne|ToMany below),
+// so derive the shape from the definition's relationships record instead.
+type GetRelationshipsShape<TDefinition extends ResourceDefinition> = {
+  [K in keyof TDefinition['relationships']]: ToOneLinkageSchema | ToManyLinkageSchema;
+};
 
 export type UpdateSchema<
   TDefinition extends ResourceDefinition,

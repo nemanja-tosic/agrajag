@@ -1737,12 +1737,12 @@ __metadata:
     qs: "npm:6.14.0"
     tsd: "npm:0.33.0"
     tsx: "npm:4.22.4"
-    zod: "npm:3.25.76"
-    zod-openapi: "npm:2.19.0"
+    zod: "npm:4.1.13"
+    zod-openapi: "npm:6.0.0"
   peerDependencies:
     "@hono/swagger-ui": ^0.6.0
     hono: ^4.0.0
-    zod: ^3.0.0
+    zod: ^4.0.0
   peerDependenciesMeta:
     "@hono/swagger-ui":
       optional: true
@@ -6497,18 +6497,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod-openapi@npm:2.19.0":
-  version: 2.19.0
-  resolution: "zod-openapi@npm:2.19.0"
+"zod-openapi@npm:6.0.0":
+  version: 6.0.0
+  resolution: "zod-openapi@npm:6.0.0"
   peerDependencies:
-    zod: ^3.21.4
-  checksum: 10c0/8182304b245ecd6da80d634f1ff370a3c6170ce322d2263b8cc62eb4eb33f3187acabd52b625596901e1699bcf8d84f471e9f06a4f6d200a00cf52ddd5fc15ab
+    zod: ^4.0.0
+  checksum: 10c0/b05da6bf285637979ccd316f1017c33f9fb949edc2178a2b2e8f1c7bab81522bae50d678f74b2ac93426dc36962c90896ef96c7052d0706295c7379b1cc4aa88
   languageName: node
   linkType: hard
 
-"zod@npm:3.25.76":
-  version: 3.25.76
-  resolution: "zod@npm:3.25.76"
-  checksum: 10c0/5718ec35e3c40b600316c5b4c5e4976f7fee68151bc8f8d90ec18a469be9571f072e1bbaace10f1e85cf8892ea12d90821b200e980ab46916a6166a4260a983c
+"zod@npm:4.1.13":
+  version: 4.1.13
+  resolution: "zod@npm:4.1.13"
+  checksum: 10c0/d7e74e82dba81a91ffc3239cd85bc034abe193a28f7087a94ab258a3e48e9a7ca4141920cac979a0d781495b48fc547777394149f26be04c3dc642f58bbc3941
   languageName: node
   linkType: hard

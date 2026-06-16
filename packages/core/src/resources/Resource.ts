@@ -16,3 +16,5 @@ export type SingleResourceDocument<
 export type MultipleResourceDocument<
   TDefinition extends ResourceDefinition = ResourceDefinition,
 > = { data: Resource<TDefinition>[]; included?: Resource[] };
+
+

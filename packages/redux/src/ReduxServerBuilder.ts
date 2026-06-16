@@ -235,9 +235,9 @@ export class ReduxServerBuilder<
         }
 
         if (Array.isArray(rel)) {
-          return [rel[0].type, { type: rel[0].type, id: response[key].id }];
+          return [rel[0].type, { type: rel[0].type, id: (response[key] as { id: string }).id }];
         } else {
-          return [rel.type, { type: rel.type, id: response[key].id }];
+          return [rel.type, { type: rel.type, id: (response[key] as { id: string }).id }];
         }
       }),
     ] as TagTypes[];
