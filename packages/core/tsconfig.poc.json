@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    "module": "node16",
+    "moduleResolution": "node16",
+    "target": "ES2022",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "composite": false,
+    "incremental": false,
+    "baseUrl": ".",
+    "paths": { "agrajag": ["./src/index.ts"] },
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "tests-d/**/*.ts"]
+}

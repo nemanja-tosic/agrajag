@@ -23,4 +23,4 @@ export * from './serialization/JsonApiDeserializer.js';
 export * from './schema/createSchema.js';
 export * from './schema/ZodSchemaFactory.js';
 
-export { z } from 'zod';
+export { z } from 'zod/v4';

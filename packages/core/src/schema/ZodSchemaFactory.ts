@@ -10,7 +10,7 @@ import {
   ResourceCapabilities,
   ResourceDefinition,
 } from '../resources/ResourceDefinition.js';
-import { z, ZodType, ZodTypeAny } from 'zod';
+import { z, ZodType, ZodTypeAny } from 'zod/v4';
 import { CreateSchemaOptions, SchemaFactory } from './SchemaFactory.js';
 import { EndpointSchema } from '../endpoints/Endpoints.js';
 import { extendZodWithOpenApi } from 'zod-openapi';
