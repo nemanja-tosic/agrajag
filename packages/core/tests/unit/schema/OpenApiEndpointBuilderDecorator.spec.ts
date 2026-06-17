@@ -24,6 +24,7 @@ describe('OpenAPI doc generation (zod-openapi 6)', () => {
       () => factory.createEndpointSchema(tournament),
       '/tournaments/:id',
       (() => undefined) as never,
+      { kind: 'entity' },
     );
 
     const doc = decorator.build();

@@ -120,6 +120,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
             await respond(this.#createUnhandledErrorResponse(error as Error));
           }
         },
+        { kind: 'collection' },
       );
     }
 
@@ -153,6 +154,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
             await respond(this.#createUnhandledErrorResponse(error as Error));
           }
         },
+        { kind: 'entity' },
       );
     }
 
@@ -201,6 +203,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
             await respond(this.#createUnhandledErrorResponse(error as Error));
           }
         },
+        { kind: 'create' },
       );
     }
 
@@ -248,6 +251,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
             await respond(this.#createUnhandledErrorResponse(error as Error));
           }
         },
+        { kind: 'update' },
       );
     }
 
@@ -284,6 +288,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
             await respond(this.#createUnhandledErrorResponse(error as Error));
           }
         },
+        { kind: 'delete' },
       );
     }
 
@@ -318,6 +323,12 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
             await this.#logError(error as Error);
             await respond(this.#createUnhandledErrorResponse(error as Error));
           }
+        },
+        {
+          kind: 'relationship',
+          type,
+          key,
+          cardinality: Array.isArray(oneOrMany) ? 'many' : 'one',
         },
       );
 
@@ -362,6 +373,12 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
             await respond(this.#createUnhandledErrorResponse(error as Error));
           }
         },
+        {
+          kind: 'relationship',
+          type,
+          key,
+          cardinality: Array.isArray(oneOrMany) ? 'many' : 'one',
+        },
       );
 
       serverBuilder.addPatch(
@@ -405,6 +422,12 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
             await respond(this.#createUnhandledErrorResponse(error as Error));
           }
         },
+        {
+          kind: 'relationship',
+          type,
+          key,
+          cardinality: Array.isArray(oneOrMany) ? 'many' : 'one',
+        },
       );
 
       // NOTE: this should be possible only if it is a one-to-many relationship
@@ -443,6 +466,12 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
             await this.#logError(error as Error);
             await respond(this.#createUnhandledErrorResponse(error as Error));
           }
+        },
+        {
+          kind: 'relationship',
+          type,
+          key,
+          cardinality: Array.isArray(oneOrMany) ? 'many' : 'one',
         },
       );
     }

@@ -5,12 +5,29 @@ import { ResourceLinkage } from '../resources/ResourceLinkageSchema.js';
 import { Resource } from '../resources/Resource.js';
 import { ErrorObject } from '../resources/Error.js';
 
+/**
+ * Which logical endpoint an `add*` call represents, passed so adapters don't have
+ * to reverse-engineer it from the path string. The HTTP verb (which `add*` method)
+ * plus this fully identifies the operation; for relationship endpoints it also
+ * carries the relationship key and cardinality.
+ */
+export type EndpointOperation =
+  | { kind: 'collection' }
+  | { kind: 'entity' }
+  | { kind: 'create' }
+  | { kind: 'update' }
+  | { kind: 'delete' }
+  // `type` is the *parent* resource type; the definition passed to the add* call
+  // is the related resource, so the parent isn't otherwise recoverable.
+  | { kind: 'relationship'; type: string; key: string; cardinality: 'one' | 'many' };
+
 export abstract class ServerBuilder {
   abstract addGet<TPath extends string, TDefinition extends ResourceDefinition>(
     definition: TDefinition,
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: FetchDeleteHandler<TPath, TDefinition>,
+    operation: EndpointOperation,
   ): void;
 
   abstract addPost<
@@ -21,6 +38,7 @@ export abstract class ServerBuilder {
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: MutationHandler<TPath, TDefinition>,
+    operation: EndpointOperation,
   ): void;
 
   abstract addPatch<
@@ -31,6 +49,7 @@ export abstract class ServerBuilder {
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: MutationHandler<TPath, TDefinition>,
+    operation: EndpointOperation,
   ): void;
 
   abstract addDelete<
@@ -41,6 +60,7 @@ export abstract class ServerBuilder {
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: MutationHandler<TPath, TDefinition>,
+    operation: EndpointOperation,
   ): void;
 }
 

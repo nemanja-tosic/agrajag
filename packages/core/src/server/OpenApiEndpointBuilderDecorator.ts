@@ -9,6 +9,7 @@ import {
   ServerBuilder,
   FetchDeleteHandler,
   MutationHandler,
+  EndpointOperation,
 } from './ServerBuilder.js';
 
 export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
@@ -27,6 +28,7 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: FetchDeleteHandler<TPath, TDefinition>,
+    operation: EndpointOperation,
   ) {
     this.#addPath(path, () => {
       const endpointSchema = createEndpointSchema();
@@ -48,7 +50,7 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
       };
     });
 
-    this.builder.addGet(definition, createEndpointSchema, path, handler);
+    this.builder.addGet(definition, createEndpointSchema, path, handler, operation);
   }
 
   addPost<TPath extends string, TDefinition extends ResourceDefinition>(
@@ -56,6 +58,7 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: MutationHandler<TPath, TDefinition>,
+    operation: EndpointOperation,
   ): void {
     this.#addPath(path, () => {
       const endpointSchema = createEndpointSchema();
@@ -82,7 +85,7 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
       };
     });
 
-    this.builder.addPost(definition, createEndpointSchema, path, handler);
+    this.builder.addPost(definition, createEndpointSchema, path, handler, operation);
   }
 
   addPatch<TPath extends string, TDefinition extends ResourceDefinition>(
@@ -90,6 +93,7 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: MutationHandler<TPath, TDefinition>,
+    operation: EndpointOperation,
   ): void {
     this.#addPath(path, () => {
       const endpointSchema = createEndpointSchema();
@@ -116,7 +120,7 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
       };
     });
 
-    this.builder.addPatch(definition, createEndpointSchema, path, handler);
+    this.builder.addPatch(definition, createEndpointSchema, path, handler, operation);
   }
 
   addDelete<TPath extends string, TDefinition extends ResourceDefinition>(
@@ -124,6 +128,7 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
     createEndpointSchema: () => EndpointSchema,
     path: TPath,
     handler: MutationHandler<TPath, TDefinition>,
+    operation: EndpointOperation,
   ): void {
     this.#addPath(path, () => {
       const endpointSchema = createEndpointSchema();
@@ -152,7 +157,7 @@ export class OpenApiEndpointBuilderDecorator extends ServerBuilder {
       };
     });
 
-    this.builder.addDelete(definition, createEndpointSchema, path, handler);
+    this.builder.addDelete(definition, createEndpointSchema, path, handler, operation);
   }
 
   #addPath(path: string, item: () => ZodOpenApiPathItemObject): void {
