@@ -8,7 +8,18 @@ export type QueryParams<
   fields?: Prettify<Partial<Fields<TDefinition, TDefinition['type']>>>;
   sort?: TDefinition['attributes'];
   filter?: string;
+  page?: PageParams;
 };
+
+/** Cursor (keyset) pagination params, JSON:API `page[...]` profile. */
+export interface PageParams {
+  /** Page length. */
+  size?: number;
+  /** Opaque cursor — return the page after this row. */
+  after?: string;
+  /** Opaque cursor — return the page before this row. */
+  before?: string;
+}
 
 export type Prettify<T> = {
   [K in keyof T]: T[K];

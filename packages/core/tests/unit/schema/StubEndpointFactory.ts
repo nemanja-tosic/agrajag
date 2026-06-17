@@ -15,9 +15,7 @@ export class StubEndpointFactory<TDefinition extends ResourceDefinition>
   ): Endpoints<TDefinition> {
     return {
       fetch: {
-        collection: async () => {
-          return [];
-        },
+        collection: async () => ({ data: [] }) as never,
       },
     };
   }
