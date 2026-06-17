@@ -118,23 +118,17 @@ export class ZodSchemaFactory implements SchemaFactory {
       ...(options?.requestSchema ? { request: options.requestSchema } : {}),
       ...(options?.responseSchema ? { response: options.responseSchema } : {}),
       parameters: z.object({
+        // No `.meta({ param })` — zod-openapi 6 derives each param's name from the
+        // object key and its location from requestParams.path/query. The old
+        // zod-openapi-3 `.openapi({ param: { name, in } })` shape now CONFLICTS with
+        // that inference and throws ("has both … information") during doc generation.
         path: z.object({
-          ...(options?.noId
-            ? {}
-            : {
-                id: z.string().meta({ param: { name: 'id', in: 'path' } }),
-              }),
+          ...(options?.noId ? {} : { id: z.string() }),
         }),
         query: z.object({
-          include: z
-            .string()
-            .optional()
-            .meta({ param: { name: 'include', in: 'query' } }),
+          include: z.string().optional(),
           ...querySchema.shape,
-          sort: z
-            .string()
-            .optional()
-            .meta({ param: { name: 'sort', in: 'query' } }),
+          sort: z.string().optional(),
           filter: z.string().optional(),
         }),
       }),
