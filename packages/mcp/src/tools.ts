@@ -39,14 +39,14 @@ export function attributesJsonSchema(definition: ResourceDefinition, partial: bo
 
 // JSON:API query params the agrajag server understands. It parses the query with
 // `qs.parse(query, { comma: true })`, so `include` and each `fields[type]` are
-// comma-joined, and `filter` is passed through raw (app-interpreted). NOTE: there
-// is intentionally NO pagination here — agrajag's query layer has no `page[...]`
-// support, so emitting it would be silently dropped by the server.
+// comma-joined, `filter` is passed through raw (app-interpreted), and `page[...]`
+// carries pagination (cursor: size/after/before; offset: number/size).
 export interface ListQuery {
   filter?: unknown;
   sort?: unknown;
   include?: unknown;
   fields?: unknown;
+  page?: unknown;
 }
 
 export function buildQuery(args: ListQuery): string {
@@ -60,6 +60,11 @@ export function buildQuery(args: ListQuery): string {
     for (const [type, value] of Object.entries(args.fields as Record<string, unknown>)) {
       const list = Array.isArray(value) ? value.map(String).join(',') : String(value);
       if (list) params.set(`fields[${type}]`, list);
+    }
+  }
+  if (args.page && typeof args.page === 'object') {
+    for (const [key, value] of Object.entries(args.page as Record<string, unknown>)) {
+      if (value != null && value !== '') params.set(`page[${key}]`, String(value));
     }
   }
   const query = params.toString();
@@ -82,6 +87,19 @@ export const fieldsSchema: JsonSchema = {
   description:
     'Sparse fieldsets per resource type, e.g. {"<type>":"name,age"} — comma-separated attribute names limit which fields come back.',
   additionalProperties: { type: 'string' },
+};
+
+export const pageSchema: JsonSchema = {
+  type: 'object',
+  description:
+    'Pagination. Cursor mode: { size, after } or { size, before } using cursors from the response `links`. Offset mode: { number, size }.',
+  properties: {
+    size: { type: 'number', description: 'page length' },
+    after: { type: 'string', description: 'cursor from links.next (cursor mode)' },
+    before: { type: 'string', description: 'cursor from links.prev (cursor mode)' },
+    number: { type: 'number', description: '1-based page number (offset mode)' },
+  },
+  additionalProperties: false,
 };
 
 export function relationshipsSchema(rels: RelationshipMeta[]): JsonSchema {

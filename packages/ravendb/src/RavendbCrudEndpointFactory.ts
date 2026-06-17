@@ -4,6 +4,7 @@ import {
   Resolver,
   ResourceDefinition,
   ResourceIdentifier,
+  paginate,
 } from 'agrajag';
 import { IDocumentStore } from 'ravendb';
 
@@ -42,7 +43,7 @@ export class RavendbCrudEndpointFactory<
 
         return query.all();
       },
-      byType: (type, { sort } = {}) => {
+      byType: async (type, { sort, page } = {}) => {
         const query = session.query<Stored<TDefinition>>({
           collection: type,
         });
@@ -57,7 +58,10 @@ export class RavendbCrudEndpointFactory<
           }
         }
 
-        return query.all();
+        // TODO: reference adapter — materializes the full set then slices.
+        // A production resolver should keyset at the query (translate the
+        // cursor's sort-key values + id into a WHERE, take size + 1).
+        return paginate(await query.all(), page);
       },
       async post() {
         throw new Error('Not implemented');

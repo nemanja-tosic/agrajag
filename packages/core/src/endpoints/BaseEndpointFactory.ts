@@ -10,11 +10,12 @@ import {
   Stored,
 } from './Endpoints.js';
 import { Resolver } from '../application/Resolver.js';
-import { Serializer } from '../serialization/Serializer.js';
+import { Serializer, SerializeOptions } from '../serialization/Serializer.js';
 import { QueryParams } from './QueryParams.js';
 import { Document } from '../resources/Resource.js';
 import { ResourceLinkage } from '../resources/ResourceLinkageSchema.js';
 import { IEndpointFactory } from './EndpointFactory.js';
+import { buildPageLinks } from './PageLinks.js';
 
 export abstract class BaseEndpointFactory<
   TDefinition extends ResourceDefinition,
@@ -30,6 +31,7 @@ export abstract class BaseEndpointFactory<
     serializer: Serializer,
     entity: Stored<TDefinition> | Stored<TDefinition>[],
     params: QueryParams<TDefinition>,
+    options?: SerializeOptions,
   ): Promise<Document<TDefinition>> {
     if (Array.isArray(entity)) {
       return serializer.serialize(
@@ -42,6 +44,7 @@ export abstract class BaseEndpointFactory<
           ),
         ),
         params,
+        options,
       );
     }
 
@@ -94,22 +97,12 @@ export abstract class BaseEndpointFactory<
           collection: async params => {
             await using external = this.createExternal(definition);
 
-            const entities = await external.byType(definition.type, params);
-            if (!entities) {
-              return undefined;
-            }
+            const page = await external.byType(definition.type, params);
 
-            const serialized = await this.#serialize(
-              definition,
-              external,
-              serializer,
-              entities,
-              params,
-            );
-
-            return Array.isArray(serialized) && serialized.length === 1
-              ? serialized[0]
-              : serialized;
+            return this.#serialize(definition, external, serializer, page.data, params, {
+              links: buildPageLinks(definition.type, params, page.pageInfo, page.total),
+              ...(page.total !== undefined ? { meta: { total: page.total } } : {}),
+            });
           },
         },
       };
