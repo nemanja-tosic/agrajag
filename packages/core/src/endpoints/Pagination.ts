@@ -17,6 +17,21 @@ export function paginate<T extends { id?: string }>(
   sortValues: (row: T) => unknown[] = () => [],
 ): Page<T> {
   const size = Math.max(1, Math.min(page?.size ?? DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE));
+
+  // Offset mode: 1-based page number, random access, no cursors.
+  if (page?.number != null) {
+    const number = Math.max(1, Math.floor(page.number));
+    const start = (number - 1) * size;
+    return {
+      data: ordered.slice(start, start + size),
+      pageInfo: {
+        hasNextPage: start + size < ordered.length,
+        hasPreviousPage: number > 1,
+      },
+      total: ordered.length,
+    };
+  }
+
   const cursorFor = (row: T): string =>
     encodeCursor({ values: sortValues(row), id: String(row.id) });
   const indexOf = (cursor: string): number => {

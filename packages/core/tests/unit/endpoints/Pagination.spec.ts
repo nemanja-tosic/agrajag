@@ -54,6 +54,24 @@ describe('paginate (in-memory cursor)', () => {
   });
 });
 
+describe('paginate (offset mode)', () => {
+  it('returns a numbered page with no cursors', () => {
+    const page = paginate(rows, { number: 2, size: 2 });
+    expect(page.data.map(r => r.id)).to.deep.equal(['3', '4']);
+    expect(page.pageInfo.hasPreviousPage).to.equal(true);
+    expect(page.pageInfo.hasNextPage).to.equal(true);
+    expect(page.pageInfo.startCursor).to.equal(undefined);
+    expect(page.total).to.equal(5);
+  });
+
+  it('reports the last numbered page', () => {
+    const page = paginate(rows, { number: 3, size: 2 });
+    expect(page.data.map(r => r.id)).to.deep.equal(['5']);
+    expect(page.pageInfo.hasNextPage).to.equal(false);
+    expect(page.pageInfo.hasPreviousPage).to.equal(true);
+  });
+});
+
 describe('buildPageLinks (cursor)', () => {
   it('emits self/first and next when there is a next page', () => {
     const links = buildPageLinks('tags', { page: { size: 2 } }, {
@@ -74,5 +92,19 @@ describe('buildPageLinks (cursor)', () => {
     });
     expect(links.prev).to.equal('/tags?sort=-createdAt&page[size]=2&page[before]=START');
     expect(links.next).to.equal(undefined);
+  });
+});
+
+describe('buildPageLinks (offset)', () => {
+  it('emits numbered first/prev/next/last from the total', () => {
+    const links = buildPageLinks('tags', { page: { number: 2, size: 2 } }, {
+      hasNextPage: true,
+      hasPreviousPage: true,
+    }, 5);
+    expect(links.self).to.equal('/tags?page[size]=2&page[number]=2');
+    expect(links.first).to.equal('/tags?page[size]=2&page[number]=1');
+    expect(links.prev).to.equal('/tags?page[size]=2&page[number]=1');
+    expect(links.next).to.equal('/tags?page[size]=2&page[number]=3');
+    expect(links.last).to.equal('/tags?page[size]=2&page[number]=3');
   });
 });
