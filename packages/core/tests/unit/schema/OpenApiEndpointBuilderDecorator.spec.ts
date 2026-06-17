@@ -34,6 +34,24 @@ describe('OpenAPI doc generation (zod-openapi 6)', () => {
     expect(params.some(p => p.name === 'include' && p.in === 'query')).to.equal(true);
     expect(params.some(p => p.name === 'id' && p.in === 'path')).to.equal(true);
   });
+
+  it('survives repeated builds without polluting the global registry', () => {
+    const author = createSchema('authors', z.object({ name: z.string() }), {
+      relationships: { articles: () => [article] },
+    });
+    const article = createSchema('articles', z.object({ body: z.string() }), {
+      relationships: { author: () => author },
+    });
+    const buildOnce = () =>
+      new ZodSchemaFactory().createSinglePrimaryTypeSchema(article, {
+        withDenormalize: true,
+      });
+    expect(() => {
+      buildOnce();
+      buildOnce();
+      buildOnce();
+    }).to.not.throw();
+  });
 });
 
 describe('denormalization', () => {
