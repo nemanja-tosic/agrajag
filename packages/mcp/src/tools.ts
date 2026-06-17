@@ -124,11 +124,3 @@ export function buildRelationships(
   }
   return out;
 }
-
-export async function responseText(response: Response): Promise<string> {
-  const body = await response.text();
-  if (!response.ok) {
-    throw new Error(`${response.status} ${response.statusText}: ${body}`);
-  }
-  return body || '(empty response)';
-}

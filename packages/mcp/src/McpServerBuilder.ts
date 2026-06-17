@@ -1,12 +1,12 @@
 import {
-  Deserializer,
+  EndpointOperation,
   EndpointSchema,
   JsonApiDeserializer,
   QueryParams,
   ResourceDefinition,
   ServerBuilder,
 } from 'agrajag';
-import type { HttpClient } from './HttpClient.js';
+import type { Executor, TransportRequest } from './Executor.js';
 import {
   attributesJsonSchema,
   buildQuery,
@@ -16,7 +16,6 @@ import {
   includeSchema,
   relationshipMetas,
   relationshipsSchema,
-  responseText,
 } from './tools.js';
 
 export interface McpWriteOptions {
@@ -33,9 +32,8 @@ export interface McpWriteOptions {
 export interface McpServerBuilderOptions {
   /** Tool-name prefix, e.g. "blog" -> tools named "blog_<type>_<action>". */
   namePrefix: string;
-  /** Root the resources hang off; tools request `<baseUrl>/<type>...`. */
-  baseUrl: string;
-  http: HttpClient;
+  /** How tool requests are fulfilled (HTTP client or in-process). */
+  executor: Executor;
   /**
    * Which write tools to expose. Reads (list/get and relationship reads) are
    * always on; every write defaults to false, so the tool surface is read-only
@@ -45,165 +43,177 @@ export interface McpServerBuilderOptions {
   writes?: McpWriteOptions;
 }
 
-type ParsedPath =
-  | { kind: 'collection'; type: string }
-  | { kind: 'self'; type: string }
-  | { kind: 'relationship'; type: string; key: string }
-  | { kind: 'unknown' };
-
-// For relationship endpoints core passes the *related* definition, not the
-// parent — so the parent type and key must come from the path, not the arg.
-function parsePath(path: string): ParsedPath {
-  let match: RegExpExecArray | null;
-  if ((match = /^\/([^/]+)$/.exec(path))) {
-    return { kind: 'collection', type: match[1]! };
-  }
-  if ((match = /^\/([^/]+)\/:id$/.exec(path))) {
-    return { kind: 'self', type: match[1]! };
-  }
-  if ((match = /^\/([^/]+)\/:id\/relationships\/([^/]+)$/.exec(path))) {
-    return { kind: 'relationship', type: match[1]!, key: match[2]! };
-  }
-  return { kind: 'unknown' };
-}
+type Handler = (...args: any[]) => unknown;
 
 /**
- * Maps agrajag's resource endpoints onto MCP tools. Like the redux adapter it is
- * a client: it ignores the server `handler` and builds its own request from
- * `(definition, path)`, getting capability gating and the path scheme from core's
- * Builder.addResource for free.
+ * Maps agrajag's resource endpoints onto MCP tools, driven by core's
+ * Builder.addResource — capability gating, paths, and the endpoint `operation`
+ * all come from there. How a tool's request is fulfilled is delegated to an
+ * Executor, so the same tools work over HTTP (cross-process) or in-process.
  *
- * Reads (list/get and relationship `_get`) are always emitted; write tools
+ * Reads (list/get and relationship `_get`) are always emitted; writes
  * (create/update/delete and relationship `_set`/`_add`/`_remove`) are opt-in via
- * `writes`, all off by default. Everything is capability gated by core first, so
- * enabling a write still only produces tools for resources that declare it.
+ * `writes`.
  */
 export class McpServerBuilder extends ServerBuilder {
   readonly tools: GeneratedTool[] = [];
 
   readonly #prefix: string;
-  readonly #baseUrl: string;
-  readonly #http: HttpClient;
+  readonly #executor: Executor;
   readonly #writes: Required<McpWriteOptions>;
-  readonly #deserializer: Deserializer = new JsonApiDeserializer();
-  // Parent definitions by type, so relationship writes can resolve cardinality
-  // (the add* arg is the *related* definition, which doesn't carry it).
-  readonly #byType: Map<string, ResourceDefinition>;
+  readonly #deserializer = new JsonApiDeserializer();
 
-  constructor(options: McpServerBuilderOptions, definitions: Iterable<ResourceDefinition>) {
+  constructor(options: McpServerBuilderOptions) {
     super();
     this.#prefix = options.namePrefix;
-    this.#baseUrl = options.baseUrl.replace(/\/$/, '');
-    this.#http = options.http;
+    this.#executor = options.executor;
     this.#writes = {
       create: options.writes?.create ?? false,
       update: options.writes?.update ?? false,
       delete: options.writes?.delete ?? false,
       relationships: options.writes?.relationships ?? false,
     };
-    this.#byType = new Map([...definitions].map(definition => [definition.type, definition]));
   }
 
-  addGet(definition: ResourceDefinition, _schema: () => EndpointSchema, path: string): void {
-    const parsed = parsePath(path);
-    if (parsed.kind === 'collection') {
-      this.#addList(definition, parsed.type);
-    } else if (parsed.kind === 'self') {
-      this.#addGet(definition, parsed.type);
-    } else if (parsed.kind === 'relationship') {
-      this.#addRelationshipRead(definition, parsed.type, parsed.key);
+  addGet(
+    definition: ResourceDefinition,
+    _schema: () => EndpointSchema,
+    path: string,
+    handler: Handler,
+    operation: EndpointOperation,
+  ): void {
+    if (operation.kind === 'collection') {
+      this.#listTool(definition, path, handler);
+    } else if (operation.kind === 'entity') {
+      this.#getTool(definition, path, handler);
+    } else if (operation.kind === 'relationship') {
+      this.#relationshipReadTool(definition, path, handler, operation);
     }
   }
 
-  addPost(definition: ResourceDefinition, _schema: () => EndpointSchema, path: string): void {
-    const parsed = parsePath(path);
-    if (parsed.kind === 'collection') {
+  addPost(
+    definition: ResourceDefinition,
+    _schema: () => EndpointSchema,
+    path: string,
+    handler: Handler,
+    operation: EndpointOperation,
+  ): void {
+    if (operation.kind === 'create') {
       if (this.#writes.create) {
-        this.#addCreate(definition, definition.type);
+        this.#createTool(definition, path, handler);
       }
     } else if (
-      parsed.kind === 'relationship' &&
-      this.#writes.relationships &&
-      this.#isToMany(parsed.type, parsed.key)
+      operation.kind === 'relationship' &&
+      operation.cardinality === 'many' &&
+      this.#writes.relationships
     ) {
-      // POST to a relationship adds members — to-many only.
-      this.#addRelationshipWrite('add', 'POST', definition, parsed.type, parsed.key, true);
+      this.#relationshipWriteTool('add', 'POST', definition, path, handler, operation);
     }
   }
 
-  addPatch(definition: ResourceDefinition, _schema: () => EndpointSchema, path: string): void {
-    const parsed = parsePath(path);
-    if (parsed.kind === 'self') {
+  addPatch(
+    definition: ResourceDefinition,
+    _schema: () => EndpointSchema,
+    path: string,
+    handler: Handler,
+    operation: EndpointOperation,
+  ): void {
+    if (operation.kind === 'update') {
       if (this.#writes.update) {
-        this.#addUpdate(definition, definition.type);
+        this.#updateTool(definition, path, handler);
       }
-    } else if (parsed.kind === 'relationship' && this.#writes.relationships) {
-      // PATCH replaces the whole relationship (to-one or to-many).
-      this.#addRelationshipWrite(
-        'set',
-        'PATCH',
-        definition,
-        parsed.type,
-        parsed.key,
-        this.#isToMany(parsed.type, parsed.key),
-      );
+    } else if (operation.kind === 'relationship' && this.#writes.relationships) {
+      this.#relationshipWriteTool('set', 'PATCH', definition, path, handler, operation);
     }
   }
 
-  addDelete(definition: ResourceDefinition, _schema: () => EndpointSchema, path: string): void {
-    const parsed = parsePath(path);
-    if (parsed.kind === 'self') {
+  addDelete(
+    definition: ResourceDefinition,
+    _schema: () => EndpointSchema,
+    path: string,
+    handler: Handler,
+    operation: EndpointOperation,
+  ): void {
+    if (operation.kind === 'delete') {
       if (this.#writes.delete) {
-        this.#addDelete(definition.type);
+        this.#deleteTool(definition, path, handler);
       }
     } else if (
-      parsed.kind === 'relationship' &&
-      this.#writes.relationships &&
-      this.#isToMany(parsed.type, parsed.key)
+      operation.kind === 'relationship' &&
+      operation.cardinality === 'many' &&
+      this.#writes.relationships
     ) {
-      // DELETE from a relationship removes members — to-many only.
-      this.#addRelationshipWrite('remove', 'DELETE', definition, parsed.type, parsed.key, true);
+      this.#relationshipWriteTool('remove', 'DELETE', definition, path, handler, operation);
     }
-  }
-
-  #isToMany(parentType: string, key: string): boolean {
-    return Array.isArray(this.#byType.get(parentType)?.relationships[key]);
-  }
-
-  #url(type: string, id?: string): string {
-    const base = `${this.#baseUrl}/${type}`;
-    return id === undefined ? base : `${base}/${encodeURIComponent(id)}`;
-  }
-
-  #relationshipUrl(parentType: string, id: string, key: string): string {
-    return `${this.#url(parentType, id)}/relationships/${encodeURIComponent(key)}`;
   }
 
   #name(type: string, action: string): string {
     return `${this.#prefix}_${type}_${action}`;
   }
 
-  async #read(
-    definition: ResourceDefinition,
-    response: Response,
-    args: Record<string, unknown>,
-  ): Promise<string> {
-    const body = await response.text();
-    if (!response.ok) {
-      throw new Error(`${response.status} ${response.statusText}: ${body}`);
+  #params(args: Record<string, unknown>): QueryParams & { id?: string } {
+    const params: QueryParams & { id?: string } = {};
+    if (args.id != null) params.id = String(args.id);
+    if (Array.isArray(args.include)) params.include = args.include.map(String);
+    if (typeof args.sort === 'string') params.sort = args.sort as never;
+    if (typeof args.filter === 'string') params.filter = args.filter;
+    if (args.fields && typeof args.fields === 'object') {
+      params.fields = Object.fromEntries(
+        Object.entries(args.fields as Record<string, unknown>).map(([type, value]) => [
+          type,
+          String(value).split(','),
+        ]),
+      ) as never;
     }
-    if (!body) {
-      return '(empty response)';
-    }
-    const params: QueryParams = {
-      include: Array.isArray(args.include) ? args.include.map(String) : undefined,
-    };
-    const result = await this.#deserializer.deserialize(definition, JSON.parse(body), params);
-    return JSON.stringify(result, null, 2);
+    return params;
   }
 
-  #addList(definition: ResourceDefinition, type: string): void {
+  // Build the transport request (both HTTP and in-process representations), send
+  // it via the executor, and format the JSON:API document for the tool result.
+  async #send(
+    args: Record<string, unknown>,
+    options: {
+      method: TransportRequest['method'];
+      path: string;
+      handler: Handler;
+      definition: ResourceDefinition;
+      deserialize: boolean;
+      body?: unknown;
+    },
+  ): Promise<string> {
+    const { method, handler, definition, deserialize, body } = options;
+    const id = args.id != null ? String(args.id) : undefined;
+    const path = options.path.replace(':id', encodeURIComponent(id ?? ''));
+    const query = method === 'GET' ? buildQuery(args) : '';
+    const params = this.#params(args);
+
+    const runInProcess = () =>
+      new Promise<{ body?: unknown; status: number }>((resolve, reject) => {
+        const respond = async (response: { body?: unknown; status: number }) => {
+          resolve(response);
+        };
+        try {
+          const ran = method === 'GET' ? handler(params, respond) : handler(body, params, respond);
+          Promise.resolve(ran).catch(reject);
+        } catch (error) {
+          reject(error);
+        }
+      });
+
+    const document = await this.#executor.send({ method, path, query, body, runInProcess });
+    if (document == null) {
+      return '(empty response)';
+    }
+    if (deserialize) {
+      const result = await this.#deserializer.deserialize(definition, document as never, params);
+      return JSON.stringify(result, null, 2);
+    }
+    return JSON.stringify(document, null, 2);
+  }
+
+  #listTool(definition: ResourceDefinition, path: string, handler: Handler): void {
     const rels = relationshipMetas(definition);
+    const type = definition.type;
     this.tools.push({
       name: this.#name(type, 'list'),
       description: `List ${type} (${this.#prefix}). Returns the JSON:API collection document.`,
@@ -217,13 +227,13 @@ export class McpServerBuilder extends ServerBuilder {
         },
         additionalProperties: false,
       },
-      handler: async args =>
-        this.#read(definition, await this.#http.request(`${this.#url(type)}${buildQuery(args)}`), args),
+      handler: args => this.#send(args, { method: 'GET', path, handler, definition, deserialize: true }),
     });
   }
 
-  #addGet(definition: ResourceDefinition, type: string): void {
+  #getTool(definition: ResourceDefinition, path: string, handler: Handler): void {
     const rels = relationshipMetas(definition);
+    const type = definition.type;
     this.tools.push({
       name: this.#name(type, 'get'),
       description: `Get one ${type} resource by id (${this.#prefix}).`,
@@ -233,17 +243,13 @@ export class McpServerBuilder extends ServerBuilder {
         required: ['id'],
         additionalProperties: false,
       },
-      handler: async args =>
-        this.#read(
-          definition,
-          await this.#http.request(`${this.#url(type, String(args.id))}${buildQuery(args)}`),
-          args,
-        ),
+      handler: args => this.#send(args, { method: 'GET', path, handler, definition, deserialize: true }),
     });
   }
 
-  #addCreate(definition: ResourceDefinition, type: string): void {
+  #createTool(definition: ResourceDefinition, path: string, handler: Handler): void {
     const rels = relationshipMetas(definition);
+    const type = definition.type;
     this.tools.push({
       name: this.#name(type, 'create'),
       description: `Create a ${type} resource (${this.#prefix}).`,
@@ -257,28 +263,28 @@ export class McpServerBuilder extends ServerBuilder {
         required: ['attributes'],
         additionalProperties: false,
       },
-      handler: async args =>
-        this.#read(
+      handler: args =>
+        this.#send(args, {
+          method: 'POST',
+          path,
+          handler,
           definition,
-          await this.#http.request(this.#url(type), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              data: {
-                ...(typeof args.id === 'string' ? { id: args.id } : {}),
-                type,
-                attributes: args.attributes,
-                relationships: buildRelationships(rels, args.relationships),
-              },
-            }),
-          }),
-          args,
-        ),
+          deserialize: true,
+          body: {
+            data: {
+              ...(typeof args.id === 'string' ? { id: args.id } : {}),
+              type,
+              attributes: args.attributes,
+              relationships: buildRelationships(rels, args.relationships),
+            },
+          },
+        }),
     });
   }
 
-  #addUpdate(definition: ResourceDefinition, type: string): void {
+  #updateTool(definition: ResourceDefinition, path: string, handler: Handler): void {
     const rels = relationshipMetas(definition);
+    const type = definition.type;
     this.tools.push({
       name: this.#name(type, 'update'),
       description: `Update a ${type} resource by id (${this.#prefix}). Send only the attributes/relationships to change.`,
@@ -292,27 +298,27 @@ export class McpServerBuilder extends ServerBuilder {
         required: ['id', 'attributes'],
         additionalProperties: false,
       },
-      handler: async args =>
-        this.#read(
+      handler: args =>
+        this.#send(args, {
+          method: 'PATCH',
+          path,
+          handler,
           definition,
-          await this.#http.request(this.#url(type, String(args.id)), {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              data: {
-                id: args.id,
-                type,
-                attributes: args.attributes,
-                relationships: buildRelationships(rels, args.relationships),
-              },
-            }),
-          }),
-          args,
-        ),
+          deserialize: true,
+          body: {
+            data: {
+              id: args.id,
+              type,
+              attributes: args.attributes,
+              relationships: buildRelationships(rels, args.relationships),
+            },
+          },
+        }),
     });
   }
 
-  #addDelete(type: string): void {
+  #deleteTool(definition: ResourceDefinition, path: string, handler: Handler): void {
+    const type = definition.type;
     this.tools.push({
       name: this.#name(type, 'delete'),
       description: `Delete a ${type} resource by id (${this.#prefix}).`,
@@ -322,58 +328,68 @@ export class McpServerBuilder extends ServerBuilder {
         required: ['id'],
         additionalProperties: false,
       },
-      handler: async args =>
-        responseText(await this.#http.request(this.#url(type, String(args.id)), { method: 'DELETE' })),
+      handler: args =>
+        this.#send(args, { method: 'DELETE', path, handler, definition, deserialize: false }),
     });
   }
 
-  #addRelationshipRead(relatedDefinition: ResourceDefinition, parentType: string, key: string): void {
+  #relationshipReadTool(
+    relatedDefinition: ResourceDefinition,
+    path: string,
+    handler: Handler,
+    operation: Extract<EndpointOperation, { kind: 'relationship' }>,
+  ): void {
     this.tools.push({
-      name: this.#name(parentType, `${key}_get`),
-      description: `Read the "${key}" relationship of a ${parentType} (related ${relatedDefinition.type}). Returns JSON:API resource linkage.`,
+      name: this.#name(operation.type, `${operation.key}_get`),
+      description: `Read the "${operation.key}" relationship of a ${operation.type} (related ${relatedDefinition.type}). Returns JSON:API resource linkage.`,
       inputSchema: {
         type: 'object',
-        properties: { id: { type: 'string', description: `id of the ${parentType}` } },
+        properties: { id: { type: 'string', description: `id of the ${operation.type}` } },
         required: ['id'],
         additionalProperties: false,
       },
-      handler: async args =>
-        responseText(await this.#http.request(this.#relationshipUrl(parentType, String(args.id), key))),
+      handler: args =>
+        this.#send(args, {
+          method: 'GET',
+          path,
+          handler,
+          definition: relatedDefinition,
+          deserialize: false,
+        }),
     });
   }
 
-  #addRelationshipWrite(
+  #relationshipWriteTool(
     action: 'set' | 'add' | 'remove',
     method: 'PATCH' | 'POST' | 'DELETE',
     relatedDefinition: ResourceDefinition,
-    parentType: string,
-    key: string,
-    toMany: boolean,
+    path: string,
+    handler: Handler,
+    operation: Extract<EndpointOperation, { kind: 'relationship' }>,
   ): void {
     const relatedType = relatedDefinition.type;
+    const toMany = operation.cardinality === 'many';
     const verb = action === 'set' ? 'Replace' : action === 'add' ? 'Add to' : 'Remove from';
 
-    const properties: Record<string, unknown> = { id: { type: 'string', description: `id of the ${parentType}` } };
+    const properties: Record<string, unknown> = {
+      id: { type: 'string', description: `id of the ${operation.type}` },
+    };
     if (toMany) {
-      properties.relatedIds = {
-        type: 'array',
-        items: { type: 'string' },
-        description: `ids of ${relatedType}`,
-      };
+      properties.relatedIds = { type: 'array', items: { type: 'string' }, description: `ids of ${relatedType}` };
     } else {
       properties.relatedId = { type: ['string', 'null'], description: `id of ${relatedType} (null to clear)` };
     }
 
     this.tools.push({
-      name: this.#name(parentType, `${key}_${action}`),
-      description: `${verb} the "${key}" relationship of a ${parentType} (related ${relatedType}).`,
+      name: this.#name(operation.type, `${operation.key}_${action}`),
+      description: `${verb} the "${operation.key}" relationship of a ${operation.type} (related ${relatedType}).`,
       inputSchema: {
         type: 'object',
         properties,
         required: ['id', toMany ? 'relatedIds' : 'relatedId'],
         additionalProperties: false,
       },
-      handler: async args => {
+      handler: args => {
         const data = toMany
           ? (Array.isArray(args.relatedIds) ? args.relatedIds : []).map(id => ({
               type: relatedType,
@@ -382,13 +398,14 @@ export class McpServerBuilder extends ServerBuilder {
           : args.relatedId == null
             ? null
             : { type: relatedType, id: String(args.relatedId) };
-        return responseText(
-          await this.#http.request(this.#relationshipUrl(parentType, String(args.id), key), {
-            method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data }),
-          }),
-        );
+        return this.#send(args, {
+          method,
+          path,
+          handler,
+          definition: relatedDefinition,
+          deserialize: false,
+          body: { data },
+        });
       },
     });
   }

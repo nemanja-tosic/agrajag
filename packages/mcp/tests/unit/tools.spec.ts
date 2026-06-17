@@ -1,6 +1,12 @@
 import { expect } from 'chai';
 import { z, createSchema, ResourceCapabilities, DefinitionCollection } from 'agrajag';
-import { McpBuilder, type GeneratedTool, type McpWriteOptions } from '../../src/index.js';
+import {
+  McpBuilder,
+  httpExecutor,
+  inProcessExecutor,
+  type GeneratedTool,
+  type McpWriteOptions,
+} from '../../src/index.js';
 
 interface Call {
   url: string;
@@ -44,7 +50,7 @@ function build(
   }
   const tools = new McpBuilder()
     .addDefinitions(collection)
-    .build({ namePrefix, baseUrl: 'https://h/api', http, writes });
+    .build({ namePrefix, executor: httpExecutor({ baseUrl: 'https://h/api', http }), writes });
   return { tools, http };
 }
 
@@ -212,5 +218,25 @@ describe('McpBuilder', () => {
     const out = await toolNamed(tools, 'blog_tags_get').handler({ id: 't1' });
     // denormalized (id + flat attributes), not the raw JSON:API envelope
     expect(JSON.parse(out)).to.deep.equal({ id: 't1', label: 'x' });
+  });
+
+  it('in-process executor invokes the endpoint handler with no HTTP', async () => {
+    const tags = createSchema('tags', z.object({ label: z.string() }));
+    const collection = new DefinitionCollection();
+    collection.addDefinition(tags);
+    const tools = new McpBuilder().addDefinitions(collection).build({
+      namePrefix: 'blog',
+      executor: inProcessExecutor(),
+      endpoints: () =>
+        ({
+          fetch: {
+            self: async (params: { id: string }) => ({
+              data: { type: 'tags', id: params.id, attributes: { label: 'in-proc' } },
+            }),
+          },
+        }) as never,
+    });
+    const out = await toolNamed(tools, 'blog_tags_get').handler({ id: 't9' });
+    expect(JSON.parse(out)).to.deep.equal({ id: 't9', label: 'in-proc' });
   });
 });

@@ -2,29 +2,55 @@
 
 Expose agrajag `ResourceDefinition`s as [Model Context Protocol](https://modelcontextprotocol.io)
 tools. Like the other adapters it plugs into agrajag's `Builder`: core's
-capability gating and path scheme drive an `McpServerBuilder` that emits one set
-of tools per resource, with input schemas derived from the resource's zod
-attributes and relationship graph. No per-resource code.
+capability gating, path scheme, and endpoint `operation` drive an
+`McpServerBuilder` that emits one set of tools per resource, with input schemas
+derived from the resource's zod attributes and relationship graph. No
+per-resource code.
 
 ```ts
-import { McpBuilder, createMcpServer, createFetchHttpClient } from '@agrajag/mcp-adapter';
+import {
+  McpBuilder,
+  createMcpServer,
+  httpExecutor,
+  createFetchHttpClient,
+} from '@agrajag/mcp-adapter';
 import { DefinitionCollection } from 'agrajag';
-
-const http = createFetchHttpClient();            // or your own HttpClient (cookies, tokens, …)
 
 // One builder per origin/module; compose their tools into one server.
 const tools = new McpBuilder()
   .addDefinitions(new DefinitionCollection().addDefinition(article).addDefinition(author))
   .build({
     namePrefix: 'blog',
-    baseUrl: 'https://host/api',
-    http,
+    executor: httpExecutor({ baseUrl: 'https://host/api', http: createFetchHttpClient() }),
     writes: { create: true, update: true },   // reads always on; writes opt-in
   });
 
 const { server } = createMcpServer(tools, { name: 'blog-mcp', version: '1.0.0' });
 // register `server` with an MCP transport
 ```
+
+## Executors — HTTP or in-process
+
+How a tool's request is fulfilled is delegated to an `Executor`, mirroring
+agrajag's two adapter styles:
+
+- **`httpExecutor({ baseUrl, http })`** — cross-process: speaks JSON:API over an
+  injected `HttpClient` (auth lives there). For MCP servers that front one or
+  more API origins.
+- **`inProcessExecutor()`** — co-deployed: invokes agrajag's endpoint handler
+  directly, no HTTP. Runs inside the caller's context, so request-scoped concerns
+  (transactions, row-level scoping, request-scoped auth) apply ambiently.
+  Requires resolver-backed `endpoints`:
+
+  ```ts
+  new McpBuilder().addDefinitions(defs).build({
+    namePrefix: 'blog',
+    executor: inProcessExecutor(),
+    endpoints: definition => myEndpointFactory.createEndpoints(definition, serializer),
+  });
+  ```
+
+  (The HTTP executor never invokes the handler, so it doesn't need `endpoints`.)
 
 ## Generated tools
 
