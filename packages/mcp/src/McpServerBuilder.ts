@@ -1,5 +1,8 @@
 import {
+  Deserializer,
   EndpointSchema,
+  JsonApiDeserializer,
+  QueryParams,
   ResourceDefinition,
   ServerBuilder,
 } from 'agrajag';
@@ -48,10 +51,8 @@ type ParsedPath =
   | { kind: 'relationship'; type: string; key: string }
   | { kind: 'unknown' };
 
-// Core builds paths as `/${type}`, `/${type}/:id`, and
-// `/${type}/:id/relationships/${key}`. Recover the structure from the path so
-// each add* call maps to the right tool — for relationship endpoints the parent
-// type lives in the path (the definition arg is the *related* resource).
+// For relationship endpoints core passes the *related* definition, not the
+// parent — so the parent type and key must come from the path, not the arg.
 function parsePath(path: string): ParsedPath {
   let match: RegExpExecArray | null;
   if ((match = /^\/([^/]+)$/.exec(path))) {
@@ -84,6 +85,7 @@ export class McpServerBuilder extends ServerBuilder {
   readonly #baseUrl: string;
   readonly #http: HttpClient;
   readonly #writes: Required<McpWriteOptions>;
+  readonly #deserializer: Deserializer = new JsonApiDeserializer();
   // Parent definitions by type, so relationship writes can resolve cardinality
   // (the add* arg is the *related* definition, which doesn't carry it).
   readonly #byType: Map<string, ResourceDefinition>;
@@ -181,6 +183,25 @@ export class McpServerBuilder extends ServerBuilder {
     return `${this.#prefix}_${type}_${action}`;
   }
 
+  async #read(
+    definition: ResourceDefinition,
+    response: Response,
+    args: Record<string, unknown>,
+  ): Promise<string> {
+    const body = await response.text();
+    if (!response.ok) {
+      throw new Error(`${response.status} ${response.statusText}: ${body}`);
+    }
+    if (!body) {
+      return '(empty response)';
+    }
+    const params: QueryParams = {
+      include: Array.isArray(args.include) ? args.include.map(String) : undefined,
+    };
+    const result = await this.#deserializer.deserialize(definition, JSON.parse(body), params);
+    return JSON.stringify(result, null, 2);
+  }
+
   #addList(definition: ResourceDefinition, type: string): void {
     const rels = relationshipMetas(definition);
     this.tools.push({
@@ -196,7 +217,8 @@ export class McpServerBuilder extends ServerBuilder {
         },
         additionalProperties: false,
       },
-      handler: async args => responseText(await this.#http.request(`${this.#url(type)}${buildQuery(args)}`)),
+      handler: async args =>
+        this.#read(definition, await this.#http.request(`${this.#url(type)}${buildQuery(args)}`), args),
     });
   }
 
@@ -212,7 +234,11 @@ export class McpServerBuilder extends ServerBuilder {
         additionalProperties: false,
       },
       handler: async args =>
-        responseText(await this.#http.request(`${this.#url(type, String(args.id))}${buildQuery(args)}`)),
+        this.#read(
+          definition,
+          await this.#http.request(`${this.#url(type, String(args.id))}${buildQuery(args)}`),
+          args,
+        ),
     });
   }
 
@@ -232,7 +258,8 @@ export class McpServerBuilder extends ServerBuilder {
         additionalProperties: false,
       },
       handler: async args =>
-        responseText(
+        this.#read(
+          definition,
           await this.#http.request(this.#url(type), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -245,6 +272,7 @@ export class McpServerBuilder extends ServerBuilder {
               },
             }),
           }),
+          args,
         ),
     });
   }
@@ -265,7 +293,8 @@ export class McpServerBuilder extends ServerBuilder {
         additionalProperties: false,
       },
       handler: async args =>
-        responseText(
+        this.#read(
+          definition,
           await this.#http.request(this.#url(type, String(args.id)), {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -278,6 +307,7 @@ export class McpServerBuilder extends ServerBuilder {
               },
             }),
           }),
+          args,
         ),
     });
   }
@@ -312,8 +342,6 @@ export class McpServerBuilder extends ServerBuilder {
     });
   }
 
-  // PATCH (set/replace), POST (add), DELETE (remove) against a relationship's
-  // linkage. to-one supports only `set` (nullable); to-many supports all three.
   #addRelationshipWrite(
     action: 'set' | 'add' | 'remove',
     method: 'PATCH' | 'POST' | 'DELETE',

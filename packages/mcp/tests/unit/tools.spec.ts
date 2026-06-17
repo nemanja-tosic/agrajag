@@ -204,4 +204,13 @@ describe('McpBuilder', () => {
     expect(http.calls[0]!.url).to.equal('https://h/api/authors/au1');
     expect(http.calls[0]!.init!.method).to.equal('DELETE');
   });
+
+  it('deserializes resource responses into denormalized objects', async () => {
+    const tags = createSchema('tags', z.object({ label: z.string() }));
+    const http = stubClient(JSON.stringify({ data: { type: 'tags', id: 't1', attributes: { label: 'x' } } }));
+    const { tools } = build([tags], http);
+    const out = await toolNamed(tools, 'blog_tags_get').handler({ id: 't1' });
+    // denormalized (id + flat attributes), not the raw JSON:API envelope
+    expect(JSON.parse(out)).to.deep.equal({ id: 't1', label: 'x' });
+  });
 });
