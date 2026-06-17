@@ -133,6 +133,20 @@ describe('McpBuilder', () => {
     expect(query.get('fields[articles]')).to.equal('body');
   });
 
+  it('list emits page[...] for cursor and offset modes', async () => {
+    const cursor = build([author]);
+    await toolNamed(cursor.tools, 'blog_authors_list').handler({ page: { size: 2, after: 'CUR' } });
+    let query = new URL(cursor.http.calls[0]!.url).searchParams;
+    expect(query.get('page[size]')).to.equal('2');
+    expect(query.get('page[after]')).to.equal('CUR');
+
+    const offset = build([author]);
+    await toolNamed(offset.tools, 'blog_authors_list').handler({ page: { number: 3, size: 2 } });
+    query = new URL(offset.http.calls[0]!.url).searchParams;
+    expect(query.get('page[number]')).to.equal('3');
+    expect(query.get('page[size]')).to.equal('2');
+  });
+
   it('exposes relationships in the create input schema with correct cardinality', () => {
     const { tools } = build([author]);
     const props = toolNamed(tools, 'blog_authors_create').inputSchema.properties as Record<

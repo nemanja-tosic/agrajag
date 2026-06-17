@@ -14,6 +14,7 @@ import {
   fieldsSchema,
   GeneratedTool,
   includeSchema,
+  pageSchema,
   relationshipMetas,
   relationshipsSchema,
 } from './tools.js';
@@ -165,6 +166,9 @@ export class McpServerBuilder extends ServerBuilder {
         ]),
       ) as never;
     }
+    if (args.page && typeof args.page === 'object') {
+      params.page = args.page as never;
+    }
     return params;
   }
 
@@ -224,6 +228,7 @@ export class McpServerBuilder extends ServerBuilder {
           sort: { type: 'string', description: 'JSON:API sort, e.g. "-createdAt,name"' },
           include: includeSchema(rels),
           fields: fieldsSchema,
+          page: pageSchema,
         },
         additionalProperties: false,
       },

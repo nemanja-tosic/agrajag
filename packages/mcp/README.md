@@ -56,7 +56,7 @@ agrajag's two adapter styles:
 
 Reads, always on (gated only on the definition's capabilities):
 
-- `<prefix>_<type>_list` — `filter`, `sort`, `include`, `fields`
+- `<prefix>_<type>_list` — `filter`, `sort`, `include`, `fields`, `page`
 - `<prefix>_<type>_get` — `id`, `include`, `fields`
 - `<prefix>_<type>_<relationship>_get` — `id`; reads a relationship's linkage
 
@@ -74,14 +74,14 @@ the adapter wraps into JSON:API linkage, filling the related `type` from the
 definition; to-one accepts `null` to clear. `include`/`fields`/`sort` are emitted
 as the comma-joined query the agrajag server parses; `filter` is passed through raw.
 
+`page` drives cursor or offset pagination (cursor: `{ size, after | before }`
+with cursors from the response `links`; offset: `{ number, size }`). The
+response's top-level `links` (`next`/`prev`, plus `first`/`last` in offset mode)
+let an agent walk pages.
+
 The surface is read-only unless you opt in, and every write is still capability
 gated by core — enabling `writes.delete` only adds delete tools for resources
 that declare the Delete capability.
-
-### Not generated
-
-- **Pagination** — agrajag's query layer has no `page[...]` support, so emitting
-  page params would be silently dropped. Add it to agrajag core first.
 
 ## Auth
 
