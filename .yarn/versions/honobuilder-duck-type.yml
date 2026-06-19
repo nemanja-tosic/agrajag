@@ -1,5 +1,5 @@
 releases:
-  agrajag: patch
+  agrajag: minor
   "@agrajag/express-adapter": patch
   "@agrajag/fastify-adapter": patch
   "@agrajag/mcp-adapter": patch

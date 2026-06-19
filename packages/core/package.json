@@ -15,39 +15,28 @@
     "test": "mocha && tsd --files \"tests-d/**/*.test-d.ts\""
   },
   "dependencies": {
-    "@hono/swagger-ui": "0.6.1",
-    "hono": "4.12.25",
     "jsonapi-serializer": "3.6.9",
     "qs": "6.14.0",
-    "zod": "4.4.3",
     "zod-openapi": "6.0.0"
   },
   "devDependencies": {
     "@agrajag/configs": "workspace:*",
+    "@hono/swagger-ui": "0.6.1",
     "@types/chai": "5.2.2",
     "@types/jsonapi-serializer": "3.6.8",
     "@types/mocha": "10.0.10",
     "@types/node": "22.18.6",
     "@types/qs": "^6",
     "chai": "5.2.1",
+    "hono": "4.12.25",
     "mocha": "11.7.1",
     "tsd": "0.33.0",
-    "tsx": "4.22.4"
+    "tsx": "4.22.4",
+    "zod": "4.4.3"
   },
   "peerDependencies": {
     "@hono/swagger-ui": "^0.6.0",
-    "hono": "^4.0.0",
+    "hono": "^4.12.0",
     "zod": "^4.4.0"
-  },
-  "peerDependenciesMeta": {
-    "@hono/swagger-ui": {
-      "optional": true
-    },
-    "hono": {
-      "optional": true
-    },
-    "zod": {
-      "optional": true
-    }
   }
 }
