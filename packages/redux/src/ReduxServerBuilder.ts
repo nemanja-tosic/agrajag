@@ -227,23 +227,29 @@ export class ReduxServerBuilder<
     path: string,
     response: Denormalized<ResourceDefinition> | undefined,
   ): TagDescription<TagTypes>[] {
+    const id =
+      response && typeof (response as { id?: unknown }).id === 'string'
+        ? (response as { id: string }).id
+        : undefined;
+
     return [
       definition.type,
+      { type: definition.type, id: 'LIST' },
+      ...(id ? [{ type: definition.type, id }] : []),
       ...Object.entries(definition.relationships).flatMap(([key, rel]) => {
         if (response === undefined || !(key in response)) {
-          return;
+          return [];
         }
 
-        if (Array.isArray(rel)) {
-          return [rel[0].type, { type: rel[0].type, id: (response[key] as { id: string }).id }];
-        } else {
-          return [rel.type, { type: rel.type, id: (response[key] as { id: string }).id }];
-        }
+        const related = Array.isArray(rel) ? rel[0] : rel;
+        return [
+          related.type,
+          { type: related.type, id: (response[key] as { id: string }).id },
+        ];
       }),
-    ] as TagTypes[];
+    ] as TagDescription<TagTypes>[];
   }
 
-  // TODO: we should invalidate tags based on id
   // TODO: we should invalidate tags based on include relationships
   #providesTags(
     definition: ResourceDefinition,
@@ -253,10 +259,30 @@ export class ReduxServerBuilder<
       | Denormalized<ResourceDefinition>[]
       | undefined,
   ): TagDescription<TagTypes>[] {
-    return [...walkResourceTree(definition)].reduce(
-      (acc, [, def]) => [...acc, unwrapRelationship(def).type] as TagTypes[],
-      [] as TagTypes[],
+    const treeTypes = [...walkResourceTree(definition)].map(
+      ([, def]) => unwrapRelationship(def).type,
     );
+
+    const items = Array.isArray(response)
+      ? response
+      : response
+        ? [response]
+        : [];
+
+    const idTags = items
+      .filter(
+        (item): item is { id: string } =>
+          !!item && typeof (item as { id?: unknown }).id === 'string',
+      )
+      .map(item => ({ type: definition.type, id: item.id }));
+
+    return [
+      ...treeTypes,
+      ...idTags,
+      ...(Array.isArray(response)
+        ? [{ type: definition.type, id: 'LIST' }]
+        : []),
+    ] as TagDescription<TagTypes>[];
   }
 }
 
