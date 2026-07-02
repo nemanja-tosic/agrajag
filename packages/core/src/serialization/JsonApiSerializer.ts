@@ -74,38 +74,39 @@ export class JsonApiSerializer implements Serializer {
     const type = definition.type;
     const relationships = definition.relationships;
 
-    const isInIncludes = (key: string) =>
-      params?.include?.includes([...path.slice(1), key].join('.')) ?? false;
+    const isInIncludes = (key: string) => {
+      const dotted = [...path.slice(1), key].join('.');
+      return (
+        params?.include?.some(
+          included => included === dotted || included.startsWith(`${dotted}.`),
+        ) ?? false
+      );
+    };
 
     const isInFields = (key: string) =>
       params?.fields?.[
         path.join('.') as keyof NonNullable<typeof params.fields>
       ]?.includes(key) ?? true;
 
+    const includedRelationships = Object.entries(relationships)
+      .filter(([key]) => isInIncludes(key))
+      .map(([key, value]) => [key, this.#unwrapRelationship(value)] as const);
+
     return {
       ref: 'id',
       included: options?.relationshipKey !== undefined,
       attributes: [
         ...(definition.attributes as string[]).filter(isInFields),
-        ...Object.keys(relationships),
+        ...includedRelationships.map(([key]) => key),
       ],
       keyForAttribute: attribute => attribute,
       ...Object.fromEntries(
-        Object.entries(relationships)
-          .map(
-            ([key, value]) => [key, this.#unwrapRelationship(value)] as const,
-          )
-          .map(([key, relationship]) => [
-            key,
-            isInIncludes(key)
-              ? this.#createOptions(
-                  relationship,
-                  params as any,
-                  [...path, key],
-                  { relationshipKey: key },
-                )
-              : { ref: 'id' },
-          ]),
+        includedRelationships.map(([key, relationship]) => [
+          key,
+          this.#createOptions(relationship, params as any, [...path, key], {
+            relationshipKey: key,
+          }),
+        ]),
       ),
     };
   }
