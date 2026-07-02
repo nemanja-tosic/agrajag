@@ -58,3 +58,36 @@ describe('HonoServerBuilder body parsing', () => {
     expect(await response.json()).to.deep.equal({ data: { type: 'things', id: '1' } });
   });
 });
+
+describe('HonoServerBuilder include parsing', () => {
+  const stubSchema = {} as ResourceDefinition;
+  const stubEndpointSchema = () => ({}) as EndpointSchema;
+
+  const captureInclude = () => {
+    const captured: { include?: unknown } = {};
+    const builder = new HonoServerBuilder(new Hono());
+    builder.addGet(stubSchema, stubEndpointSchema, '/things', async (params, respond) => {
+      captured.include = (params as { include?: unknown }).include;
+      await respond({ body: { data: [] }, status: 200 });
+    });
+    return { app: builder.build(), captured };
+  };
+
+  it('normalizes a single-value include to a one-element array', async () => {
+    const { app, captured } = captureInclude();
+    await app.request('/things?include=matches');
+    expect(captured.include).to.deep.equal(['matches']);
+  });
+
+  it('keeps comma-joined includes as an array', async () => {
+    const { app, captured } = captureInclude();
+    await app.request('/things?include=a,b');
+    expect(captured.include).to.deep.equal(['a', 'b']);
+  });
+
+  it('leaves an absent include undefined', async () => {
+    const { app, captured } = captureInclude();
+    await app.request('/things');
+    expect(captured.include).to.equal(undefined);
+  });
+});
