@@ -325,9 +325,6 @@ export abstract class BaseEndpointFactory<
     return endpoints;
   }
 
-  // Copies the entity without invoking its property getters (mappers expose
-  // relationships as lazy getters), then resolves only the relationships the
-  // request actually included — matching the serializer's include scoping.
   async #denormalize<TDefinition extends ResourceDefinition>(
     definition: TDefinition,
     entity: Stored<TDefinition>,

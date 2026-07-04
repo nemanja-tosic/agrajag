@@ -11,10 +11,6 @@ const bookSchema = createSchema('books', z.object({ title: z.string() }), {
   relationships: { author: () => authorSchema },
 });
 
-// Mappers expose relationships as lazy getters (loading guards live inside).
-// Serialization must not invoke a getter for a relationship the request did
-// not include — pre-fix, #denormalize spread the entity and probed every
-// relationship key, firing the getters and blowing up on unloaded relations.
 function createBook(): Stored<typeof bookSchema> {
   return {
     id: 'book1',
