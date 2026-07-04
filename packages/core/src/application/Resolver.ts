@@ -23,10 +23,12 @@ export interface User {
   [key: string]: unknown;
 }
 
+export type ResolverContext = Record<string, unknown>;
+
 export type ResolverQueryParams<
   TDefinition extends ResourceDefinition,
   TUser extends User,
-> = QueryParams<TDefinition> & { user?: TUser };
+> = QueryParams<TDefinition> & { user?: TUser; context?: ResolverContext };
 
 /** Cursor pagination metadata for a page of results (Relay-style). */
 export interface PageInfo {

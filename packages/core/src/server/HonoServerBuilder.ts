@@ -120,7 +120,10 @@ export class HonoServerBuilder extends ServerBuilder {
   // A 204 (No Content) response must not carry a body, so it cannot go
   // through `c.json` (which only accepts contentful status codes). Route it
   // to `c.body(null, ...)` instead.
-  #respond(c: Context, { body, status, headers }: Response): globalThis.Response {
+  #respond(
+    c: Context,
+    { body, status, headers }: Response,
+  ): globalThis.Response {
     if (status === 204) {
       return c.body(null, status, headers);
     }
@@ -156,6 +159,7 @@ export class HonoServerBuilder extends ServerBuilder {
   #extractParams(c: any): any {
     const { filter, ...query } = c.req.query();
     const parsed = qs.parse(query, { comma: true }) as Record<string, unknown>;
+    const context = { ...c.var };
 
     if (typeof parsed.include === 'string') {
       parsed.include = parsed.include.split(',');
@@ -165,7 +169,8 @@ export class HonoServerBuilder extends ServerBuilder {
       ...c.req.param(),
       ...parsed,
       filter,
-      user: c.get('user'),
+      user: context.user,
+      context,
     };
   }
 
