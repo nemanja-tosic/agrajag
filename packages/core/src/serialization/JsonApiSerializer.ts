@@ -1,5 +1,5 @@
 import jsonapiSerializer, { SerializerOptions } from 'jsonapi-serializer';
-import { Serializer } from './Serializer.js';
+import { Serializer, SerializeOptions } from './Serializer.js';
 import { QueryParams } from '../endpoints/QueryParams.js';
 import { ResourceDefinition } from '../resources/ResourceDefinition.js';
 import { Denormalized } from '../endpoints/Endpoints.js';
@@ -14,18 +14,21 @@ export class JsonApiSerializer implements Serializer {
     definition: TDefinition,
     data: Denormalized<TDefinition>,
     params: QueryParams<TDefinition>,
+    options?: SerializeOptions,
   ): SingleResourceDocument<TDefinition>;
   serialize<TDefinition extends ResourceDefinition>(
     definition: TDefinition,
     data: Denormalized<TDefinition>[],
     params: QueryParams<TDefinition>,
+    options?: SerializeOptions,
   ): MultipleResourceDocument<TDefinition>;
   serialize<TDefinition extends ResourceDefinition>(
     definition: TDefinition,
     data: Denormalized<TDefinition> | Denormalized<TDefinition>[],
     params: QueryParams<TDefinition>,
+    options?: SerializeOptions,
   ): Document<TDefinition> {
-    const serialized = this.#createSerializer(definition, params).serialize(
+    const serialized = this.#createSerializer(definition, params, options).serialize(
       data,
     );
 
@@ -45,10 +48,19 @@ export class JsonApiSerializer implements Serializer {
   #createSerializer<TDefinition extends ResourceDefinition>(
     definition: TDefinition,
     params: QueryParams<TDefinition>,
+    serializeOptions?: SerializeOptions,
   ): jsonapiSerializer.Serializer {
     const type = definition.type;
 
     const options = this.#createOptions(definition, params, [type]);
+    if (serializeOptions?.links) {
+      options.topLevelLinks = Object.fromEntries(
+        Object.entries(serializeOptions.links).filter(([, value]) => value !== undefined),
+      ) as Record<string, string>;
+    }
+    if (serializeOptions?.meta) {
+      options.meta = serializeOptions.meta;
+    }
 
     return new jsonapiSerializer.Serializer(type, options);
   }
@@ -62,38 +74,39 @@ export class JsonApiSerializer implements Serializer {
     const type = definition.type;
     const relationships = definition.relationships;
 
-    const isInIncludes = (key: string) =>
-      params?.include?.includes([...path.slice(1), key].join('.')) ?? false;
+    const isInIncludes = (key: string) => {
+      const dotted = [...path.slice(1), key].join('.');
+      return (
+        params?.include?.some(
+          included => included === dotted || included.startsWith(`${dotted}.`),
+        ) ?? false
+      );
+    };
 
     const isInFields = (key: string) =>
       params?.fields?.[
         path.join('.') as keyof NonNullable<typeof params.fields>
       ]?.includes(key) ?? true;
 
+    const includedRelationships = Object.entries(relationships)
+      .filter(([key]) => isInIncludes(key))
+      .map(([key, value]) => [key, this.#unwrapRelationship(value)] as const);
+
     return {
       ref: 'id',
       included: options?.relationshipKey !== undefined,
       attributes: [
         ...(definition.attributes as string[]).filter(isInFields),
-        ...Object.keys(relationships),
+        ...includedRelationships.map(([key]) => key),
       ],
       keyForAttribute: attribute => attribute,
       ...Object.fromEntries(
-        Object.entries(relationships)
-          .map(
-            ([key, value]) => [key, this.#unwrapRelationship(value)] as const,
-          )
-          .map(([key, relationship]) => [
-            key,
-            isInIncludes(key)
-              ? this.#createOptions(
-                  relationship,
-                  params as any,
-                  [...path, key],
-                  { relationshipKey: key },
-                )
-              : { ref: 'id' },
-          ]),
+        includedRelationships.map(([key, relationship]) => [
+          key,
+          this.#createOptions(relationship, params as any, [...path, key], {
+            relationshipKey: key,
+          }),
+        ]),
       ),
     };
   }

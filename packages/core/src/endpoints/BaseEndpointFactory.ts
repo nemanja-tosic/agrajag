@@ -10,11 +10,12 @@ import {
   Stored,
 } from './Endpoints.js';
 import { Resolver } from '../application/Resolver.js';
-import { Serializer } from '../serialization/Serializer.js';
+import { Serializer, SerializeOptions } from '../serialization/Serializer.js';
 import { QueryParams } from './QueryParams.js';
 import { Document } from '../resources/Resource.js';
 import { ResourceLinkage } from '../resources/ResourceLinkageSchema.js';
 import { IEndpointFactory } from './EndpointFactory.js';
+import { buildPageLinks } from './PageLinks.js';
 
 export abstract class BaseEndpointFactory<
   TDefinition extends ResourceDefinition,
@@ -30,25 +31,33 @@ export abstract class BaseEndpointFactory<
     serializer: Serializer,
     entity: Stored<TDefinition> | Stored<TDefinition>[],
     params: QueryParams<TDefinition>,
+    options?: SerializeOptions,
   ): Promise<Document<TDefinition>> {
     if (Array.isArray(entity)) {
       return serializer.serialize(
         definition,
         await Promise.all(
           entity.map(entity =>
-            this.#denormalize(definition, entity, key =>
-              external.byIds(key, {}),
+            this.#denormalize(
+              definition,
+              entity,
+              key => external.byIds(key, {}),
+              params.include,
             ),
           ),
         ),
         params,
+        options,
       );
     }
 
     return serializer.serialize(
       definition,
-      await this.#denormalize(definition, entity, key =>
-        external.byIds(key, {}),
+      await this.#denormalize(
+        definition,
+        entity,
+        key => external.byIds(key, {}),
+        params.include,
       ),
       params,
     );
@@ -94,22 +103,12 @@ export abstract class BaseEndpointFactory<
           collection: async params => {
             await using external = this.createExternal(definition);
 
-            const entities = await external.byType(definition.type, params);
-            if (!entities) {
-              return undefined;
-            }
+            const page = await external.byType(definition.type, params);
 
-            const serialized = await this.#serialize(
-              definition,
-              external,
-              serializer,
-              entities,
-              params,
-            );
-
-            return Array.isArray(serialized) && serialized.length === 1
-              ? serialized[0]
-              : serialized;
+            return this.#serialize(definition, external, serializer, page.data, params, {
+              links: buildPageLinks(definition.type, params, page.pageInfo, page.total),
+              ...(page.total !== undefined ? { meta: { total: page.total } } : {}),
+            });
           },
         },
       };
@@ -330,25 +329,40 @@ export abstract class BaseEndpointFactory<
     definition: TDefinition,
     entity: Stored<TDefinition>,
     relationship: (key: string[]) => Promise<Stored<TDefinition>[]>,
+    include?: string[],
   ): Promise<Denormalized<TDefinition>> {
-    return {
-      ...entity,
-      ...Object.fromEntries(
-        await Promise.all(
-          Object.keys(definition.relationships)
-            // if we get the denormalized version, we can skip loading relationships
-            .filter(key => entity[key] === undefined)
-            .map(async key => {
-              const relationshipId = entity[this.normalizedRelKey(key)];
-              if (relationshipId === undefined) {
-                return [key, undefined];
-              }
+    const included = new Set((include ?? []).map(path => path.split('.')[0]));
+    const resolved = Object.fromEntries(
+      await Promise.all(
+        Object.keys(definition.relationships)
+          .filter(key => included.has(key))
+          // if we get the denormalized version, we can skip loading relationships
+          .filter(key => entity[key] === undefined)
+          .map(async key => {
+            const relationshipId = entity[this.normalizedRelKey(key)];
+            if (relationshipId === undefined) {
+              return [key, undefined];
+            }
 
-              return [key, await relationship(relationshipId as string[])];
-            }),
-        ),
+            return [key, await relationship(relationshipId as string[])];
+          }),
       ),
-    };
+    );
+
+    const copy = Object.defineProperties(
+      {},
+      Object.getOwnPropertyDescriptors(entity),
+    ) as Record<string, unknown>;
+    for (const [key, value] of Object.entries(resolved)) {
+      Object.defineProperty(copy, key, {
+        value,
+        enumerable: true,
+        configurable: true,
+        writable: true,
+      });
+    }
+
+    return copy as Denormalized<TDefinition>;
   }
 
   protected normalizedRelKey(key: string): string {

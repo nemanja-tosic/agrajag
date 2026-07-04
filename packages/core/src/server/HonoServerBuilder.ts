@@ -158,11 +158,16 @@ export class HonoServerBuilder extends ServerBuilder {
 
   #extractParams(c: any): any {
     const { filter, ...query } = c.req.query();
+    const parsed = qs.parse(query, { comma: true }) as Record<string, unknown>;
     const context = { ...c.var };
+
+    if (typeof parsed.include === 'string') {
+      parsed.include = parsed.include.split(',');
+    }
 
     return {
       ...c.req.param(),
-      ...qs.parse(query, { comma: true }),
+      ...parsed,
       filter,
       user: context.user,
       context,

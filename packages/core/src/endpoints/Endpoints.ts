@@ -19,7 +19,7 @@ type FetchEndpoint<TDefinition extends ResourceDefinition> = {
   ) => Promise<Document<TDefinition> | undefined>;
   collection?: (
     params: QueryParams<TDefinition>,
-  ) => Promise<Document<TDefinition>[] | undefined>;
+  ) => Promise<Document<TDefinition> | undefined>;
   related?: RelatedEndpointsWithoutBody<TDefinition>;
 };
 

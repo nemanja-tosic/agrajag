@@ -8,7 +8,24 @@ export type QueryParams<
   fields?: Prettify<Partial<Fields<TDefinition, TDefinition['type']>>>;
   sort?: TDefinition['attributes'];
   filter?: string;
+  page?: PageParams;
 };
+
+/**
+ * JSON:API `page[...]` params. The mode is inferred from which are present:
+ * `number` → offset (random access, total/last link), `after`/`before` → cursor
+ * (keyset, no count), neither → the first page. They are mutually exclusive.
+ */
+export interface PageParams {
+  /** Page length. */
+  size?: number;
+  /** Opaque cursor — return the page after this row (cursor mode). */
+  after?: string;
+  /** Opaque cursor — return the page before this row (cursor mode). */
+  before?: string;
+  /** 1-based page number (offset mode). */
+  number?: number;
+}
 
 export type Prettify<T> = {
   [K in keyof T]: T[K];

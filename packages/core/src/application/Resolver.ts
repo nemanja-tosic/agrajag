@@ -30,6 +30,24 @@ export type ResolverQueryParams<
   TUser extends User,
 > = QueryParams<TDefinition> & { user?: TUser; context?: ResolverContext };
 
+/** Cursor pagination metadata for a page of results (Relay-style). */
+export interface PageInfo {
+  /** Cursor of the first row in the page. */
+  startCursor?: string;
+  /** Cursor of the last row in the page. */
+  endCursor?: string;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+/** A page of results from `byType`. */
+export interface Page<T> {
+  data: T[];
+  pageInfo: PageInfo;
+  /** Total matching rows, only when a resolver can supply it cheaply. */
+  total?: number;
+}
+
 export interface Resolver<
   TDefinition extends ResourceDefinition = ResourceDefinition,
   TUser extends User = User,
@@ -47,7 +65,7 @@ export interface Resolver<
   byType(
     type: TDefinition['type'],
     params: ResolverQueryParams<TDefinition, TUser>,
-  ): Promise<Stored<TDefinition>[]> | undefined;
+  ): Promise<Page<Stored<TDefinition>>>;
 
   relationshipByKey(
     id: string,

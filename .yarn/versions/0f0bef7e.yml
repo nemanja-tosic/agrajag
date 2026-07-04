@@ -1,5 +1,6 @@
 releases:
   agrajag: minor
+  "@agrajag/mcp-adapter": patch
   "@agrajag/redux-adapter": patch
 
 declined:
