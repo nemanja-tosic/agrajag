@@ -14,11 +14,22 @@ describe('HonoServerBuilder body parsing', () => {
 
   const buildApp = () => {
     const builder = new HonoServerBuilder(new Hono());
-    builder.addPost(stubSchema, stubEndpointSchema, '/things', (body, _params, respond) =>
-      respond({ body: { data: { type: 'things', id: '1' } }, status: 201 }),
+    builder.addPost(
+      stubSchema,
+      stubEndpointSchema,
+      '/things',
+      (body, _params, respond) =>
+        respond({ body: { data: { type: 'things', id: '1' } }, status: 201 }),
     );
-    builder.addPatch(stubSchema, stubEndpointSchema, '/things/:id', (body, _params, respond) =>
-      respond({ body: { data: { type: 'things', id: String(body ? 1 : 0) } }, status: 200 }),
+    builder.addPatch(
+      stubSchema,
+      stubEndpointSchema,
+      '/things/:id',
+      (body, _params, respond) =>
+        respond({
+          body: { data: { type: 'things', id: String(body ? 1 : 0) } },
+          status: 200,
+        }),
     );
     return builder.build();
   };
@@ -55,6 +66,53 @@ describe('HonoServerBuilder body parsing', () => {
       headers: { 'content-type': 'application/json' },
     });
     expect(response.status).to.equal(201);
-    expect(await response.json()).to.deep.equal({ data: { type: 'things', id: '1' } });
+    expect(await response.json()).to.deep.equal({
+      data: { type: 'things', id: '1' },
+    });
+  });
+
+  it('adds Hono variables to resolver context', async () => {
+    type Variables = {
+      requestId: string;
+      user: { sub: string };
+    };
+    const app = new Hono<{ Variables: Variables }>();
+    app.use('*', async (c, next) => {
+      c.set('requestId', 'request-1');
+      c.set('user', { sub: 'user-1' });
+      await next();
+    });
+    const builder = new HonoServerBuilder(app as unknown as Hono);
+    builder.addGet(
+      stubSchema,
+      stubEndpointSchema,
+      '/things',
+      (params, respond) => {
+        const resolverParams = params as typeof params & {
+          context?: Variables;
+          user?: Variables['user'];
+        };
+
+        return respond({
+          body: {
+            data: {
+              type: 'context',
+              id: `${resolverParams.context?.requestId}:${resolverParams.user?.sub}`,
+            },
+          },
+          status: 200,
+        });
+      },
+    );
+
+    const response = await builder.build().request('/things');
+
+    expect(response.status).to.equal(200);
+    expect(await response.json()).to.deep.equal({
+      data: {
+        type: 'context',
+        id: 'request-1:user-1',
+      },
+    });
   });
 });
