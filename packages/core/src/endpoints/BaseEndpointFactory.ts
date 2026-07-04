@@ -38,8 +38,11 @@ export abstract class BaseEndpointFactory<
         definition,
         await Promise.all(
           entity.map(entity =>
-            this.#denormalize(definition, entity, key =>
-              external.byIds(key, {}),
+            this.#denormalize(
+              definition,
+              entity,
+              key => external.byIds(key, {}),
+              params.include,
             ),
           ),
         ),
@@ -50,8 +53,11 @@ export abstract class BaseEndpointFactory<
 
     return serializer.serialize(
       definition,
-      await this.#denormalize(definition, entity, key =>
-        external.byIds(key, {}),
+      await this.#denormalize(
+        definition,
+        entity,
+        key => external.byIds(key, {}),
+        params.include,
       ),
       params,
     );
@@ -323,25 +329,40 @@ export abstract class BaseEndpointFactory<
     definition: TDefinition,
     entity: Stored<TDefinition>,
     relationship: (key: string[]) => Promise<Stored<TDefinition>[]>,
+    include?: string[],
   ): Promise<Denormalized<TDefinition>> {
-    return {
-      ...entity,
-      ...Object.fromEntries(
-        await Promise.all(
-          Object.keys(definition.relationships)
-            // if we get the denormalized version, we can skip loading relationships
-            .filter(key => entity[key] === undefined)
-            .map(async key => {
-              const relationshipId = entity[this.normalizedRelKey(key)];
-              if (relationshipId === undefined) {
-                return [key, undefined];
-              }
+    const included = new Set((include ?? []).map(path => path.split('.')[0]));
+    const resolved = Object.fromEntries(
+      await Promise.all(
+        Object.keys(definition.relationships)
+          .filter(key => included.has(key))
+          // if we get the denormalized version, we can skip loading relationships
+          .filter(key => entity[key] === undefined)
+          .map(async key => {
+            const relationshipId = entity[this.normalizedRelKey(key)];
+            if (relationshipId === undefined) {
+              return [key, undefined];
+            }
 
-              return [key, await relationship(relationshipId as string[])];
-            }),
-        ),
+            return [key, await relationship(relationshipId as string[])];
+          }),
       ),
-    };
+    );
+
+    const copy = Object.defineProperties(
+      {},
+      Object.getOwnPropertyDescriptors(entity),
+    ) as Record<string, unknown>;
+    for (const [key, value] of Object.entries(resolved)) {
+      Object.defineProperty(copy, key, {
+        value,
+        enumerable: true,
+        configurable: true,
+        writable: true,
+      });
+    }
+
+    return copy as Denormalized<TDefinition>;
   }
 
   protected normalizedRelKey(key: string): string {
