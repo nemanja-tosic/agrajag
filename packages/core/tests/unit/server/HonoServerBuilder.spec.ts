@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { expect } from 'chai';
 import { HonoServerBuilder } from '../../../src/server/HonoServerBuilder.js';
+import { ForbiddenError } from '../../../src/server/HttpError.js';
 import type { EndpointSchema } from '../../../src/endpoints/Endpoints.js';
 import type { ResourceDefinition } from '../../../src/resources/ResourceDefinition.js';
 
@@ -147,5 +148,52 @@ describe('HonoServerBuilder include parsing', () => {
     const { app, captured } = captureInclude();
     await app.request('/things');
     expect(captured.include).to.equal(undefined);
+  });
+});
+
+describe('HonoServerBuilder handler rejection', () => {
+  const stubSchema = {} as ResourceDefinition;
+  const stubEndpointSchema = () => ({}) as EndpointSchema;
+
+  const buildThrowingApp = (error: Error) => {
+    const builder = new HonoServerBuilder(new Hono());
+    builder.addGet(stubSchema, stubEndpointSchema, '/things', async () => {
+      throw error;
+    });
+    builder.addPost(
+      stubSchema,
+      stubEndpointSchema,
+      '/things',
+      async () => {
+        throw error;
+      },
+    );
+    return builder.build();
+  };
+
+  it('responds 500 when a GET handler rejects before calling respond', async () => {
+    const app = buildThrowingApp(new Error('boom'));
+    const res = await app.request('/things');
+    expect(res.status).to.equal(500);
+    const body = (await res.json()) as { errors: { status: string }[] };
+    expect(body.errors[0].status).to.equal('500');
+  });
+
+  it('responds 500 when a POST handler rejects before calling respond', async () => {
+    const app = buildThrowingApp(new Error('boom'));
+    const res = await app.request('/things', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ data: {} }),
+    });
+    expect(res.status).to.equal(500);
+  });
+
+  it('maps a typed HttpError thrown by a handler to its status', async () => {
+    const app = buildThrowingApp(new ForbiddenError('not yours'));
+    const res = await app.request('/things');
+    expect(res.status).to.equal(403);
+    const body = (await res.json()) as { errors: { detail: string }[] };
+    expect(body.errors[0].detail).to.equal('not yours');
   });
 });

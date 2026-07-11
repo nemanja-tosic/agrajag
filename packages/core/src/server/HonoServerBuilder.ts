@@ -7,6 +7,7 @@ import {
   MutationHandler,
   Response,
 } from './ServerBuilder.js';
+import { createErrorResponse } from './errorResponse.js';
 import * as qs from 'qs';
 
 export class HonoServerBuilder extends ServerBuilder {
@@ -27,13 +28,9 @@ export class HonoServerBuilder extends ServerBuilder {
     path: TPath,
     handler: FetchDeleteHandler<TPath, TDefinition>,
   ): this {
-    this.#hono.get(path, async c => {
-      const { body, status, headers } = await new Promise<Response>(resolve =>
-        handler(this.#extractParams(c), async response => resolve(response)),
-      );
-
-      return this.#respond(c, { body, status, headers });
-    });
+    this.#hono.get(path, c =>
+      this.#run(c, respond => handler(this.#extractParams(c), respond)),
+    );
 
     return this;
   }
@@ -51,13 +48,9 @@ export class HonoServerBuilder extends ServerBuilder {
       const parsed = await this.#parseBody(c);
       if (!parsed.ok) return c.json(parsed.error, 400);
 
-      const { body, status, headers } = await new Promise<Response>(resolve =>
-        handler(parsed.body, this.#extractParams(c), async response =>
-          resolve(response),
-        ),
+      return this.#run(c, respond =>
+        handler(parsed.body, this.#extractParams(c), respond),
       );
-
-      return this.#respond(c, { body, status, headers });
     });
 
     return this;
@@ -76,13 +69,9 @@ export class HonoServerBuilder extends ServerBuilder {
       const parsed = await this.#parseBody(c);
       if (!parsed.ok) return c.json(parsed.error, 400);
 
-      const { body, status, headers } = await new Promise<Response>(resolve =>
-        handler(parsed.body, this.#extractParams(c), async response =>
-          resolve(response),
-        ),
+      return this.#run(c, respond =>
+        handler(parsed.body, this.#extractParams(c), respond),
       );
-
-      return this.#respond(c, { body, status, headers });
     });
 
     return this;
@@ -105,16 +94,31 @@ export class HonoServerBuilder extends ServerBuilder {
         deleteBody = parsed.body;
       }
 
-      const { body, status, headers } = await new Promise<Response>(resolve =>
-        handler(deleteBody, this.#extractParams(c), async response =>
-          resolve(response),
-        ),
+      return this.#run(c, respond =>
+        handler(deleteBody, this.#extractParams(c), respond),
       );
-
-      return this.#respond(c, { body, status, headers });
     });
 
     return this;
+  }
+
+  // A handler that throws (or rejects) before calling `respond` used to leave
+  // the response promise unsettled forever: the request hung and the rejection
+  // escaped as an unhandledRejection. Chain the handler's own promise into the
+  // response promise so a throw settles the request with an error response.
+  async #run(
+    c: Context,
+    run: (respond: (response: Response) => Promise<void>) => Promise<void>,
+  ): Promise<globalThis.Response> {
+    try {
+      const response = await new Promise<Response>((resolve, reject) => {
+        run(async r => void resolve(r)).catch(reject);
+      });
+
+      return this.#respond(c, response);
+    } catch (error) {
+      return this.#respond(c, createErrorResponse(error as Error));
+    }
   }
 
   // A 204 (No Content) response must not carry a body, so it cannot go

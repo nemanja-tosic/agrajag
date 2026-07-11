@@ -6,6 +6,8 @@ export * from './api/DefinitionCollection.js';
 export * from './application/Resolver.js';
 export * from './server/ServerBuilder.js';
 export * from './server/HonoServerBuilder.js';
+export * from './server/HttpError.js';
+export * from './server/errorResponse.js';
 export * from './server/OpenApiEndpointBuilderDecorator.js';
 export * from './resources/Resource.js';
 export * from './resources/ResourceSchema.js';

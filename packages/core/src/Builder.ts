@@ -8,6 +8,7 @@ import { ResolverQueryParams, User } from './application/Resolver.js';
 import { ZodSchemaFactory } from './schema/ZodSchemaFactory.js';
 import { SchemaFactory } from './schema/SchemaFactory.js';
 import { Response, ServerBuilder } from './server/ServerBuilder.js';
+import { createErrorResponse } from './server/errorResponse.js';
 import { Definitions } from './api/Definitions.js';
 import { DefinitionCollection } from './api/DefinitionCollection.js';
 import { Endpoints } from './endpoints/Endpoints.js';
@@ -484,17 +485,6 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
   }
 
   #createUnhandledErrorResponse(error: Error): Response {
-    return {
-      body: {
-        errors: [
-          {
-            status: '500',
-            detail: 'An unexpected error occurred',
-            title: 'Internal Server Error',
-          },
-        ],
-      },
-      status: 500,
-    };
+    return createErrorResponse(error);
   }
 }
