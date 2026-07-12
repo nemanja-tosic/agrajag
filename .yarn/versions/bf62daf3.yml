@@ -1,9 +1,0 @@
-releases:
-  agrajag: minor
-  "@agrajag/redux-adapter": patch
-  "@agrajag/mcp-adapter": patch
-
-declined:
-  - "@agrajag/express-adapter"
-  - "@agrajag/fastify-adapter"
-  - "@agrajag/ravendb-adapter"
