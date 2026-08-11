@@ -17,6 +17,7 @@ export const createErrorResponse = (error: Error): Response => {
     };
   }
 
+  console.error('agrajag: unhandled endpoint error', error);
   return {
     body: {
       errors: [
