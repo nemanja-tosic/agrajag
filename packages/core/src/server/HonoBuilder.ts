@@ -15,6 +15,7 @@ export class HonoBuilder<
 > extends Builder<TDefinitions> {
   readonly #hono: Hono;
   readonly #logger?: Logger;
+  readonly #exposeErrorDetail?: boolean;
 
   constructor(honoOrOptions: Hono | (BuilderOptions & { hono?: Hono }) = {}) {
     const options =
@@ -24,6 +25,7 @@ export class HonoBuilder<
 
     this.#hono = options.hono ?? new Hono();
     this.#logger = options.logger;
+    this.#exposeErrorDetail = options.exposeErrorDetail;
   }
 
   addDefinitions<TNewDefinitions extends Definitions>(
@@ -35,7 +37,10 @@ export class HonoBuilder<
   }
 
   build(factories: Factories<TDefinitions>) {
-    const honoServerBuilder = new HonoServerBuilder(this.#hono, this.#logger);
+    const honoServerBuilder = new HonoServerBuilder(this.#hono, {
+      logger: this.#logger,
+      exposeErrorDetail: this.#exposeErrorDetail,
+    });
     const openApiDecorator = new OpenApiEndpointBuilderDecorator(
       honoServerBuilder,
     );

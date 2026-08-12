@@ -5,6 +5,7 @@ export interface ErrorObject {
     title?: string;
     detail?: string;
     source?: { pointer?: string; parameter?: string };
+    meta?: Record<string, any>;
   }[];
   meta?: Record<string, any>;
 }

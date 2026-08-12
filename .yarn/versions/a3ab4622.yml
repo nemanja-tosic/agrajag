@@ -1,0 +1,7 @@
+releases:
+  "@agrajag/express-adapter": patch
+  "@agrajag/fastify-adapter": patch
+  "@agrajag/mcp-adapter": patch
+  "@agrajag/ravendb-adapter": patch
+  "@agrajag/redux-adapter": patch
+  agrajag: patch

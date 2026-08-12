@@ -44,6 +44,12 @@ export interface BuilderOptions {
    * hidden the issues go to the logger instead so they are never silent.
    */
   exposeValidationIssues?: boolean;
+  /**
+   * Whether the generic 500 for an unexpected error names the underlying
+   * error in the response instead of "An unexpected error occurred". Off by
+   * default — see ErrorResponseOptions.
+   */
+  exposeErrorDetail?: boolean;
 }
 
 export type DeferredRelationships = unknown;
@@ -68,6 +74,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
   readonly #logger: Logger = console;
   readonly #invoke: ResolverInvoke = run => run();
   readonly #exposeValidationIssues: boolean = false;
+  readonly #exposeErrorDetail: boolean = false;
 
   constructor(options?: BuilderOptions) {
     if (options?.serializer) {
@@ -81,6 +88,9 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
     }
     if (options?.exposeValidationIssues !== undefined) {
       this.#exposeValidationIssues = options.exposeValidationIssues;
+    }
+    if (options?.exposeErrorDetail !== undefined) {
+      this.#exposeErrorDetail = options.exposeErrorDetail;
     }
     if (options?.invoke) {
       this.#invoke = options.invoke;
@@ -518,6 +528,8 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
   }
 
   #createUnhandledErrorResponse(error: Error): Response {
-    return createErrorResponse(error);
+    return createErrorResponse(error, {
+      exposeErrorDetail: this.#exposeErrorDetail,
+    });
   }
 }
