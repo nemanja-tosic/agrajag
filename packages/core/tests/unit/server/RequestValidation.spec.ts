@@ -68,6 +68,34 @@ describe('request body validation', () => {
     expect(res.status).to.equal(201);
   });
 
+  it('exposeErrorDetail also names endpoint throws on the Builder path', async () => {
+    const things = createSchema('things', z.object({ name: z.string() }));
+    const throwingFactory = {
+      createEndpoints: () => ({
+        create: {
+          self: async () => {
+            throw new Error('column does not exist');
+          },
+        },
+      }),
+    };
+    const app = new HonoBuilder({
+      hono: new Hono(),
+      logger: { error: () => undefined },
+      exposeErrorDetail: true,
+    })
+      .addDefinitions(new DefinitionCollection().addDefinition(things))
+      .build({ things: throwingFactory } as never);
+
+    const res = await post(app, {
+      data: { type: 'things', attributes: { name: 'ok' } },
+    });
+
+    expect(res.status).to.equal(500);
+    const [error] = await errorsOf(res);
+    expect(error.detail).to.equal('Error: column does not exist');
+  });
+
   it('responds 400 to an invalid PATCH body too', async () => {
     const app = buildApp();
     const res = await app.request('/things/1', {

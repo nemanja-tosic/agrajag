@@ -12,15 +12,22 @@ import { HttpError } from './HttpError.js';
 import type { Logger } from '../Builder.js';
 import * as qs from 'qs';
 
+export interface HonoServerBuilderOptions {
+  logger?: Logger;
+  exposeErrorDetail?: boolean;
+}
+
 export class HonoServerBuilder extends ServerBuilder {
   #hono = new Hono();
   readonly #logger: Logger;
+  readonly #exposeErrorDetail: boolean;
 
-  constructor(hono: Hono, logger: Logger = console) {
+  constructor(hono: Hono, options: HonoServerBuilderOptions = {}) {
     super();
 
     this.#hono = hono;
-    this.#logger = logger;
+    this.#logger = options.logger ?? console;
+    this.#exposeErrorDetail = options.exposeErrorDetail ?? false;
   }
 
   addGet<
@@ -124,7 +131,12 @@ export class HonoServerBuilder extends ServerBuilder {
       if (!(error instanceof HttpError)) {
         await this.#logger.error(error as Error);
       }
-      return this.#respond(c, createErrorResponse(error as Error));
+      return this.#respond(
+        c,
+        createErrorResponse(error as Error, {
+          exposeErrorDetail: this.#exposeErrorDetail,
+        }),
+      );
     }
   }
 

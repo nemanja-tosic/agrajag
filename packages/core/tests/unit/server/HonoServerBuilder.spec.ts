@@ -207,7 +207,7 @@ describe('HonoServerBuilder logging', () => {
 
   const buildThrowingApp = (error: Error, captured: Error[]) => {
     const builder = new HonoServerBuilder(new Hono(), {
-      error: e => void captured.push(e),
+      logger: { error: e => void captured.push(e) },
     });
     builder.addGet(stubSchema, stubEndpointSchema, '/things', async () => {
       throw error;
@@ -231,5 +231,55 @@ describe('HonoServerBuilder logging', () => {
     ).request('/things');
     expect(res.status).to.equal(403);
     expect(captured).to.have.length(0);
+  });
+});
+
+describe('HonoServerBuilder error detail exposure', () => {
+  const stubSchema = {} as ResourceDefinition;
+  const stubEndpointSchema = () => ({}) as EndpointSchema;
+
+  const buildThrowingApp = (error: Error, exposeErrorDetail?: boolean) => {
+    const builder = new HonoServerBuilder(new Hono(), {
+      logger: { error: () => undefined },
+      exposeErrorDetail,
+    });
+    builder.addGet(stubSchema, stubEndpointSchema, '/things', async () => {
+      throw error;
+    });
+    return builder.build();
+  };
+
+  const firstError = async (res: Response) =>
+    ((await res.json()) as { errors: { detail: string; meta?: { stack?: string[] } }[] })
+      .errors[0];
+
+  it('hides the cause by default', async () => {
+    const res = await buildThrowingApp(new Error('secret internals')).request(
+      '/things',
+    );
+    const error = await firstError(res);
+    expect(res.status).to.equal(500);
+    expect(error.detail).to.equal('An unexpected error occurred');
+    expect(error.meta).to.equal(undefined);
+  });
+
+  it('names the cause and carries the stack head when opted in', async () => {
+    const cause = new Error('projection column missing');
+    const res = await buildThrowingApp(cause, true).request('/things');
+    const error = await firstError(res);
+    expect(res.status).to.equal(500);
+    expect(error.detail).to.equal('Error: projection column missing');
+    expect(error.meta?.stack?.[0]).to.contain('projection column missing');
+  });
+
+  it('leaves typed HttpErrors untouched by the flag', async () => {
+    const res = await buildThrowingApp(
+      new ForbiddenError('not yours'),
+      true,
+    ).request('/things');
+    const error = await firstError(res);
+    expect(res.status).to.equal(403);
+    expect(error.detail).to.equal('not yours');
+    expect(error.meta).to.equal(undefined);
   });
 });
