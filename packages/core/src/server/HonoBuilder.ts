@@ -1,4 +1,4 @@
-import { Builder, BuilderOptions, DefinitionCollection } from 'agrajag';
+import { Builder, BuilderOptions, DefinitionCollection, Logger } from 'agrajag';
 import { HonoServerBuilder } from './HonoServerBuilder.js';
 import { Hono } from 'hono';
 import { Definitions } from '../api/Definitions.js';
@@ -14,6 +14,7 @@ export class HonoBuilder<
   TDefinitions extends Definitions = {},
 > extends Builder<TDefinitions> {
   readonly #hono: Hono;
+  readonly #logger?: Logger;
 
   constructor(honoOrOptions: Hono | (BuilderOptions & { hono?: Hono }) = {}) {
     const options =
@@ -22,6 +23,7 @@ export class HonoBuilder<
     super(options);
 
     this.#hono = options.hono ?? new Hono();
+    this.#logger = options.logger;
   }
 
   addDefinitions<TNewDefinitions extends Definitions>(
@@ -33,7 +35,7 @@ export class HonoBuilder<
   }
 
   build(factories: Factories<TDefinitions>) {
-    const honoServerBuilder = new HonoServerBuilder(this.#hono);
+    const honoServerBuilder = new HonoServerBuilder(this.#hono, this.#logger);
     const openApiDecorator = new OpenApiEndpointBuilderDecorator(
       honoServerBuilder,
     );

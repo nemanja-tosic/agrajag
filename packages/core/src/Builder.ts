@@ -12,6 +12,8 @@ import { createErrorResponse } from './server/errorResponse.js';
 import { Definitions } from './api/Definitions.js';
 import { DefinitionCollection } from './api/DefinitionCollection.js';
 import { Endpoints } from './endpoints/Endpoints.js';
+import { BadRequestError, HttpError } from './server/HttpError.js';
+import { ZodError } from 'zod';
 
 export interface Logger {
   error: (error: Error) => void | Promise<void>;
@@ -35,6 +37,13 @@ export interface BuilderOptions {
   schemaFactory?: SchemaFactory;
   logger?: Logger;
   invoke?: ResolverInvoke;
+  /**
+   * Whether the 400 for a request body that fails schema validation names the
+   * offending fields (zod issue paths and messages) in the response. Off by
+   * default — issue paths describe the wire schema to strangers, and when
+   * hidden the issues go to the logger instead so they are never silent.
+   */
+  exposeValidationIssues?: boolean;
 }
 
 export type DeferredRelationships = unknown;
@@ -58,6 +67,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
   readonly #schemaFactory: SchemaFactory = new ZodSchemaFactory();
   readonly #logger: Logger = console;
   readonly #invoke: ResolverInvoke = run => run();
+  readonly #exposeValidationIssues: boolean = false;
 
   constructor(options?: BuilderOptions) {
     if (options?.serializer) {
@@ -68,6 +78,9 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
     }
     if (options?.logger) {
       this.#logger = options.logger;
+    }
+    if (options?.exposeValidationIssues !== undefined) {
+      this.#exposeValidationIssues = options.exposeValidationIssues;
     }
     if (options?.invoke) {
       this.#invoke = options.invoke;
@@ -185,7 +198,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
             const data = await this.#invoke(
               () =>
                 endpoint(
-                  this.#schemaFactory.createUpdateSchema(definition).parse(body) as Parameters<typeof endpoint>[0],
+                  this.#parseUpdateBody(definition, body) as Parameters<typeof endpoint>[0],
                   params,
                 ),
               params,
@@ -233,7 +246,7 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
             const data = await this.#invoke(
               () =>
                 endpoint(
-                  this.#schemaFactory.createUpdateSchema(definition).parse(body) as Parameters<typeof endpoint>[0],
+                  this.#parseUpdateBody(definition, body) as Parameters<typeof endpoint>[0],
                   params,
                 ),
               params,
@@ -480,7 +493,27 @@ export abstract class Builder<TDefinitions extends Definitions = {}> {
     return this;
   }
 
+  #parseUpdateBody(definition: ResourceDefinition, body: unknown): unknown {
+    try {
+      return this.#schemaFactory.createUpdateSchema(definition).parse(body);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        if (!this.#exposeValidationIssues) {
+          void this.#logger.error(error);
+          throw new BadRequestError('Invalid request body');
+        }
+        throw new BadRequestError(
+          `Invalid request body: ${error.issues
+            .map(issue => `${issue.path.join('.')}: ${issue.message}`)
+            .join('; ')}`,
+        );
+      }
+      throw error;
+    }
+  }
+
   async #logError(error: Error): Promise<void> {
+    if (error instanceof HttpError) return;
     this.#logger.error(error);
   }
 
