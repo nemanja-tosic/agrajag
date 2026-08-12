@@ -55,36 +55,3 @@ describe('createErrorResponse', () => {
     ]);
   });
 });
-
-// The generic 500 deliberately hides the cause from the client — so the
-// server console must be the place where the cause survives. A deployment
-// with nothing but pod logs has no other way to diagnose an unexpected throw.
-describe('createErrorResponse logging', () => {
-  const captured: unknown[][] = [];
-  const original = console.error;
-
-  beforeEach(() => {
-    captured.length = 0;
-    console.error = (...args: unknown[]) => void captured.push(args);
-  });
-
-  afterEach(() => {
-    console.error = original;
-  });
-
-  it('logs the unexpected error it hides behind the generic 500', () => {
-    const cause = new Error('projection column missing');
-    const response = createErrorResponse(cause);
-
-    expect(response.status).to.equal(500);
-    expect(captured).to.have.length(1);
-    expect(captured[0]).to.include(cause);
-  });
-
-  it('does not log a typed HttpError — refusals are expected control flow', () => {
-    const response = createErrorResponse(new ForbiddenError('not yours'));
-
-    expect(response.status).to.equal(403);
-    expect(captured).to.have.length(0);
-  });
-});

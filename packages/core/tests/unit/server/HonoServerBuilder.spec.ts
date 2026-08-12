@@ -197,3 +197,39 @@ describe('HonoServerBuilder handler rejection', () => {
     expect(body.errors[0].detail).to.equal('not yours');
   });
 });
+
+// The generic 500 deliberately hides the cause from the client — so the
+// server log must be the place where the cause survives. A deployment with
+// nothing but pod logs has no other way to diagnose an unexpected throw.
+describe('HonoServerBuilder logging', () => {
+  const stubSchema = {} as ResourceDefinition;
+  const stubEndpointSchema = () => ({}) as EndpointSchema;
+
+  const buildThrowingApp = (error: Error, captured: Error[]) => {
+    const builder = new HonoServerBuilder(new Hono(), {
+      error: e => void captured.push(e),
+    });
+    builder.addGet(stubSchema, stubEndpointSchema, '/things', async () => {
+      throw error;
+    });
+    return builder.build();
+  };
+
+  it('logs the unexpected error it hides behind the generic 500', async () => {
+    const captured: Error[] = [];
+    const cause = new Error('projection column missing');
+    const res = await buildThrowingApp(cause, captured).request('/things');
+    expect(res.status).to.equal(500);
+    expect(captured).to.deep.equal([cause]);
+  });
+
+  it('does not log a typed HttpError — refusals are expected control flow', async () => {
+    const captured: Error[] = [];
+    const res = await buildThrowingApp(
+      new ForbiddenError('not yours'),
+      captured,
+    ).request('/things');
+    expect(res.status).to.equal(403);
+    expect(captured).to.have.length(0);
+  });
+});

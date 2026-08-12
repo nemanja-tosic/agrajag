@@ -8,15 +8,19 @@ import {
   Response,
 } from './ServerBuilder.js';
 import { createErrorResponse } from './errorResponse.js';
+import { HttpError } from './HttpError.js';
+import type { Logger } from '../Builder.js';
 import * as qs from 'qs';
 
 export class HonoServerBuilder extends ServerBuilder {
   #hono = new Hono();
+  readonly #logger: Logger;
 
-  constructor(hono: Hono) {
+  constructor(hono: Hono, logger: Logger = console) {
     super();
 
     this.#hono = hono;
+    this.#logger = logger;
   }
 
   addGet<
@@ -117,6 +121,9 @@ export class HonoServerBuilder extends ServerBuilder {
 
       return this.#respond(c, response);
     } catch (error) {
+      if (!(error instanceof HttpError)) {
+        await this.#logger.error(error as Error);
+      }
       return this.#respond(c, createErrorResponse(error as Error));
     }
   }
