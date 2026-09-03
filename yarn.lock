@@ -6789,7 +6789,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ws@npm:8.20.1":
+"ws@npm:8.20.1, ws@npm:^8.16.0":
   version: 8.20.1
   resolution: "ws@npm:8.20.1"
   peerDependencies:
@@ -6801,21 +6801,6 @@ __metadata:
     utf-8-validate:
       optional: true
   checksum: 10c0/ce162433218399cdedeb76fd33363d4d86a7d910058d4e3c679dce08cea65d6da6b39f11baa4d7808d024cf46ed88f6a05c17611621aaad8fc5e62edacc30c5d
-  languageName: node
-  linkType: hard
-
-"ws@npm:^8.16.0":
-  version: 8.17.0
-  resolution: "ws@npm:8.17.0"
-  peerDependencies:
-    bufferutil: ^4.0.1
-    utf-8-validate: ">=5.0.2"
-  peerDependenciesMeta:
-    bufferutil:
-      optional: true
-    utf-8-validate:
-      optional: true
-  checksum: 10c0/55241ec93a66fdfc4bf4f8bc66c8eb038fda2c7a4ee8f6f157f2ca7dc7aa76aea0c0da0bf3adb2af390074a70a0e45456a2eaf80e581e630b75df10a64b0a990
   languageName: node
   linkType: hard
 
