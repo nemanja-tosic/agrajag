@@ -46,6 +46,15 @@ export interface Page<T> {
   pageInfo: PageInfo;
   /** Total matching rows, only when a resolver can supply it cheaply. */
   total?: number;
+  /**
+   * Aggregates over the whole matching set — not over `data`. A list that shows totals
+   * needs a footer figure the page it is holding cannot produce, so the resolver computes
+   * it alongside the page and it travels in the document's `meta`.
+   *
+   * Decimal strings, the money wire format: the sum is exact where it is computed and
+   * stays exact all the way to the reader.
+   */
+  aggregates?: Record<string, string>;
 }
 
 export interface Resolver<
