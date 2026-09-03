@@ -107,7 +107,16 @@ export abstract class BaseEndpointFactory<
 
             return this.#serialize(definition, external, serializer, page.data, params, {
               links: buildPageLinks(definition.type, params, page.pageInfo, page.total),
-              ...(page.total !== undefined ? { meta: { total: page.total } } : {}),
+              ...(page.total !== undefined || page.aggregates !== undefined
+                ? {
+                    meta: {
+                      ...(page.total !== undefined ? { total: page.total } : {}),
+                      ...(page.aggregates !== undefined
+                        ? { aggregates: page.aggregates }
+                        : {}),
+                    },
+                  }
+                : {}),
             });
           },
         },
