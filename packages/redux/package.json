@@ -18,7 +18,7 @@
     "@reduxjs/toolkit": "2.12.0",
     "agrajag": "workspace:*",
     "change-case": "5.4.4",
-    "qs": "6.14.0",
+    "qs": "6.17.1",
     "react-redux": "9.3.0"
   },
   "devDependencies": {

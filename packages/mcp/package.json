@@ -24,7 +24,7 @@
     "chai": "5.2.1",
     "mocha": "11.7.1",
     "tsx": "4.22.4",
-    "zod": "4.4.3"
+    "zod": "4.6.7"
   },
   "peerDependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
